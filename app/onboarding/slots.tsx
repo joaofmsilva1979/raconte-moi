@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -10,6 +10,12 @@ export default function SlotsScreen() {
   const { mealSlots, saveMealSlot } = useSettingsStore();
   const { primary } = useColorTheme();
   const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
+
+  useEffect(() => {
+    if (mealSlots.length > 0) {
+      setLocalSlots(mealSlots);
+    }
+  }, [mealSlots]);
 
   const adjust = (meal_type: MealType, field: 'start_hour' | 'end_hour', delta: number) => {
     setLocalSlots(prev =>

@@ -37,12 +37,14 @@ describe('PermissionsScreen (Étape 5)', () => {
 
   it("demande les permissions, complète l'onboarding et redirige vers /", async () => {
     const { requestRecordingPermissionsAsync } = require('expo-audio');
+    const Notifications = require('expo-notifications');
     const { getByText } = await render(<PermissionsScreen />);
 
     await fireEvent.press(getByText("C'est parti ! 🥔"));
 
     await waitFor(() => {
       expect(requestRecordingPermissionsAsync).toHaveBeenCalled();
+      expect(Notifications.requestPermissionsAsync).toHaveBeenCalled();
       expect(mockCompleteOnboarding).toHaveBeenCalled();
       expect(mockReplace).toHaveBeenCalledWith('/');
     });

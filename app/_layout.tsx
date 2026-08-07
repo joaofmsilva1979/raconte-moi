@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { initDatabase } from '@/db/database';
+import { useSettingsStore } from '@/store/settingsStore';
 
 export default function RootLayout() {
   useEffect(() => {
-    initDatabase().catch(console.error);
+    initDatabase().then(() => {
+      useSettingsStore.getState().loadSettings();
+    }).catch(console.error);
   }, []);
 
   return (
