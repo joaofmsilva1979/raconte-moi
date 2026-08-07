@@ -427,6 +427,14 @@ L'utilisatrice peut exporter son journal sur une période choisie, au format PDF
 - Ressentis : heure · 💜 · catégorie · délai depuis repas précédent
 - Footer horodaté : *"Partagé volontairement par Eugénie le [date]. Données locales, aucun serveur tiers."*
 
+### Format A4 & pagination
+- Format A4 (210×297mm), portrait
+- **Option B validée — continuation avec mention "(suite)"**
+- Si un jour déborde sur la page suivante → en-tête "Mercredi · suite ↗" sur fond légèrement orangé + ligne `✂ Suite page suivante` en bas de page
+- **Règle hybride :** si un jour commence dans les 3 dernières lignes disponibles → saut de page forcé. Sinon → continuation avec "(suite)"
+- En-tête répété sur chaque page : titre + période + numéro de page
+- Footer répété sur chaque page : mention consentement + numéro de page
+
 ### Technique
 - Génération PDF : `react-native-html-to-pdf` (on-device, aucun service tiers)
 - Partage : `expo-sharing` → share sheet iOS natif

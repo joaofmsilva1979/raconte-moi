@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pagination A4</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #E0D8D0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 24px; }
+  h2 { font-size: 20px; font-weight: 700; color: #2D1A0E; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #9A7060; margin-bottom: 28px; line-height: 1.5; }
+  .section-title { font-size: 13px; font-weight: 700; color: #5C3020; margin: 28px 0 14px; padding-left: 10px; border-left: 3px solid #E85520; }
+
+  /* A4 sheet simulation */
+  /* A4 = 210×297mm. On simule à ~55% pour tenir à l'écran → ~460×650px */
+  .page-wrap {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    overflow-x: auto;
+  }
+  .page-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .page-label-top {
+    font-size: 10px; font-weight: 700; color: #888;
+    background: white; border-radius: 10px;
+    padding: 3px 10px; white-space: nowrap;
+  }
+
+  .a4-page {
+    width: 460px;
+    min-height: 650px;
+    background: white;
+    border-radius: 3px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* Page header (répété sur chaque page) */
+  .page-header {
+    background: linear-gradient(135deg, #F5855A, #E85520);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .ph-left { color: white; }
+  .ph-title { font-size: 11px; font-weight: 700; }
+  .ph-sub { font-size: 8px; opacity: 0.75; margin-top: 1px; }
+  .ph-page { font-size: 9px; color: rgba(255,255,255,0.75); }
+
+  /* Page body */
+  .page-body { flex: 1; padding: 18px 24px; }
+
+  /* Jour */
+  .day-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px; padding-bottom: 6px;
+    border-bottom: 2px solid #F0D0B8;
+  }
+  .day-dot { width: 9px; height: 9px; border-radius: 50%; background: #E85520; flex-shrink: 0; }
+  .day-dot.suite { background: #F0A080; }
+  .day-name { font-size: 13px; font-weight: 700; color: #2D1A0E; }
+  .day-date { font-size: 10px; color: #C09070; margin-left: auto; }
+  .suite-badge {
+    font-size: 8px; font-weight: 700;
+    background: #FFF0E0; color: #C07040;
+    border: 1px solid #F0C090; border-radius: 10px;
+    padding: 2px 8px; margin-left: 6px;
+  }
+
+  /* Entries */
+  .entry {
+    display: flex; gap: 10px;
+    margin-bottom: 8px; padding-left: 16px;
+    position: relative;
+  }
+  .entry::before { content: ''; position: absolute; left: 3px; top: 6px; bottom: -8px; width: 1px; background: #F0D0B8; }
+  .entry:last-child::before { display: none; }
+  .e-bullet { position: absolute; left: -1px; top: 5px; width: 8px; height: 8px; border-radius: 50%; border: 2px solid white; flex-shrink: 0; }
+  .e-time { font-size: 9px; color: #C09070; min-width: 34px; padding-top: 2px; flex-shrink: 0; }
+  .e-icon { font-size: 12px; flex-shrink: 0; }
+  .e-content { flex: 1; }
+  .e-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; color: #C4664A; }
+  .e-bg { background: #FFF8F5; border-radius: 6px; padding: 5px 8px; border-left: 2px solid #F0C0A0; }
+  .e-text { font-size: 10px; color: #3A2010; line-height: 1.4; }
+
+  /* Ressenti */
+  .entry.r .e-bullet { background: #9B7EC8; }
+  .entry.r .e-label { color: #7B5EA7; }
+  .entry.r .e-bg { background: #F8F3FF; border-left-color: #C0A0E0; }
+  .entry.r .e-text { color: #5A3A80; }
+  .r-delay { font-size: 8px; color: #9B7EC8; font-style: italic; margin-top: 2px; }
+
+  /* Repas */
+  .entry.m .e-bullet { background: #E85520; }
+
+  /* Page footer */
+  .page-footer {
+    border-top: 1px solid #F0E0D0;
+    padding: 8px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 8px; color: #C0A898;
+    flex-shrink: 0;
+  }
+
+  /* Saut de page visuel */
+  .page-break-indicator {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+    color: #C08060;
+    font-size: 9px;
+    font-style: italic;
+  }
+  .page-break-indicator::before, .page-break-indicator::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, #D0A880 0, #D0A880 4px, transparent 4px, transparent 8px);
+  }
+
+  /* Saut de page forcé (option A) */
+  .forced-break-zone {
+    background: #FFF8E8;
+    border: 2px dashed #E8C860;
+    border-radius: 8px;
+    padding: 10px 14px;
+    text-align: center;
+    color: #A08020;
+    font-size: 9px;
+    margin: 8px 0;
+    line-height: 1.6;
+  }
+
+  /* Truncated entry (cut) */
+  .entry-cut {
+    opacity: 0.4;
+    position: relative;
+  }
+  .cut-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 20px;
+    background: linear-gradient(transparent, white);
+  }
+
+  /* Bottom cut line */
+  .bottom-cut {
+    border-top: 2px dashed #E85520;
+    margin-top: auto;
+    padding: 6px 24px;
+    background: #FFF5F0;
+    font-size: 8px;
+    color: #C4664A;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .note-box { padding: 14px; background: #FFF5F0; border: 1px solid #F0C8A8; border-radius: 12px; font-size: 12px; color: #7A4020; line-height: 1.7; margin-top: 20px; }
+  .option-label { display: inline-block; background: #FDEEE8; color: #C4664A; font-weight: 700; font-size: 10px; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; }
+  code { background: #F5EEE6; padding: 1px 5px; border-radius: 3px; font-size: 10px; color: #C4664A; }
+</style>
+</head>
+<body>
+
+<h2>Export PDF — Gestion de la pagination A4</h2>
+<p class="subtitle">Format A4 (210×297mm). Deux stratégies quand un jour est trop long pour tenir sur une page.</p>
+
+<!-- OPTION A : Saut de page forcé -->
+<div class="section-title">Option A — Saut de page forcé avant chaque nouveau jour</div>
+<span class="option-label">Simple · Propre · Peut laisser du blanc en bas de page</span>
+
+<div class="page-wrap">
+
+  <!-- Page 1 -->
+  <div class="page-col">
+    <div class="page-label-top">Page 1</div>
+    <div class="a4-page">
+      <div class="page-header">
+        <div class="ph-left">
+          <div class="ph-title">🥔 Journal d'Eugénie</div>
+          <div class="ph-sub">3 – 7 août 2026</div>
+        </div>
+        <div class="ph-page">1 / 3</div>
+      </div>
+      <div class="page-body">
+
+        <!-- Lundi complet -->
+        <div class="day-header" style="margin-top:4px;">
+          <div class="day-dot"></div>
+          <div class="day-name">Lundi</div>
+          <div class="day-date">3 août 2026</div>
+        </div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">07:55</div><div class="e-icon">☀️</div><div class="e-content"><div class="e-label">Petit-déjeuner</div><div class="e-bg"><div class="e-text">Thé vert, toasts au beurre de cacahuète, un kiwi.</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">12:30</div><div class="e-icon">🌞</div><div class="e-content"><div class="e-label">Déjeuner</div><div class="e-bg"><div class="e-text">Pâtes bolognaise maison, salade verte, eau.</div></div></div></div>
+        <div class="entry r"><div class="e-bullet"></div><div class="e-time">13:20</div><div class="e-icon">💜</div><div class="e-content"><div class="e-label">Ressenti</div><div class="e-bg"><div class="e-text">😮‍💨 Ballonnement</div><div class="r-delay">~50 min après le déjeuner</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">19:45</div><div class="e-icon">🌙</div><div class="e-content"><div class="e-label">Dîner</div><div class="e-bg"><div class="e-text">Soupe de légumes, fromage de chèvre, pain complet.</div></div></div></div>
+
+        <!-- Zone blanche intentionnelle avant saut forcé -->
+        <div class="forced-break-zone" style="margin-top:14px;">
+          ↕ Saut de page — Mardi commence page 2
+        </div>
+
+        <!-- Mardi commence mais immédiatement sauté -->
+        <div style="margin-top:10px;opacity:0.35;font-size:9px;color:#C09070;text-align:center;font-style:italic;">
+          (espace blanc si le jour précédent finit tôt)
+        </div>
+
+      </div>
+      <div class="page-footer">
+        <span>🔒 Partagé volontairement par Eugénie</span>
+        <span>Page 1 sur 3</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 2 -->
+  <div class="page-col">
+    <div class="page-label-top">Page 2</div>
+    <div class="a4-page">
+      <div class="page-header">
+        <div class="ph-left">
+          <div class="ph-title">🥔 Journal d'Eugénie</div>
+          <div class="ph-sub">3 – 7 août 2026</div>
+        </div>
+        <div class="ph-page">2 / 3</div>
+      </div>
+      <div class="page-body">
+        <!-- Mardi démarre proprement -->
+        <div class="day-header" style="margin-top:4px;">
+          <div class="day-dot"></div>
+          <div class="day-name">Mardi</div>
+          <div class="day-date">4 août 2026</div>
+        </div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">08:10</div><div class="e-icon">☀️</div><div class="e-content"><div class="e-label">Petit-déjeuner</div><div class="e-bg"><div class="e-text">Café au lait, tartines beurre-confiture, banane.</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">12:45</div><div class="e-icon">🌞</div><div class="e-content"><div class="e-label">Déjeuner</div><div class="e-bg"><div class="e-text">Sandwich thon, yaourt nature, une pomme.</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">16:20</div><div class="e-icon">🌤</div><div class="e-content"><div class="e-label">Collation</div><div class="e-bg"><div class="e-text">Carré de chocolat noir, jus d'orange.</div></div></div></div>
+        <div class="entry r"><div class="e-bullet"></div><div class="e-time">17:00</div><div class="e-icon">💜</div><div class="e-content"><div class="e-label">Ressenti</div><div class="e-bg"><div class="e-text">😊 Je me sens bien</div><div class="r-delay">~40 min après la collation</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">20:00</div><div class="e-icon">🌙</div><div class="e-content"><div class="e-label">Dîner</div><div class="e-bg"><div class="e-text">Saumon grillé, riz basmati, brocolis vapeur.</div></div></div></div>
+
+        <div class="forced-break-zone" style="margin-top:14px;">
+          ↕ Saut de page — Mercredi commence page 3
+        </div>
+      </div>
+      <div class="page-footer">
+        <span>🔒 Partagé volontairement par Eugénie</span>
+        <span>Page 2 sur 3</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- OPTION B : Continuation avec en-tête "suite" -->
+<div class="section-title">Option B — Continuation avec mention "(suite)" ✅ Recommandée</div>
+<span class="option-label">Compact · Pas de blanc · Claire pour un médecin</span>
+
+<div class="page-wrap">
+
+  <!-- Page 1 avec mercredi coupé -->
+  <div class="page-col">
+    <div class="page-label-top">Page 1 — fin de page</div>
+    <div class="a4-page">
+      <div class="page-header">
+        <div class="ph-left">
+          <div class="ph-title">🥔 Journal d'Eugénie</div>
+          <div class="ph-sub">3 – 7 août 2026</div>
+        </div>
+        <div class="ph-page">1 / 2</div>
+      </div>
+      <div class="page-body">
+
+        <!-- Lundi + Mardi résumés -->
+        <div class="day-header" style="margin-top:4px;">
+          <div class="day-dot"></div>
+          <div class="day-name">Lundi</div>
+          <div class="day-date">3 août</div>
+        </div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">07:55</div><div class="e-icon">☀️</div><div class="e-content"><div class="e-label">Petit-déjeuner</div><div class="e-bg"><div class="e-text">Thé, toasts beurre de cacahuète, kiwi.</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">12:30</div><div class="e-icon">🌞</div><div class="e-content"><div class="e-label">Déjeuner</div><div class="e-bg"><div class="e-text">Pâtes bolognaise, salade verte.</div></div></div></div>
+        <div class="entry r"><div class="e-bullet"></div><div class="e-time">13:20</div><div class="e-icon">💜</div><div class="e-content"><div class="e-label">Ressenti</div><div class="e-bg"><div class="e-text">😮‍💨 Ballonnement</div><div class="r-delay">~50 min après le déjeuner</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">19:45</div><div class="e-icon">🌙</div><div class="e-content"><div class="e-label">Dîner</div><div class="e-bg"><div class="e-text">Soupe, fromage de chèvre, pain complet.</div></div></div></div>
+
+        <div class="day-header" style="margin-top:12px;">
+          <div class="day-dot"></div>
+          <div class="day-name">Mardi</div>
+          <div class="day-date">4 août</div>
+        </div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">08:10</div><div class="e-icon">☀️</div><div class="e-content"><div class="e-label">Petit-déjeuner</div><div class="e-bg"><div class="e-text">Café au lait, tartines, banane.</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">12:45</div><div class="e-icon">🌞</div><div class="e-content"><div class="e-label">Déjeuner</div><div class="e-bg"><div class="e-text">Sandwich thon, yaourt, pomme.</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">20:00</div><div class="e-icon">🌙</div><div class="e-content"><div class="e-label">Dîner</div><div class="e-bg"><div class="e-text">Saumon grillé, riz, brocolis.</div></div></div></div>
+
+        <!-- Mercredi commence mais va être coupé -->
+        <div class="day-header" style="margin-top:12px;">
+          <div class="day-dot"></div>
+          <div class="day-name">Mercredi</div>
+          <div class="day-date">5 août</div>
+        </div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">07:40</div><div class="e-icon">☀️</div><div class="e-content"><div class="e-label">Petit-déjeuner</div><div class="e-bg"><div class="e-text">Granola, lait d'amande, framboises, miel.</div></div></div></div>
+        <div class="entry r"><div class="e-bullet"></div><div class="e-time">09:15</div><div class="e-icon">💜</div><div class="e-content"><div class="e-label">Ressenti</div><div class="e-bg"><div class="e-text">😣 Douleur · ventre</div><div class="r-delay">~95 min après le petit-déjeuner</div></div></div></div>
+
+        <!-- Coupure de page -->
+        <div class="bottom-cut">
+          <span>✂</span>
+          <span>Suite page 2 → Mercredi 5 août (suite)</span>
+        </div>
+      </div>
+      <div class="page-footer">
+        <span>🔒 Partagé volontairement par Eugénie</span>
+        <span>Page 1 sur 2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 2 — continuation mercredi + reste -->
+  <div class="page-col">
+    <div class="page-label-top">Page 2 — début avec "(suite)"</div>
+    <div class="a4-page">
+      <div class="page-header">
+        <div class="ph-left">
+          <div class="ph-title">🥔 Journal d'Eugénie</div>
+          <div class="ph-sub">3 – 7 août 2026</div>
+        </div>
+        <div class="ph-page">2 / 2</div>
+      </div>
+      <div class="page-body">
+
+        <!-- Mercredi suite — en-tête avec badge "(suite)" -->
+        <div class="day-header" style="margin-top:4px; background:#FFF8F0; border-radius:6px; padding:6px 8px; border-bottom:none; border:1.5px solid #F0C890; margin-bottom:8px;">
+          <div class="day-dot suite"></div>
+          <div class="day-name" style="color:#8A5020;">Mercredi</div>
+          <span class="suite-badge">suite ↗</span>
+          <div class="day-date">5 août 2026</div>
+        </div>
+
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">13:00</div><div class="e-icon">🌞</div><div class="e-content"><div class="e-label">Déjeuner</div><div class="e-bg"><div class="e-text">Quiche lorraine, salade verte, eau pétillante.</div></div></div></div>
+        <div class="entry r"><div class="e-bullet"></div><div class="e-time">14:10</div><div class="e-icon">💜</div><div class="e-content"><div class="e-label">Ressenti</div><div class="e-bg"><div class="e-text">😮‍💨 Ballonnement</div><div class="r-delay">~70 min après le déjeuner</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">19:30</div><div class="e-icon">🌙</div><div class="e-content"><div class="e-label">Dîner</div><div class="e-bg"><div class="e-text">Omelette fines herbes, haricots verts, pain.</div></div></div></div>
+
+        <!-- Jeudi proprement -->
+        <div class="day-header" style="margin-top:12px;">
+          <div class="day-dot"></div>
+          <div class="day-name">Jeudi</div>
+          <div class="day-date">6 août 2026</div>
+        </div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">08:00</div><div class="e-icon">☀️</div><div class="e-content"><div class="e-label">Petit-déjeuner</div><div class="e-bg"><div class="e-text">Café noir, croissant, jus d'orange.</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">12:15</div><div class="e-icon">🌞</div><div class="e-content"><div class="e-label">Déjeuner</div><div class="e-bg"><div class="e-text">Salade lentilles-feta-tomates, pomme.</div></div></div></div>
+        <div class="entry r"><div class="e-bullet"></div><div class="e-time">15:30</div><div class="e-icon">💜</div><div class="e-content"><div class="e-label">Ressenti</div><div class="e-bg"><div class="e-text">😴 Fatigue</div><div class="r-delay">~3h après le déjeuner</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">20:15</div><div class="e-icon">🌙</div><div class="e-content"><div class="e-label">Dîner</div><div class="e-bg"><div class="e-text">Poulet rôti, pommes de terre, courgettes.</div></div></div></div>
+
+        <!-- Vendredi -->
+        <div class="day-header" style="margin-top:12px;">
+          <div class="day-dot"></div>
+          <div class="day-name">Vendredi</div>
+          <div class="day-date">7 août 2026</div>
+        </div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">08:12</div><div class="e-icon">☀️</div><div class="e-content"><div class="e-label">Petit-déjeuner</div><div class="e-bg"><div class="e-text">Café au lait, tartines beurre, banane.</div></div></div></div>
+        <div class="entry m"><div class="e-bullet"></div><div class="e-time">12:46</div><div class="e-icon">🌞</div><div class="e-content"><div class="e-label">Déjeuner</div><div class="e-bg"><div class="e-text">Salade composée, pain complet.</div></div></div></div>
+        <div class="entry r"><div class="e-bullet"></div><div class="e-time">13:30</div><div class="e-icon">💜</div><div class="e-content"><div class="e-label">Ressenti</div><div class="e-bg"><div class="e-text">😮‍💨 Ballonnement</div><div class="r-delay">~44 min après le déjeuner</div></div></div></div>
+
+      </div>
+      <div class="page-footer">
+        <span>🔒 Partagé volontairement par Eugénie · 07/08/2026</span>
+        <span>Page 2 sur 2</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note-box">
+  <strong>Ma recommandation : Option B (continuation avec "(suite)")</strong><br>
+  • Plus compact → moins de pages à imprimer → plus agréable pour un médecin<br>
+  • L'en-tête "(suite)" en fond légèrement orangé signale visuellement la continuité<br>
+  • La ligne <code>✂ Suite page 2 → Mercredi 5 août (suite)</code> en bas de page évite toute confusion<br>
+  • Le numéro de page en haut à droite de chaque page permet de s'y retrouver<br><br>
+  <strong>Règle intelligente :</strong> si un jour commence dans les 3 dernières lignes disponibles de la page → saut de page forcé (Option A). Sinon → continuation avec "(suite)". Le meilleur des deux selon le contexte.
+</div>
+
+</body>
+</html>

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aperçu export PDF</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #E8E0D8;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 32px 24px;
+    min-height: 100vh;
+  }
+
+  .page-label {
+    text-align: center;
+    font-size: 11px;
+    color: #9A7060;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Feuille A4-like */
+  .pdf-sheet {
+    background: white;
+    max-width: 680px;
+    margin: 0 auto;
+    border-radius: 4px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+
+  /* En-tête colorée */
+  .pdf-cover {
+    background: linear-gradient(135deg, #F5855A 0%, #E85520 60%, #C04010 100%);
+    padding: 32px 36px 28px;
+    color: white;
+  }
+  .pdf-app-name {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.75;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pdf-main-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .pdf-subtitle {
+    font-size: 14px;
+    opacity: 0.8;
+    margin-bottom: 20px;
+  }
+  .pdf-meta-row {
+    display: flex;
+    gap: 24px;
+    font-size: 11px;
+    opacity: 0.85;
+  }
+  .pdf-meta-item { display: flex; flex-direction: column; gap: 2px; }
+  .pdf-meta-label { opacity: 0.7; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pdf-meta-value { font-weight: 600; }
+
+  /* Barre de résumé */
+  .pdf-summary {
+    background: #FFF8F5;
+    border-bottom: 1px solid #F0D8C8;
+    padding: 14px 36px;
+    display: flex;
+    gap: 32px;
+    align-items: center;
+  }
+  .summary-stat { text-align: center; }
+  .summary-num { font-size: 22px; font-weight: 700; color: #E85520; }
+  .summary-label { font-size: 9px; color: #C09070; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .summary-divider { width: 1px; background: #F0D0B8; height: 36px; }
+
+  /* Corps du document */
+  .pdf-body { padding: 28px 36px; }
+
+  /* Jour */
+  .day-block { margin-bottom: 28px; }
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #F0D0B8;
+  }
+  .day-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #E85520;
+    flex-shrink: 0;
+  }
+  .day-name { font-size: 14px; font-weight: 700; color: #2D1A0E; }
+  .day-date { font-size: 11px; color: #C09070; margin-left: auto; }
+
+  /* Entrées */
+  .entry {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding-left: 20px;
+    position: relative;
+  }
+  .entry::before {
+    content: '';
+    position: absolute;
+    left: 3px; top: 0; bottom: -10px;
+    width: 1px;
+    background: #F0D8C8;
+  }
+  .entry:last-child::before { display: none; }
+  .entry-bullet {
+    position: absolute;
+    left: -1px; top: 4px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 2px solid white;
+    flex-shrink: 0;
+  }
+  .entry-time {
+    font-size: 10px;
+    color: #C09070;
+    min-width: 38px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+  .entry-icon { font-size: 13px; flex-shrink: 0; }
+  .entry-content { flex: 1; }
+  .entry-meal-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .entry-text { font-size: 11px; color: #3A2010; line-height: 1.5; }
+
+  /* Ressenti */
+  .entry.ressenti .entry-bullet { background: #9B7EC8; }
+  .entry.ressenti .entry-meal-label { color: #7B5EA7; }
+  .entry.ressenti .entry-text { color: #5A3A80; }
+  .entry.ressenti .entry-bg {
+    background: #F8F3FF;
+    border-radius: 8px;
+    padding: 6px 10px;
+    border-left: 3px solid #C0A0E0;
+  }
+  .ressenti-delay {
+    font-size: 9px;
+    color: #9B7EC8;
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  /* Repas */
+  .entry.repas .entry-bullet { background: #E85520; }
+  .entry.repas .entry-meal-label { color: #C4664A; }
+  .entry-repas-bg {
+    background: #FFF8F5;
+    border-radius: 8px;
+    padding: 6px 10px;
+    border-left: 3px solid #F0C0A0;
+  }
+
+  /* Séparateur de pages */
+  .page-break {
+    border: none;
+    border-top: 1px dashed #E0D0C0;
+    margin: 28px 0;
+    position: relative;
+  }
+  .page-break::after {
+    content: 'page 2';
+    position: absolute;
+    right: 0; top: -8px;
+    font-size: 8px;
+    color: #C0B0A0;
+    background: white;
+    padding-left: 6px;
+  }
+
+  /* Footer */
+  .pdf-footer {
+    background: #F8F5F2;
+    border-top: 1px solid #E8D8C8;
+    padding: 16px 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .footer-privacy {
+    font-size: 9px;
+    color: #9A8070;
+    line-height: 1.6;
+    flex: 1;
+  }
+  .footer-logo {
+    font-size: 9px;
+    color: #C09070;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .rgpd-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #F0F8EC;
+    border: 1px solid #B0D890;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 8px;
+    color: #4A7030;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-label">Aperçu du document exporté</div>
+
+<div class="pdf-sheet">
+
+  <!-- EN-TÊTE -->
+  <div class="pdf-cover">
+    <div class="pdf-app-name">🥔 Les notes de patate</div>
+    <div class="pdf-main-title">Journal d'Eugénie</div>
+    <div class="pdf-subtitle">Journal alimentaire personnel</div>
+    <div class="pdf-meta-row">
+      <div class="pdf-meta-item">
+        <span class="pdf-meta-label">Période</span>
+        <span class="pdf-meta-value">Lun. 3 → Dim. 7 août 2026</span>
+      </div>
+      <div class="pdf-meta-item">
+        <span class="pdf-meta-label">Généré le</span>
+        <span class="pdf-meta-value">7 août 2026 à 10:04</span>
+      </div>
+      <div class="pdf-meta-item">
+        <span class="pdf-meta-label">Contenu</span>
+        <span class="pdf-meta-value">Repas + ressentis</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RÉSUMÉ -->
+  <div class="pdf-summary">
+    <div class="summary-stat">
+      <div class="summary-num">18</div>
+      <div class="summary-label">repas notés</div>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-stat">
+      <div class="summary-num">7</div>
+      <div class="summary-label">ressentis</div>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-stat">
+      <div class="summary-num">5</div>
+      <div class="summary-label">jours</div>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-stat">
+      <div class="summary-num">3×</div>
+      <div class="summary-label">ballonnement</div>
+    </div>
+  </div>
+
+  <!-- CORPS -->
+  <div class="pdf-body">
+
+    <!-- LUNDI -->
+    <div class="day-block">
+      <div class="day-header">
+        <div class="day-dot"></div>
+        <div class="day-name">Lundi</div>
+        <div class="day-date">3 août 2026</div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">07:55</div>
+        <div class="entry-icon">☀️</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Petit-déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Thé vert, deux toasts au beurre de cacahuète et un kiwi.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">12:30</div>
+        <div class="entry-icon">🌞</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Pâtes bolognaise maison, salade verte assaisonnée à l'huile d'olive, un verre d'eau.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry ressenti">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">13:20</div>
+        <div class="entry-icon">💜</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Ressenti</div>
+          <div class="entry-bg">
+            <div class="entry-text">😮‍💨 Ballonnement</div>
+            <div class="ressenti-delay">~50 min après le déjeuner</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">19:45</div>
+        <div class="entry-icon">🌙</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Dîner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Soupe de légumes maison, fromage de chèvre frais, deux tranches de pain complet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARDI -->
+    <div class="day-block">
+      <div class="day-header">
+        <div class="day-dot"></div>
+        <div class="day-name">Mardi</div>
+        <div class="day-date">4 août 2026</div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">08:10</div>
+        <div class="entry-icon">☀️</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Petit-déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Café au lait, deux tartines avec du beurre et de la confiture d'abricot, une banane.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">12:45</div>
+        <div class="entry-icon">🌞</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Sandwich thon-mayo sur pain de mie, un yaourt nature, une pomme.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">16:20</div>
+        <div class="entry-icon">🌤</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Collation</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Un carré de chocolat noir et un verre de jus d'orange pressé.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry ressenti">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">17:00</div>
+        <div class="entry-icon">💜</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Ressenti</div>
+          <div class="entry-bg">
+            <div class="entry-text">😊 Je me sens bien</div>
+            <div class="ressenti-delay">~40 min après la collation</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">20:00</div>
+        <div class="entry-icon">🌙</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Dîner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Filet de saumon grillé, riz basmati, brocolis vapeur, un yaourt.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MERCREDI -->
+    <div class="day-block">
+      <div class="day-header">
+        <div class="day-dot"></div>
+        <div class="day-name">Mercredi</div>
+        <div class="day-date">5 août 2026</div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">07:40</div>
+        <div class="entry-icon">☀️</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Petit-déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Bol de granola avec lait d'amande, framboises fraîches, miel.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry ressenti">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">09:15</div>
+        <div class="entry-icon">💜</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Ressenti</div>
+          <div class="entry-bg">
+            <div class="entry-text">😣 Douleur · ventre</div>
+            <div class="ressenti-delay">~95 min après le petit-déjeuner</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">13:00</div>
+        <div class="entry-icon">🌞</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Quiche lorraine, salade verte, un verre d'eau pétillante.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry ressenti">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">14:10</div>
+        <div class="entry-icon">💜</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Ressenti</div>
+          <div class="entry-bg">
+            <div class="entry-text">😮‍💨 Ballonnement</div>
+            <div class="ressenti-delay">~70 min après le déjeuner</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">19:30</div>
+        <div class="entry-icon">🌙</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Dîner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Omelette aux fines herbes, haricots verts sautés, une tranche de pain.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="page-break">
+
+    <!-- JEUDI -->
+    <div class="day-block">
+      <div class="day-header">
+        <div class="day-dot"></div>
+        <div class="day-name">Jeudi</div>
+        <div class="day-date">6 août 2026</div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">08:00</div>
+        <div class="entry-icon">☀️</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Petit-déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Café noir, un croissant au beurre, un jus d'orange frais.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">12:15</div>
+        <div class="entry-icon">🌞</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Salade composée (lentilles, tomates, concombre, feta), une pomme, de l'eau.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry ressenti">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">15:30</div>
+        <div class="entry-icon">💜</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Ressenti</div>
+          <div class="entry-bg">
+            <div class="entry-text">😴 Fatigue</div>
+            <div class="ressenti-delay">~3h après le déjeuner</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">20:15</div>
+        <div class="entry-icon">🌙</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Dîner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Poulet rôti, pommes de terre au four, courgettes grillées, yaourt.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENDREDI -->
+    <div class="day-block">
+      <div class="day-header">
+        <div class="day-dot"></div>
+        <div class="day-name">Vendredi</div>
+        <div class="day-date">7 août 2026</div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">08:12</div>
+        <div class="entry-icon">☀️</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Petit-déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Café au lait, deux tartines avec du beurre, une banane.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">12:46</div>
+        <div class="entry-icon">🌞</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Déjeuner</div>
+          <div class="entry-repas-bg">
+            <div class="entry-text">Salade composée, deux tranches de pain complet.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry ressenti">
+        <div class="entry-bullet"></div>
+        <div class="entry-time">13:30</div>
+        <div class="entry-icon">💜</div>
+        <div class="entry-content">
+          <div class="entry-meal-label">Ressenti</div>
+          <div class="entry-bg">
+            <div class="entry-text">😮‍💨 Ballonnement</div>
+            <div class="ressenti-delay">~44 min après le déjeuner</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas" style="opacity:0.45;">
+        <div class="entry-bullet" style="background:#D0C0B0;border-color:#F5F0EB;"></div>
+        <div class="entry-time" style="color:#D0C0B0;">—</div>
+        <div class="entry-icon">🌤</div>
+        <div class="entry-content">
+          <div class="entry-meal-label" style="color:#C0B0A0;">Collation</div>
+          <div class="entry-repas-bg" style="background:#F5F0EB;border-color:#E0D8D0;">
+            <div class="entry-text" style="color:#B0A098;font-style:italic;">Non noté</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="entry repas" style="opacity:0.45;">
+        <div class="entry-bullet" style="background:#D0C0B0;border-color:#F5F0EB;"></div>
+        <div class="entry-time" style="color:#D0C0B0;">—</div>
+        <div class="entry-icon">🌙</div>
+        <div class="entry-content">
+          <div class="entry-meal-label" style="color:#C0B0A0;">Dîner</div>
+          <div class="entry-repas-bg" style="background:#F5F0EB;border-color:#E0D8D0;">
+            <div class="entry-text" style="color:#B0A098;font-style:italic;">Non noté</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="pdf-footer">
+    <div class="footer-privacy">
+      Ce document est un journal alimentaire personnel partagé <strong>volontairement</strong> par Eugénie le 7 août 2026.<br>
+      Données générées et stockées localement sur son iPhone. Aucun serveur tiers n'a eu accès à ces informations.
+      <div><span class="rgpd-badge">🔒 Partagé avec consentement explicite — RGPD</span></div>
+    </div>
+    <div class="footer-logo">
+      🥔 Les notes de patate<br>
+      <span style="font-size:8px;color:#C0A898;">v1.0 · iOS</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
