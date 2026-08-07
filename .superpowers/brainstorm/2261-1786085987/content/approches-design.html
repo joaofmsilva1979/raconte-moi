@@ -1,0 +1,122 @@
+<h2>Les Notes de Patate — 3 directions design</h2>
+<p class="subtitle">Basé sur tes deux maquettes + une 3ème créative. Clique sur celle qui te parle le plus.</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#FFF5F0; padding:16px; border-radius:12px; margin-bottom:12px;">
+      <!-- iPhone mockup A -->
+      <div style="background:#FFFAF8; border-radius:20px; padding:18px 14px; border:2px solid #F5E0D8; max-width:180px; margin:0 auto; font-family:-apple-system,sans-serif;">
+        <div style="font-size:10px; color:#999; text-align:center; margin-bottom:8px;">08:12</div>
+        <div style="font-size:13px; font-weight:600; color:#2D1A0E; margin-bottom:2px;">Bonjour Léa ☀️</div>
+        <div style="background:#FDEEE8; border-radius:8px; padding:5px 8px; display:inline-block; font-size:9px; color:#C4664A; margin-bottom:12px;">🥐 Petit-déjeuner · 08:12</div>
+        <div style="width:60px; height:60px; background:linear-gradient(135deg,#F07B5A,#E85D35); border-radius:50%; margin:0 auto 8px; display:flex; align-items:center; justify-content:center;">
+          <div style="font-size:22px;">🎙</div>
+        </div>
+        <div style="font-size:8px; text-align:center; color:#B08070; margin-bottom:10px;">Maintenir pour parler</div>
+        <div style="background:#FFFAF8; border:1px solid #F0DDD5; border-radius:8px; padding:8px; font-size:8px; color:#4A3028; line-height:1.4;">Un café au lait, deux tartines et une banane.</div>
+        <div style="display:flex; justify-content:space-around; margin-top:12px; padding-top:8px; border-top:1px solid #F0E0D8;">
+          <div style="font-size:7px; color:#E07050; text-align:center;">☀️<br>Auj.</div>
+          <div style="font-size:7px; color:#B09080; text-align:center;">🥗<br>Repas</div>
+          <div style="font-size:7px; color:#B09080; text-align:center;">🌿<br>Découv.</div>
+          <div style="font-size:7px; color:#B09080; text-align:center;">👤<br>Moi</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Enregistrement d'abord</h3>
+      <p>Le bouton micro est la star. On ouvre l'app, on parle. Journal en onglet secondaire. Fidèle à ta maquette 01 — chaleureux, orange corail, ultra-direct.</p>
+      <div style="margin-top:8px; font-size:12px; color:#888;">
+        ✅ Geste unique (appui long)<br>
+        ✅ Friction quasi-nulle<br>
+        ↗ Journal accessible via onglet
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#F5F2EE; padding:16px; border-radius:12px; margin-bottom:12px;">
+      <div style="background:#FAFAF7; border-radius:20px; padding:16px 12px; border:2px solid #E8E0D5; max-width:180px; margin:0 auto; font-family:-apple-system,sans-serif;">
+        <div style="font-size:13px; font-weight:700; color:#2D2820; text-align:center; margin-bottom:2px;">Aujourd'hui</div>
+        <div style="font-size:9px; color:#999; text-align:center; margin-bottom:10px;">Vendredi 7 août</div>
+        <!-- Timeline -->
+        <div style="position:relative; padding-left:14px; border-left:2px solid #E0D8CC;">
+          <div style="margin-bottom:8px;">
+            <div style="font-size:8px; font-weight:600; color:#5C4A35;">☀️ Petit-déj · 08:12</div>
+            <div style="font-size:7px; color:#8A7A6A; background:#F0EBE3; border-radius:6px; padding:3px 5px; margin-top:2px;">Café, tartines, banane</div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="font-size:8px; font-weight:600; color:#5C4A35;">🌞 Déjeuner · 12:46</div>
+            <div style="font-size:7px; color:#8A7A6A; background:#F0EBE3; border-radius:6px; padding:3px 5px; margin-top:2px;">Salade, pain</div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="font-size:8px; font-weight:600; color:#5C4A35;">🌤 Collation · 16:18</div>
+            <div style="font-size:7px; color:#8A7A6A; background:#F0EBE3; border-radius:6px; padding:3px 5px; margin-top:2px;">Yaourt nature</div>
+          </div>
+          <div>
+            <div style="font-size:8px; font-weight:600; color:#C0B8AC;">🌙 Dîner</div>
+            <div style="font-size:7px; color:#C0B8AC; font-style:italic; margin-top:2px;">Vous me raconterez plus tard…</div>
+          </div>
+        </div>
+        <!-- Floating mic -->
+        <div style="text-align:center; margin-top:10px;">
+          <div style="width:36px; height:36px; background:linear-gradient(135deg,#7B9E6B,#5C7A4E); border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:16px;">🎙</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Journal d'abord</h3>
+      <p>On voit la journée complète dès l'ouverture : les repas passés + les futurs "en attente". Micro flottant en bas. Fidèle à ta maquette 02 — tons terre, timeline propre.</p>
+      <div style="margin-top:8px; font-size:12px; color:#888;">
+        ✅ Vue d'ensemble immédiate<br>
+        ✅ Sentiment de progression<br>
+        ↗ Un tap de plus pour enregistrer
+      </div>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#F0F4FF; padding:16px; border-radius:12px; margin-bottom:12px;">
+      <div style="background:#FAFBFF; border-radius:20px; padding:16px 12px; border:2px solid #DDE4F5; max-width:180px; margin:0 auto; font-family:-apple-system,sans-serif;">
+        <!-- Ultra minimal: just greeting + big smart button + last entry -->
+        <div style="text-align:center; margin-bottom:14px;">
+          <div style="font-size:11px; font-weight:700; color:#1A2340; margin-bottom:2px;">Salut Léa 👋</div>
+          <div style="font-size:8px; color:#6B7A9A;">Petit-déjeuner · il y a 2h</div>
+        </div>
+        <!-- Smart button with pulse -->
+        <div style="position:relative; text-align:center; margin-bottom:14px;">
+          <div style="width:72px; height:72px; background:linear-gradient(135deg,#4F7FFF,#7B5FFF); border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 8px rgba(79,127,255,0.12), 0 0 0 16px rgba(79,127,255,0.06);">
+            <div style="font-size:28px;">🎙</div>
+          </div>
+          <div style="font-size:7px; color:#8090B8; margin-top:6px;">Appuie et parle</div>
+        </div>
+        <!-- Last 2 entries minimal -->
+        <div style="background:#F3F6FF; border-radius:10px; padding:8px; margin-bottom:6px;">
+          <div style="font-size:7px; font-weight:600; color:#3A4A70;">☀️ 08:12 · Café + tartines</div>
+        </div>
+        <div style="background:#F3F6FF; border-radius:10px; padding:8px; opacity:0.5;">
+          <div style="font-size:7px; color:#8090B8;">🌞 Déjeuner · en attente…</div>
+        </div>
+        <!-- Bottom: swipe hint -->
+        <div style="text-align:center; margin-top:10px; font-size:7px; color:#A0B0D0;">↑ Glisse pour voir tout le journal</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Ultra-minimal (ma reco)</h3>
+      <p>Un seul écran intelligent. Le bouton est ÉNORME, impossible de rater. Les 2-3 derniers repas apparaissent en dessous. Le journal complet se déploie par glissement vers le haut. Bleu/indigo, moderne, épuré.</p>
+      <div style="margin-top:8px; font-size:12px; color:#888;">
+        ✅ 0 navigation = 0 confusion<br>
+        ✅ Micro toujours visible<br>
+        ✅ Journal accessible sans quitter l'écran
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px; padding:14px; background:#FFFBF0; border:1px solid #F0E0A0; border-radius:10px; font-size:13px; color:#705020;">
+  <strong>Note :</strong> Les trois approches partagent le même moteur (vocal → transcription → catégorie automatique par heure → stockage local). La direction choisie influence uniquement l'expérience d'ouverture de l'app.
+</div>

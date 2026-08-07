@@ -1,0 +1,139 @@
+<h2>Direction retenue — C avec chaleur de A</h2>
+<p class="subtitle">Ultra-minimal + palette corail/abricot chaleureuse. Voici à quoi ressemblent les deux écrans clés.</p>
+
+<div class="split">
+
+  <!-- Écran 1 : Accueil / Enregistrement -->
+  <div class="mockup">
+    <div class="mockup-header">Écran principal</div>
+    <div class="mockup-body" style="background:#FFF8F5; border-radius:12px; padding:20px 16px; font-family:-apple-system,sans-serif; min-height:420px; display:flex; flex-direction:column; align-items:center;">
+
+      <!-- Status bar -->
+      <div style="width:100%; display:flex; justify-content:space-between; font-size:9px; color:#B09080; margin-bottom:16px;">
+        <span>09:14</span><span>●●●●  WiFi 🔋</span>
+      </div>
+
+      <!-- Greeting -->
+      <div style="text-align:center; margin-bottom:6px;">
+        <div style="font-size:15px; font-weight:700; color:#2D1A0E; letter-spacing:-0.3px;">Bonjour Léa ☀️</div>
+        <div style="font-size:10px; color:#C09070; margin-top:2px;">Petit-déjeuner · il y a 1h</div>
+      </div>
+
+      <!-- Meal badge -->
+      <div style="background:#FDEEE8; border-radius:20px; padding:5px 12px; font-size:9px; color:#C4664A; font-weight:600; margin-bottom:24px;">🥐 Petit-déjeuner · 08:12</div>
+
+      <!-- BIG warm mic button -->
+      <div style="position:relative; margin-bottom:20px;">
+        <!-- Pulse rings -->
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:110px; height:110px; border-radius:50%; background:rgba(240,120,80,0.08); z-index:0;"></div>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:90px; height:90px; border-radius:50%; background:rgba(240,120,80,0.13); z-index:0;"></div>
+        <!-- Button -->
+        <div style="position:relative; z-index:1; width:72px; height:72px; background:linear-gradient(145deg, #F5855A, #E85520); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(232,85,32,0.35); cursor:pointer;">
+          <span style="font-size:30px;">🎙</span>
+        </div>
+      </div>
+      <div style="font-size:9px; color:#C09070; margin-bottom:20px; font-style:italic;">Appuie et parle</div>
+
+      <!-- Last 2 entries -->
+      <div style="width:100%;">
+        <div style="background:#FDEEE8; border-radius:10px; padding:10px 12px; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+          <span style="font-size:14px;">☀️</span>
+          <div>
+            <div style="font-size:9px; font-weight:600; color:#3D2010;">08:12 · Café au lait, tartines, banane</div>
+            <div style="font-size:8px; color:#C09070;">Petit-déjeuner</div>
+          </div>
+        </div>
+        <div style="background:#FFF3EE; border-radius:10px; padding:10px 12px; opacity:0.6; display:flex; align-items:center; gap:8px; border:1px dashed #F0C0A0;">
+          <span style="font-size:14px;">🌞</span>
+          <div style="font-size:9px; color:#C09070; font-style:italic;">Déjeuner · en attente…</div>
+        </div>
+      </div>
+
+      <!-- Swipe hint -->
+      <div style="margin-top:auto; padding-top:16px; text-align:center; font-size:8px; color:#D0A890;">
+        ↑ Glisse pour voir le journal complet
+      </div>
+    </div>
+  </div>
+
+  <!-- Écran 2 : Journal (glissement vers le haut) -->
+  <div class="mockup">
+    <div class="mockup-header">Journal (glissement ↑)</div>
+    <div class="mockup-body" style="background:#FFF8F5; border-radius:12px; padding:20px 16px; font-family:-apple-system,sans-serif; min-height:420px;">
+
+      <!-- Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <div style="font-size:14px; font-weight:700; color:#2D1A0E;">Aujourd'hui</div>
+        <div style="font-size:8px; color:#C09070; background:#FDEEE8; padding:3px 8px; border-radius:10px;">Vend. 7 août</div>
+      </div>
+      <div style="height:1px; background:#F0D8C8; margin-bottom:14px;"></div>
+
+      <!-- Timeline -->
+      <div style="position:relative; padding-left:20px; border-left:2px solid #F0C8A8;">
+
+        <!-- Entry 1 -->
+        <div style="position:relative; margin-bottom:16px;">
+          <div style="position:absolute; left:-25px; top:2px; width:10px; height:10px; background:#F07050; border-radius:50%; border:2px solid #FFF8F5;"></div>
+          <div style="font-size:9px; font-weight:700; color:#5C3020; margin-bottom:3px;">☀️ Petit-déjeuner · 08:12</div>
+          <div style="background:#FDEEE8; border-radius:8px; padding:7px 10px; font-size:8px; color:#4A2F20; line-height:1.5;">
+            Un café au lait, deux tartines avec du beurre et une banane.
+          </div>
+          <div style="font-size:7px; color:#D0A880; margin-top:3px;">🔒 Sur cet iPhone</div>
+        </div>
+
+        <!-- Entry 2 -->
+        <div style="position:relative; margin-bottom:16px;">
+          <div style="position:absolute; left:-25px; top:2px; width:10px; height:10px; background:#F07050; border-radius:50%; border:2px solid #FFF8F5;"></div>
+          <div style="font-size:9px; font-weight:700; color:#5C3020; margin-bottom:3px;">🌞 Déjeuner · 12:46</div>
+          <div style="background:#FDEEE8; border-radius:8px; padding:7px 10px; font-size:8px; color:#4A2F20; line-height:1.5;">
+            Une salade composée et deux tranches de pain.
+          </div>
+        </div>
+
+        <!-- Entry 3 -->
+        <div style="position:relative; margin-bottom:16px;">
+          <div style="position:absolute; left:-25px; top:2px; width:10px; height:10px; background:#F07050; border-radius:50%; border:2px solid #FFF8F5;"></div>
+          <div style="font-size:9px; font-weight:700; color:#5C3020; margin-bottom:3px;">🌤 Collation · 16:18</div>
+          <div style="background:#FDEEE8; border-radius:8px; padding:7px 10px; font-size:8px; color:#4A2F20;">Yaourt nature.</div>
+        </div>
+
+        <!-- Dîner - pending -->
+        <div style="position:relative;">
+          <div style="position:absolute; left:-25px; top:2px; width:10px; height:10px; background:#F0D0B8; border-radius:50%; border:2px solid #FFF8F5;"></div>
+          <div style="font-size:9px; font-weight:500; color:#C09070; margin-bottom:3px;">🌙 Dîner</div>
+          <div style="border:1px dashed #F0C0A0; border-radius:8px; padding:7px 10px; font-size:8px; color:#C09070; font-style:italic;">
+            Vous me raconterez plus tard… 😊
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Privacy badge -->
+      <div style="margin-top:16px; background:#FFF0E8; border:1px solid #F0D0B8; border-radius:10px; padding:8px 10px; font-size:8px;">
+        <div style="font-weight:600; color:#7A4A30; margin-bottom:4px;">🔒 Vos données restent privées</div>
+        <div style="color:#A07860; display:flex; justify-content:space-between; align-items:center;">
+          <span>Sur cet iPhone uniquement</span>
+          <span style="color:#4CD964; font-size:10px;">✓</span>
+        </div>
+        <div style="color:#A07860; display:flex; justify-content:space-between; align-items:center; margin-top:3px;">
+          <span>☁️ Sauvegarde iCloud</span>
+          <span style="background:#F07050; color:white; border-radius:8px; padding:1px 5px; font-size:7px;">Tous les 7j</span>
+        </div>
+      </div>
+
+      <!-- Floating mic (visible même dans le journal) -->
+      <div style="text-align:center; margin-top:12px;">
+        <div style="display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#F5855A,#E85520); border-radius:20px; padding:8px 16px; box-shadow:0 4px 12px rgba(232,85,32,0.3);">
+          <span style="font-size:14px;">🎙</span>
+          <span style="font-size:9px; color:white; font-weight:600;">+ Ajouter</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px; padding:14px; background:#FFF5F0; border:1px solid #F0D0B8; border-radius:10px; font-size:13px; color:#7A4020;">
+  <strong>Ce qu'on retient :</strong> palette corail/abricot chaleureuse · bouton micro central avec halos · journal accessible par glissement · badge repas automatique selon l'heure · badge privacité toujours visible
+</div>

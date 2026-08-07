@@ -369,14 +369,83 @@ Tous les écrans validés sont dans `docs/ecrans/` (et dans Google Drive `APP_LE
 
 ---
 
-## 15. Hors scope v1
+## 15. Ressentis
+
+L'utilisatrice peut noter un ressenti physique **à n'importe quel moment**, indépendamment d'un repas.
+
+### Déclenchement
+Bouton dédié **💜 "Ajouter un ressenti"** — petit, sous le bouton micro sur l'écran principal. Toujours visible, jamais confondu avec l'enregistrement repas.
+
+### Catégories (6)
+| Emoji | Label | Sous-catégorie |
+|-------|-------|----------------|
+| 😮‍💨 | Ballonnement | — |
+| 🤢 | Nausée | — |
+| 😣 | Douleur | Ventre / Tête / Autre |
+| 😴 | Fatigue | — |
+| 😊 | Je me sens bien | — |
+| ✏️ | Autre | Note vocale libre |
+
+### Flux
+1. Tap "💜 Ajouter un ressenti" → sheet rapide
+2. Sélection catégorie (+ sous-catégorie si douleur)
+3. Note vocale optionnelle (même pipeline Apple Intelligence)
+4. Tap "Noter ce ressenti" → sauvegardé
+
+### Affichage dans le journal
+- Couleur **violet/prune** — visuellement distinct du corail des repas
+- Intégré chronologiquement dans la timeline
+- Lien automatique avec le repas précédent + délai calculé ("~45min après le déjeuner")
+
+### Table `ressentis` (SQLite)
+```sql
+id             INTEGER PRIMARY KEY AUTOINCREMENT
+recorded_at    DATETIME NOT NULL
+category       TEXT NOT NULL        -- bloating|nausea|pain|fatigue|good|other
+sub_category   TEXT                 -- belly|head|other (si pain)
+note           TEXT                 -- note vocale transcrite (optionnel)
+entry_id       INTEGER              -- FK → entries.id (repas précédent, auto-lié)
+delay_minutes  INTEGER              -- calculé auto
+```
+
+---
+
+## 16. Export du journal
+
+L'utilisatrice peut exporter son journal sur une période choisie, au format PDF, via le share sheet iOS natif.
+
+### Flux (4 étapes)
+1. **Déclenchement** — bouton "📤 Exporter le journal…" en bas du journal
+2. **Paramètres** — période (cette semaine / ce mois / 30 jours / dates libres) + options (inclure repas ✓, inclure ressentis ✓) + badge consentement RGPD explicite
+3. **Aperçu** — rendu du PDF avant envoi, avec bouton "← Modifier"
+4. **Partage** — share sheet iOS natif : Mail, WhatsApp, AirDrop, Fichiers…
+
+### Format du document exporté
+- En-tête : "🥔 Journal d'Eugénie — Du [date] au [date]"
+- Entrées groupées par jour, triées par heure
+- Repas : heure · icône repas · texte transcrit
+- Ressentis : heure · 💜 · catégorie · délai depuis repas précédent
+- Footer horodaté : *"Partagé volontairement par Eugénie le [date]. Données locales, aucun serveur tiers."*
+
+### Technique
+- Génération PDF : `react-native-html-to-pdf` (on-device, aucun service tiers)
+- Partage : `expo-sharing` → share sheet iOS natif
+- Aucune donnée envoyée à un serveur
+
+### RGPD
+- Consentement explicite affiché avant l'export
+- Footer horodaté avec mention "partagé volontairement"
+- L'utilisatrice choisit le destinataire via son propre Mail
+- Aucun intermédiaire
+
+---
+
+## 17. Hors scope v1
 
 Fonctionnalités explicitement exclues du MVP :
 
-- Export PDF du journal
-- Résumé hebdomadaire / mensuel
+- Résumé hebdomadaire / mensuel automatique
 - Widget iOS
-- Partage avec médecin / nutritionniste
 - Support iPad
 - Version Android
 - Reconnaissance d'aliments par photo

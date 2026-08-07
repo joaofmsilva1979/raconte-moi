@@ -1,0 +1,174 @@
+<h2>Les deux flux d'enregistrement</h2>
+<p class="subtitle">Flux A : elle parle d'abord, l'app devine le repas. Flux B : elle annonce le repas, puis parle. Lequel privilégier ?</p>
+
+<style>
+.flow-col { flex: 1; min-width: 0; }
+.step {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 14px;
+}
+.step-num {
+  min-width: 22px; height: 22px;
+  border-radius: 50%;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.step-content { flex: 1; }
+.step-label { font-size: 10px; font-weight: 700; color: #2D1A0E; margin-bottom: 3px; }
+.step-desc { font-size: 9px; color: #7A5A40; line-height: 1.5; }
+.phone-mini {
+  background: #FFF8F5;
+  border-radius: 16px;
+  padding: 10px;
+  border: 3px solid #2D1A0E;
+  font-family: -apple-system, sans-serif;
+  margin-bottom: 8px;
+  font-size: 8px;
+}
+.arrow-down { text-align: center; font-size: 12px; color: #C09070; margin: 4px 0; }
+.flow-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+</style>
+
+<div style="display:flex; gap:20px; align-items:flex-start;">
+
+  <!-- FLUX A -->
+  <div class="flow-col" style="border: 2px solid #F0C8A8; border-radius: 16px; padding: 16px; background: #FFFBF8;">
+    <div class="flow-badge" style="background:#FDEEE8; color:#C4664A;">Flux A — Parle d'abord</div>
+    <div style="font-size:10px; color:#7A5A40; margin-bottom:16px; line-height:1.5;">Elle parle librement. L'app transcrit, <strong>devine le repas selon l'heure</strong>, et demande confirmation.</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-num" style="background:#FDEEE8; color:#E85520;">1</div>
+      <div class="step-content">
+        <div class="step-label">Elle appuie et parle</div>
+        <div class="phone-mini" style="text-align:center;">
+          <div style="font-size:20px; margin-bottom:4px;">🎙</div>
+          <div style="color:#E85520; font-weight:600;">En écoute…</div>
+          <div style="color:#C09070; font-size:7px; margin-top:2px; font-style:italic;">"Un bol de céréales avec du lait et un jus d'orange"</div>
+          <div style="background:#F0C8A8; height:2px; border-radius:1px; margin-top:6px;">
+            <div style="background:#E85520; width:65%; height:100%; border-radius:1px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-num" style="background:#FDEEE8; color:#E85520;">2</div>
+      <div class="step-content">
+        <div class="step-label">Transcription + détection</div>
+        <div class="phone-mini">
+          <div style="color:#2D1A0E; font-weight:600; margin-bottom:4px;">✏️ Transcription</div>
+          <div style="background:#FFF3EE; border-radius:6px; padding:5px; color:#4A2F20; margin-bottom:8px; line-height:1.4;">Un bol de céréales avec du lait et un jus d'orange.</div>
+          <div style="color:#C09070; font-size:7px;">🕗 08:34 · Vendredi 7 août</div>
+          <div style="margin-top:6px; background:#FDEEE8; border-radius:6px; padding:5px; color:#C4664A; font-weight:600;">☀️ Détecté : Petit-déjeuner</div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-num" style="background:#FDEEE8; color:#E85520;">3</div>
+      <div class="step-content">
+        <div class="step-label">Confirmation (tap rapide)</div>
+        <div class="phone-mini">
+          <div style="color:#2D1A0E; font-weight:600; margin-bottom:6px;">C'est bien le petit-déjeuner ?</div>
+          <div style="display:flex; gap:5px;">
+            <div style="flex:1; background:#E85520; color:white; border-radius:8px; padding:5px; text-align:center; font-weight:600;">✓ Oui</div>
+            <div style="flex:1; background:#FFF0E8; color:#E85520; border-radius:8px; padding:5px; text-align:center; border:1px solid #F0C0A0;">Changer</div>
+          </div>
+        </div>
+        <div class="step-desc">Si elle tape "Changer" → liste des repas. Sinon : sauvegardé instantanément.</div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Result -->
+    <div class="phone-mini" style="border-color:#E85520;">
+      <div style="color:#5C3020; font-weight:600; margin-bottom:4px;">🔒 Noté sur cet iPhone</div>
+      <div style="color:#4A2F20; font-size:8px;">☀️ Petit-déjeuner · 08:34<br>Céréales, lait, jus d'orange</div>
+    </div>
+
+    <div style="margin-top:10px; padding:8px; background:#E8F5E0; border-radius:8px; font-size:9px; color:#3A6020;">
+      ✅ <strong>Friction minimale</strong> — 1 appui, 1 tap de confirmation<br>
+      ⚡ Idéal pour les matins pressés<br>
+      ↗ Risque de mauvaise détection rare (ex: goûter à 18h01)
+    </div>
+  </div>
+
+  <!-- FLUX B -->
+  <div class="flow-col" style="border: 2px solid #D8D0E8; border-radius: 16px; padding: 16px; background: #FDFCFF;">
+    <div class="flow-badge" style="background:#F3EEFF; color:#7B5EA7;">Flux B — Annonce d'abord</div>
+    <div style="font-size:10px; color:#5A4870; margin-bottom:16px; line-height:1.5;">Elle sélectionne ou dit le repas. <strong>Puis parle de ce qu'elle a mangé.</strong> Contexte clair dès le départ.</div>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-num" style="background:#F3EEFF; color:#7B5EA7;">1</div>
+      <div class="step-content">
+        <div class="step-label">Elle choisit le repas</div>
+        <div class="phone-mini">
+          <div style="color:#2D1A0E; font-weight:600; margin-bottom:6px; font-size:8px;">Quel repas ?</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+            <div style="background:#FDEEE8; border-radius:6px; padding:5px; text-align:center; font-size:7px; font-weight:600; color:#C4664A;">☀️ Petit-déj</div>
+            <div style="background:#F3EEFF; border-radius:6px; padding:5px; text-align:center; font-size:7px; font-weight:600; color:#7B5EA7; border:2px solid #7B5EA7;">🌞 Déjeuner ✓</div>
+            <div style="background:#F5EEE6; border-radius:6px; padding:5px; text-align:center; font-size:7px; font-weight:600; color:#8A6040;">🌤 Collation</div>
+            <div style="background:#F0EEF5; border-radius:6px; padding:5px; text-align:center; font-size:7px; font-weight:600; color:#504060;">🌙 Dîner</div>
+          </div>
+          <div style="margin-top:5px; color:#A090C0; font-size:7px; text-align:center; font-style:italic;">ou dire "déjeuner" 🎙</div>
+        </div>
+        <div class="step-desc">Suggestion auto selon l'heure, mais choix libre. Peut aussi le dire au micro.</div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-num" style="background:#F3EEFF; color:#7B5EA7;">2</div>
+      <div class="step-content">
+        <div class="step-label">Elle dicte ce qu'elle a mangé</div>
+        <div class="phone-mini" style="text-align:center;">
+          <div style="background:#F3EEFF; border-radius:8px; padding:4px 8px; display:inline-block; font-size:8px; color:#7B5EA7; font-weight:600; margin-bottom:8px;">🌞 Déjeuner</div>
+          <div style="font-size:18px; margin-bottom:4px;">🎙</div>
+          <div style="color:#7B5EA7; font-weight:600; font-size:9px;">En écoute…</div>
+          <div style="color:#A090C0; font-size:7px; margin-top:2px; font-style:italic;">"Une quiche lorraine et une salade verte"</div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-num" style="background:#F3EEFF; color:#7B5EA7;">3</div>
+      <div class="step-content">
+        <div class="step-label">Transcription → Sauvegarde</div>
+        <div class="phone-mini">
+          <div style="color:#2D1A0E; font-weight:600; margin-bottom:4px;">✏️ Transcription</div>
+          <div style="background:#F3EEFF; border-radius:6px; padding:5px; color:#3A2060; margin-bottom:6px; line-height:1.4;">Une quiche lorraine et une salade verte.</div>
+          <div style="background:#7B5EA7; color:white; border-radius:8px; padding:6px; text-align:center; font-weight:600; font-size:9px;">✓ Sauvegarder</div>
+        </div>
+        <div class="step-desc">Pas de confirmation nécessaire — le repas était déjà choisi.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px; padding:8px; background:#E8F5E0; border-radius:8px; font-size:9px; color:#3A6020;">
+      ✅ <strong>Zéro ambiguïté</strong> — repas toujours correct<br>
+      ✅ Pas de step de confirmation<br>
+      ↗ 1 tap supplémentaire au départ
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px; padding:14px; background:#FFF5F0; border:1px solid #F0C8A8; border-radius:10px; font-size:12px; color:#7A4020; line-height:1.6;">
+  <strong>Ma recommandation :</strong> proposer les <strong>deux</strong> en même temps. Par défaut, l'app affiche le badge repas suggéré (Flux A). Si elle veut en changer avant de parler, un tap rapide sur le badge ouvre le sélecteur (Flux B). Un seul écran, deux comportements naturels selon l'envie du moment.
+</div>

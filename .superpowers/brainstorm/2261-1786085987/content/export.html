@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Export journal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #F5F0EB; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 24px; }
+  h2 { font-size: 20px; font-weight: 700; color: #2D1A0E; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #9A7060; margin-bottom: 24px; line-height: 1.5; }
+  .section-title { font-size: 13px; font-weight: 700; color: #5C3020; margin: 20px 0 12px; padding-left: 10px; border-left: 3px solid #E85520; }
+
+  .iphone { width: 168px; height: 364px; background: #FFF8F5; border-radius: 32px; border: 5px solid #1A1A1A; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+  .notch { width: 60px; height: 10px; background: #1A1A1A; border-radius: 0 0 10px 10px; margin: 0 auto; flex-shrink: 0; }
+  .status-bar { display: flex; justify-content: space-between; padding: 4px 12px 0; font-size: 8px; color: #5C3020; flex-shrink: 0; }
+  .screen-body { flex: 1; display: flex; flex-direction: column; padding: 8px 10px 10px; overflow: hidden; }
+
+  .flow-row { display: flex; gap: 16px; align-items: flex-start; overflow-x: auto; padding-bottom: 12px; }
+  .flow-step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+  .step-label { font-size: 10px; font-weight: 700; color: #E85520; background: #FDEEE8; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+  .flow-arrow { font-size: 18px; color: #D0A880; flex-shrink: 0; margin-top: 140px; }
+  .screen-note { font-size: 9px; color: #888; text-align: center; max-width: 168px; line-height: 1.4; }
+
+  .btn-primary { width: 100%; background: linear-gradient(135deg, #F5855A, #E85520); color: white; border-radius: 10px; padding: 8px; font-size: 9px; font-weight: 700; text-align: center; }
+  .btn-secondary { width: 100%; background: #FFF0E8; color: #E85520; border-radius: 10px; padding: 7px; font-size: 8px; font-weight: 600; text-align: center; border: 1px solid #F0C0A0; }
+  .toggle { width: 26px; height: 14px; border-radius: 7px; position: relative; flex-shrink: 0; }
+  .toggle.on { background: #E85520; }
+  .toggle.off { background: #D0C0B0; }
+  .toggle::after { content: ''; position: absolute; width: 11px; height: 11px; background: white; border-radius: 50%; top: 1.5px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle.on::after { right: 1.5px; }
+  .toggle.off::after { left: 1.5px; }
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #F5EAE0; font-size: 8px; color: #2D1A0E; }
+  .row:last-child { border: none; }
+  .row-sub { font-size: 6.5px; color: #C09070; margin-top: 1px; }
+
+  /* PDF preview */
+  .pdf-preview {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #E0E0E0;
+    font-family: Georgia, serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .pdf-header { border-bottom: 2px solid #E85520; padding-bottom: 6px; margin-bottom: 8px; }
+  .pdf-title { font-size: 11px; font-weight: 700; color: #2D1A0E; }
+  .pdf-meta { font-size: 7px; color: #888; margin-top: 2px; }
+  .pdf-day { font-size: 9px; font-weight: 700; color: #5C3020; margin: 6px 0 3px; border-left: 2px solid #E85520; padding-left: 5px; }
+  .pdf-meal { font-size: 7.5px; color: #2D1A0E; padding: 3px 0 3px 8px; line-height: 1.4; }
+  .pdf-meal .time { color: #C09070; font-size: 6.5px; }
+  .pdf-ressenti { font-size: 7.5px; color: #7B5EA7; padding: 3px 0 3px 8px; line-height: 1.4; }
+  .pdf-footer { border-top: 1px solid #E0E0E0; margin-top: 8px; padding-top: 5px; font-size: 6px; color: #AAA; line-height: 1.4; }
+  .note-box { padding: 14px; background: #FFF5F0; border: 1px solid #F0C8A8; border-radius: 12px; font-size: 12px; color: #7A4020; line-height: 1.7; margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<h2>Export du journal</h2>
+<p class="subtitle">Exporter sur une période choisie — repas + ressentis — vers un email, proprement formaté. Consentement explicite avant envoi.</p>
+
+<div class="section-title">Flux d'export (4 étapes)</div>
+
+<div class="flow-row">
+
+  <!-- Bouton export dans le journal -->
+  <div class="flow-step">
+    <div class="step-label">1 · Déclenchement</div>
+    <div class="iphone" style="background:white;">
+      <div class="notch"></div>
+      <div class="status-bar" style="color:#2D1A0E;"><span>10:00</span><span>●●● 🔋</span></div>
+      <div class="screen-body" style="background:white;">
+        <div style="width:32px;height:3px;background:#D0B8A8;border-radius:2px;margin:0 auto 8px;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;color:#2D1A0E;">Mon journal</div>
+          <div style="font-size:18px;cursor:pointer;" title="Exporter">⬆️</div>
+        </div>
+        <!-- Mini calendar week -->
+        <div style="display:flex;gap:3px;justify-content:center;margin-bottom:10px;">
+          <div style="text-align:center;font-size:7px;" >
+            <div style="color:#C09070;">L</div><div style="width:16px;height:16px;background:#FDEEE8;border-radius:50%;margin:2px auto;display:flex;align-items:center;justify-content:center;font-size:7px;">✓</div>
+          </div>
+          <div style="text-align:center;font-size:7px;">
+            <div style="color:#C09070;">M</div><div style="width:16px;height:16px;background:#FDEEE8;border-radius:50%;margin:2px auto;display:flex;align-items:center;justify-content:center;font-size:7px;">✓</div>
+          </div>
+          <div style="text-align:center;font-size:7px;">
+            <div style="color:#C09070;">M</div><div style="width:16px;height:16px;background:#FDEEE8;border-radius:50%;margin:2px auto;display:flex;align-items:center;justify-content:center;font-size:7px;">✓</div>
+          </div>
+          <div style="text-align:center;font-size:7px;">
+            <div style="color:#C09070;">J</div><div style="width:16px;height:16px;background:#FDEEE8;border-radius:50%;margin:2px auto;display:flex;align-items:center;justify-content:center;font-size:7px;">✓</div>
+          </div>
+          <div style="text-align:center;font-size:7px;">
+            <div style="color:#E85520;font-weight:700;">V</div><div style="width:16px;height:16px;background:#E85520;border-radius:50%;margin:2px auto;font-size:7px;"></div>
+          </div>
+          <div style="text-align:center;font-size:7px;opacity:0.4;">
+            <div style="color:#C09070;">S</div><div style="width:16px;height:16px;background:#F5EEE8;border-radius:50%;margin:2px auto;"></div>
+          </div>
+          <div style="text-align:center;font-size:7px;opacity:0.4;">
+            <div style="color:#C09070;">D</div><div style="width:16px;height:16px;background:#F5EEE8;border-radius:50%;margin:2px auto;"></div>
+          </div>
+        </div>
+        <!-- Quelques entrées visibles -->
+        <div style="position:relative;padding-left:14px;border-left:2px solid #F0C8A8;">
+          <div style="margin-bottom:7px;">
+            <div style="font-size:7.5px;font-weight:700;color:#5C3020;">☀️ Petit-déj · 08:12</div>
+            <div style="font-size:7px;color:#8A6A50;background:#FDEEE8;border-radius:5px;padding:3px 5px;margin-top:1px;">Café, tartines, banane.</div>
+          </div>
+          <div style="margin-bottom:7px;">
+            <div style="font-size:7.5px;font-weight:700;color:#7B5EA7;">💜 Ressenti · 09:30</div>
+            <div style="font-size:7px;color:#7B5EA7;background:#F3EEFF;border-radius:5px;padding:3px 5px;margin-top:1px;">😮‍💨 Ballonnement</div>
+          </div>
+        </div>
+        <!-- Bouton export -->
+        <div style="margin-top:auto;display:flex;align-items:center;gap:5px;background:#FFF0E8;border:1.5px solid #F0C0A0;border-radius:10px;padding:7px 10px;cursor:pointer;">
+          <span style="font-size:12px;">📤</span>
+          <span style="font-size:8px;font-weight:600;color:#C4664A;">Exporter le journal…</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Bouton "Exporter" en bas du journal. Icône ⬆️ aussi en haut à droite.</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- Paramètres d'export -->
+  <div class="flow-step">
+    <div class="step-label">2 · Paramètres</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>10:00</span><span>●●● 🔋</span></div>
+      <div class="screen-body" style="justify-content:flex-end;padding:0;">
+        <div style="background:white;border-radius:20px 20px 0 0;padding:14px 12px 16px;box-shadow:0 -4px 20px rgba(0,0,0,0.12);">
+          <div style="width:32px;height:3px;background:#D0B8A8;border-radius:2px;margin:0 auto 10px;"></div>
+          <div style="font-size:11px;font-weight:700;color:#2D1A0E;margin-bottom:8px;">📤 Exporter le journal</div>
+
+          <!-- Période -->
+          <div style="font-size:7px;color:#C09070;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Période</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;">
+            <div style="background:#FDEEE8;border:2px solid #E85520;border-radius:8px;padding:5px;text-align:center;font-size:7.5px;color:#C4664A;font-weight:700;">Cette semaine</div>
+            <div style="background:#FFF8F5;border:1.5px solid #F0D0B8;border-radius:8px;padding:5px;text-align:center;font-size:7.5px;color:#9A7060;">Ce mois-ci</div>
+            <div style="background:#FFF8F5;border:1.5px solid #F0D0B8;border-radius:8px;padding:5px;text-align:center;font-size:7.5px;color:#9A7060;">30 derniers j.</div>
+            <div style="background:#FFF8F5;border:1.5px solid #F0D0B8;border-radius:8px;padding:5px;text-align:center;font-size:7.5px;color:#9A7060;">Choisir…</div>
+          </div>
+
+          <!-- Options -->
+          <div style="font-size:7px;color:#C09070;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Inclure</div>
+          <div class="row">
+            <div><div>🍽 Repas</div></div>
+            <div class="toggle on"></div>
+          </div>
+          <div class="row">
+            <div><div>💜 Ressentis</div></div>
+            <div class="toggle on"></div>
+          </div>
+
+          <!-- Consentement RGPD -->
+          <div style="background:#F0F8EC;border-radius:8px;padding:6px 8px;margin:8px 0;font-size:7px;color:#4A7030;line-height:1.4;">
+            🔒 <strong>Tu partages volontairement ces données.</strong> Elles ne sont envoyées qu'à la personne que tu choisis, via ton app Mail.
+          </div>
+
+          <div class="btn-primary">Aperçu avant envoi →</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Période + options. Badge RGPD explicite avant de continuer.</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- Aperçu du PDF -->
+  <div class="flow-step">
+    <div class="step-label">3 · Aperçu</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>10:00</span><span>●●● 🔋</span></div>
+      <div class="screen-body">
+        <div style="font-size:10px;font-weight:700;color:#2D1A0E;margin-bottom:6px;">Aperçu de l'export</div>
+
+        <!-- Mini PDF preview -->
+        <div class="pdf-preview" style="margin-bottom:8px;">
+          <div class="pdf-header">
+            <div class="pdf-title">🥔 Journal d'Eugénie</div>
+            <div class="pdf-meta">Lun. 3 août → Vend. 7 août 2026 · Généré par Les notes de patate</div>
+          </div>
+
+          <div class="pdf-day">Lundi 3 août</div>
+          <div class="pdf-meal"><span class="time">07:55 ☀️</span> Thé, toast au beurre de cacahuète.</div>
+          <div class="pdf-meal"><span class="time">12:30 🌞</span> Pâtes bolognaise, salade verte.</div>
+          <div class="pdf-ressenti"><span style="font-size:6.5px;color:#9B7EC8;">13:15 💜</span> Ballonnement (~45min après le déjeuner)</div>
+          <div class="pdf-meal"><span class="time">19:30 🌙</span> Soupe de légumes, fromage.</div>
+
+          <div class="pdf-day">Mardi 4 août</div>
+          <div class="pdf-meal"><span class="time">08:10 ☀️</span> Café, tartines, banane.</div>
+          <div class="pdf-meal"><span class="time">12:45 🌞</span> Sandwich thon, yaourt.</div>
+          <div style="font-size:6.5px;color:#AAA;padding-left:8px;margin-top:2px;font-style:italic;">… suite page suivante</div>
+
+          <div class="pdf-footer">
+            Journal personnel alimentaire — partagé volontairement par Eugénie le 07/08/2026.<br>
+            Généré par Les notes de patate (données 100% locales, aucun serveur tiers).
+          </div>
+        </div>
+
+        <div style="display:flex;gap:5px;">
+          <div style="flex:1;background:#FFF0E8;border-radius:8px;padding:6px;text-align:center;font-size:7.5px;color:#C4664A;border:1px solid #F0C0A0;">← Modifier</div>
+          <div class="btn-primary" style="flex:2;margin:0;">Partager →</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Aperçu du document avant envoi. Elle peut revenir et modifier.</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- iOS Share sheet -->
+  <div class="flow-step">
+    <div class="step-label">4 · Envoi iOS natif</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>10:01</span><span>●●● 🔋</span></div>
+      <div class="screen-body" style="justify-content:flex-end;padding:0;">
+        <!-- Aperçu flouté en fond -->
+        <div style="flex:1;background:#F5F0EB;display:flex;align-items:center;justify-content:center;font-size:20px;opacity:0.3;">📄</div>
+        <!-- Share sheet iOS natif -->
+        <div style="background:white;border-radius:20px 20px 0 0;padding:14px 12px 16px;box-shadow:0 -8px 30px rgba(0,0,0,0.2);">
+          <div style="width:32px;height:3px;background:#D0B8A8;border-radius:2px;margin:0 auto 10px;"></div>
+          <div style="font-size:9px;font-weight:700;color:#2D1A0E;margin-bottom:8px;text-align:center;">Journal du 3 au 7 août.pdf</div>
+          <!-- Apps de partage -->
+          <div style="display:flex;justify-content:space-around;margin-bottom:10px;">
+            <div style="text-align:center;">
+              <div style="width:36px;height:36px;background:#4A90D9;border-radius:10px;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-size:18px;">✉️</div>
+              <div style="font-size:6.5px;color:#555;">Mail</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="width:36px;height:36px;background:#25D366;border-radius:10px;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-size:18px;">💬</div>
+              <div style="font-size:6.5px;color:#555;">WhatsApp</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="width:36px;height:36px;background:#E8E8E8;border-radius:10px;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-size:18px;">📁</div>
+              <div style="font-size:6.5px;color:#555;">Fichiers</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="width:36px;height:36px;background:#F0F0F0;border-radius:10px;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-size:18px;">…</div>
+              <div style="font-size:6.5px;color:#555;">Plus</div>
+            </div>
+          </div>
+          <div style="background:#F5F5F5;border-radius:10px;padding:7px;text-align:center;font-size:7.5px;color:#888;cursor:pointer;">Annuler</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Share sheet iOS natif — Mail, WhatsApp, AirDrop, Fichiers… Elle choisit.</div>
+  </div>
+
+</div>
+
+<!-- FORMAT PDF -->
+<div class="section-title">Format du document exporté</div>
+
+<div style="background:white;border-radius:12px;padding:20px;border:1px solid #E0D0C0;max-width:500px;">
+  <div class="pdf-header" style="border-bottom:2px solid #E85520;padding-bottom:8px;margin-bottom:12px;">
+    <div style="font-size:16px;font-weight:700;color:#2D1A0E;">🥔 Journal d'Eugénie</div>
+    <div style="font-size:10px;color:#888;margin-top:3px;">Du lundi 3 août au vendredi 7 août 2026</div>
+    <div style="font-size:10px;color:#888;">Généré le 7 août 2026 · Les notes de patate</div>
+  </div>
+
+  <div style="font-size:11px;font-weight:700;color:#5C3020;border-left:3px solid #E85520;padding-left:6px;margin:10px 0 5px;">Lundi 3 août</div>
+  <div style="font-size:10px;padding-left:12px;color:#2D1A0E;line-height:1.8;">
+    <span style="color:#C09070;">07:55 ☀️ Petit-déjeuner</span><br>
+    Thé vert, toast au beurre de cacahuète et un kiwi.<br>
+    <span style="color:#C09070;">12:30 🌞 Déjeuner</span><br>
+    Pâtes bolognaise maison, salade verte assaisonnée.<br>
+    <span style="color:#9B7EC8;">13:15 💜 Ressenti</span> <span style="font-size:9px;color:#9B7EC8;">(~45min après le déjeuner)</span><br>
+    <span style="color:#7B5EA7;">😮‍💨 Ballonnement</span><br>
+    <span style="color:#C09070;">19:30 🌙 Dîner</span><br>
+    Soupe de légumes maison, fromage de chèvre, pain.
+  </div>
+
+  <div style="margin-top:14px;padding-top:10px;border-top:1px solid #E8E8E8;font-size:8px;color:#AAA;line-height:1.6;">
+    Ce document est un journal personnel alimentaire partagé volontairement par Eugénie le 07/08/2026.<br>
+    Données générées et stockées localement sur son iPhone via Les notes de patate.<br>
+    Aucun serveur tiers n'a eu accès à ces informations.
+  </div>
+</div>
+
+<div class="note-box" style="margin-top:16px;">
+  <strong>Implémentation :</strong> génération PDF via <code style="background:#F5EEE6;padding:1px 4px;border-radius:3px;">react-native-html-to-pdf</code> — on construit le HTML du journal, on le convertit en PDF on-device, on ouvre le share sheet iOS natif (<code>expo-sharing</code>). Aucun service tiers, tout se passe sur l'iPhone.<br><br>
+  <strong>RGPD :</strong> consentement explicite affiché avant l'export · footer horodaté avec mention "partagé volontairement" · aucune donnée envoyée à un serveur · l'utilisatrice choisit le destinataire via son propre Mail.
+</div>
+
+</body>
+</html>

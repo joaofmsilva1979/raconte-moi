@@ -1,0 +1,203 @@
+<h2>Onboarding — Étape couleur</h2>
+<p class="subtitle">L'utilisatrice choisit 1 couleur → l'app génère fond, accent et bouton. Clique pour voir le rendu.</p>
+
+<style>
+.color-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 20px 0; }
+.color-swatch {
+  cursor: pointer;
+  border-radius: 14px;
+  padding: 10px 8px;
+  text-align: center;
+  border: 3px solid transparent;
+  transition: all 0.15s;
+}
+.color-swatch:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+.color-swatch.selected { border-color: #2D2D2D; box-shadow: 0 6px 18px rgba(0,0,0,0.2); }
+.swatch-dot {
+  width: 36px; height: 36px; border-radius: 50%;
+  margin: 0 auto 6px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+.swatch-name { font-size: 9px; font-weight: 600; color: #444; }
+.swatch-tones { display: flex; gap: 3px; justify-content: center; margin-top: 4px; }
+.swatch-tone { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Phone preview */
+.phone-preview {
+  background: #FFF8F5;
+  border-radius: 28px;
+  padding: 20px 16px;
+  font-family: -apple-system, sans-serif;
+  max-width: 200px;
+  margin: 0 auto;
+  border: 6px solid #2D1A0E;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  transition: all 0.3s ease;
+}
+</style>
+
+<!-- Color palette grid -->
+<div class="color-grid" id="colorGrid">
+
+  <div class="color-swatch selected" onclick="selectColor(this, '#E85520','#FDEEE8','#F5855A','Corail')" style="background:#FFF5F0;">
+    <div class="swatch-dot" style="background:#E85520;"></div>
+    <div class="swatch-name">Corail</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#F5855A;"></div>
+      <div class="swatch-tone" style="background:#FDEEE8;"></div>
+    </div>
+  </div>
+
+  <div class="color-swatch" onclick="selectColor(this, '#C4623A','#FAEAE0','#D9845C','Terracotta')" style="background:#FBF2EE;">
+    <div class="swatch-dot" style="background:#C4623A;"></div>
+    <div class="swatch-name">Terracotta</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#D9845C;"></div>
+      <div class="swatch-tone" style="background:#FAEAE0;"></div>
+    </div>
+  </div>
+
+  <div class="color-swatch" onclick="selectColor(this, '#C8943A','#FDF5E0','#DEB96A','Miel')" style="background:#FEFAEE;">
+    <div class="swatch-dot" style="background:#C8943A;"></div>
+    <div class="swatch-name">Miel</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#DEB96A;"></div>
+      <div class="swatch-tone" style="background:#FDF5E0;"></div>
+    </div>
+  </div>
+
+  <div class="color-swatch" onclick="selectColor(this, '#5C7A4E','#EEF5EC','#82A870','Sauge')" style="background:#F4FAF3;">
+    <div class="swatch-dot" style="background:#5C7A4E;"></div>
+    <div class="swatch-name">Sauge</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#82A870;"></div>
+      <div class="swatch-tone" style="background:#EEF5EC;"></div>
+    </div>
+  </div>
+
+  <div class="color-swatch" onclick="selectColor(this, '#3A8A8A','#E8F5F5','#60AAAA','Teal')" style="background:#F0FAFA;">
+    <div class="swatch-dot" style="background:#3A8A8A;"></div>
+    <div class="swatch-name">Teal</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#60AAAA;"></div>
+      <div class="swatch-tone" style="background:#E8F5F5;"></div>
+    </div>
+  </div>
+
+  <div class="color-swatch" onclick="selectColor(this, '#4F7FFF','#EEF2FF','#7FA0FF','Lavande')" style="background:#F3F6FF;">
+    <div class="swatch-dot" style="background:#4F7FFF;"></div>
+    <div class="swatch-name">Lavande</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#7FA0FF;"></div>
+      <div class="swatch-tone" style="background:#EEF2FF;"></div>
+    </div>
+  </div>
+
+  <div class="color-swatch" onclick="selectColor(this, '#7B5EA7','#F3EEFF','#A080CC','Prune')" style="background:#F8F4FF;">
+    <div class="swatch-dot" style="background:#7B5EA7;"></div>
+    <div class="swatch-name">Prune</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#A080CC;"></div>
+      <div class="swatch-tone" style="background:#F3EEFF;"></div>
+    </div>
+  </div>
+
+  <div class="color-swatch" onclick="selectColor(this, '#C96B8A','#FEEEF4','#DF90AA','Rose')" style="background:#FFF3F7;">
+    <div class="swatch-dot" style="background:#C96B8A;"></div>
+    <div class="swatch-name">Rose</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#DF90AA;"></div>
+      <div class="swatch-tone" style="background:#FEEEF4;"></div>
+    </div>
+  </div>
+
+  <div class="color-swatch" onclick="selectColor(this, '#A03050','#FAEAEE','#C05878','Bordeaux')" style="background:#FBF0F3;">
+    <div class="swatch-dot" style="background:#A03050;"></div>
+    <div class="swatch-name">Bordeaux</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#C05878;"></div>
+      <div class="swatch-tone" style="background:#FAEAEE;"></div>
+    </div>
+  </div>
+
+  <div class="color-swatch" onclick="selectColor(this, '#5C4A35','#F5EEE6','#8A6E52','Cacao')" style="background:#FAF5EF;">
+    <div class="swatch-dot" style="background:#5C4A35;"></div>
+    <div class="swatch-name">Cacao</div>
+    <div class="swatch-tones">
+      <div class="swatch-tone" style="background:#8A6E52;"></div>
+      <div class="swatch-tone" style="background:#F5EEE6;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Live phone preview -->
+<div style="text-align:center; margin: 24px 0 8px;">
+  <div style="font-size:11px; color:#888; margin-bottom:16px; text-transform:uppercase; letter-spacing:1px;">Aperçu en direct</div>
+  <div class="phone-preview" id="phonePreview" style="background:#FFF8F5;">
+
+    <div style="text-align:center; margin-bottom:6px;">
+      <div style="font-size:13px; font-weight:700; color:#2D1A0E;">Bonjour Léa ☀️</div>
+      <div id="mealBadge" style="display:inline-block; background:#FDEEE8; border-radius:20px; padding:3px 10px; font-size:8px; color:#C4664A; font-weight:600; margin-top:4px;">🥐 Petit-déjeuner · 08:12</div>
+    </div>
+
+    <!-- Mic button -->
+    <div style="position:relative; text-align:center; margin:18px 0 12px;">
+      <div id="outerHalo" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:90px; height:90px; border-radius:50%; background:rgba(232,85,32,0.08);"></div>
+      <div id="innerHalo" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:74px; height:74px; border-radius:50%; background:rgba(232,85,32,0.14);"></div>
+      <div id="micBtn" style="position:relative; z-index:1; width:60px; height:60px; background:linear-gradient(145deg,#F5855A,#E85520); border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(232,85,32,0.4);">
+        <span style="font-size:24px;">🎙</span>
+      </div>
+    </div>
+    <div style="font-size:8px; color:#C09070; text-align:center; margin-bottom:14px; font-style:italic;">Appuie et parle</div>
+
+    <!-- Entries -->
+    <div id="entry1" style="background:#FDEEE8; border-radius:8px; padding:8px 10px; margin-bottom:5px; display:flex; align-items:center; gap:6px;">
+      <span style="font-size:12px;">☀️</span>
+      <div>
+        <div style="font-size:8px; font-weight:600; color:#3D2010;">08:12 · Café, tartines, banane</div>
+        <div style="font-size:7px; color:#C09070;">Petit-déjeuner</div>
+      </div>
+    </div>
+    <div id="entry2" style="background:#FFF3EE; border-radius:8px; padding:8px 10px; border:1px dashed #F0C0A0; opacity:0.7; display:flex; align-items:center; gap:6px;">
+      <span style="font-size:12px;">🌞</span>
+      <div style="font-size:8px; color:#C09070; font-style:italic;">Déjeuner · en attente…</div>
+    </div>
+
+    <div id="swipeHint" style="text-align:center; margin-top:10px; font-size:7px; color:#D0A890;">↑ Glisse pour le journal</div>
+  </div>
+</div>
+
+<div style="text-align:center; margin-top:8px; font-size:11px; color:#888;">
+  Chaque couleur génère automatiquement fond pastel + accent intermédiaire
+</div>
+
+<script>
+function selectColor(el, primary, bg, accent, name) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+
+  // Update phone preview
+  document.getElementById('phonePreview').style.background = bg;
+
+  // Mic button gradient
+  document.getElementById('micBtn').style.background = `linear-gradient(145deg, ${accent}, ${primary})`;
+  document.getElementById('micBtn').style.boxShadow = `0 8px 20px ${primary}55`;
+
+  // Halos
+  document.getElementById('outerHalo').style.background = primary + '14';
+  document.getElementById('innerHalo').style.background = primary + '22';
+
+  // Meal badge
+  document.getElementById('mealBadge').style.background = bg;
+  document.getElementById('mealBadge').style.color = primary;
+
+  // Entries
+  document.getElementById('entry1').style.background = bg;
+  document.getElementById('entry2').style.background = bg;
+  document.getElementById('entry2').style.borderColor = accent + '88';
+
+  // Swipe hint
+  document.getElementById('swipeHint').style.color = accent + 'AA';
+}
+</script>

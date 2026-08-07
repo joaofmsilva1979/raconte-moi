@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #F5F0EB; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 24px; }
+  h2 { font-size: 20px; font-weight: 700; color: #2D1A0E; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #9A7060; margin-bottom: 24px; line-height: 1.5; }
+
+  .section-title {
+    font-size: 13px; font-weight: 700; color: #5C3020;
+    margin: 20px 0 12px;
+    padding-left: 10px;
+    border-left: 3px solid #E85520;
+  }
+
+  /* iPhone — 168×364px fixes */
+  .iphone {
+    width: 168px; height: 364px;
+    background: #FFF8F5;
+    border-radius: 32px;
+    border: 5px solid #1A1A1A;
+    display: flex; flex-direction: column;
+    overflow: hidden; flex-shrink: 0;
+    position: relative;
+  }
+  .iphone.dark { background: #1C1C1E; }
+  .notch { width: 60px; height: 10px; background: #1A1A1A; border-radius: 0 0 10px 10px; margin: 0 auto; flex-shrink: 0; }
+  .status-bar { display: flex; justify-content: space-between; padding: 4px 12px 0; font-size: 8px; color: #5C3020; flex-shrink: 0; }
+  .status-bar.light-text { color: #EEE; }
+  .screen-body { flex: 1; display: flex; flex-direction: column; padding: 8px 10px 10px; overflow: hidden; }
+
+  .flow-row { display: flex; gap: 16px; align-items: flex-start; overflow-x: auto; padding-bottom: 12px; }
+  .flow-step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+  .step-label {
+    font-size: 10px; font-weight: 700; color: #E85520;
+    background: #FDEEE8; padding: 3px 10px;
+    border-radius: 20px; white-space: nowrap; text-align: center;
+  }
+  .flow-arrow { font-size: 18px; color: #D0A880; flex-shrink: 0; margin-top: 140px; }
+  .screen-note { font-size: 9px; color: #888; text-align: center; max-width: 168px; line-height: 1.4; }
+
+  /* iOS notification banner */
+  .notif-banner {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(20px);
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin: 8px 6px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  }
+  .notif-icon {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: linear-gradient(145deg, #F5855A, #E85520);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .notif-content { flex: 1; }
+  .notif-app { font-size: 7px; color: #999; margin-bottom: 1px; }
+  .notif-title { font-size: 9px; font-weight: 700; color: #1A1A1A; margin-bottom: 1px; }
+  .notif-body { font-size: 8px; color: #555; line-height: 1.3; }
+  .notif-time { font-size: 7px; color: #999; flex-shrink: 0; }
+
+  /* Lock screen style */
+  .lockscreen-bg {
+    background: linear-gradient(160deg, #2A1A40, #0A0A20);
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+  }
+  .lockscreen-time {
+    text-align: center; color: white;
+    margin-top: 20px; margin-bottom: 8px;
+  }
+  .lockscreen-time .big { font-size: 28px; font-weight: 200; }
+  .lockscreen-time .small { font-size: 9px; opacity: 0.7; }
+
+  /* Réglages notifs */
+  .settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid #F0E0D0;
+    font-size: 8px;
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { color: #2D1A0E; font-weight: 500; }
+  .settings-sub { font-size: 6.5px; color: #C09070; margin-top: 1px; }
+  .toggle {
+    width: 26px; height: 14px; border-radius: 7px;
+    position: relative; flex-shrink: 0;
+  }
+  .toggle.on { background: #E85520; }
+  .toggle.off { background: #D0C0B0; }
+  .toggle::after {
+    content: ''; position: absolute;
+    width: 11px; height: 11px; background: white;
+    border-radius: 50%; top: 1.5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle.on::after { right: 1.5px; }
+  .toggle.off::after { left: 1.5px; }
+
+  /* Logic diagram */
+  .logic-box {
+    background: white; border: 1.5px solid #F0D0B8;
+    border-radius: 12px; padding: 14px 16px;
+    font-size: 11px; line-height: 1.8; color: #5C3020;
+  }
+  .logic-box code {
+    background: #FFF0E8; border-radius: 4px;
+    padding: 1px 5px; font-size: 10px; color: #C4664A;
+  }
+
+  .note-box {
+    padding: 14px; background: #FFF5F0;
+    border: 1px solid #F0C8A8; border-radius: 12px;
+    font-size: 12px; color: #7A4020; line-height: 1.7;
+    margin-top: 16px;
+  }
+
+  .meal-toggle-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 0; border-bottom: 1px solid #F5EAE0;
+    font-size: 8px; color: #2D1A0E;
+  }
+  .meal-toggle-row:last-child { border: none; }
+  .meal-toggle-row .icon { font-size: 12px; }
+  .meal-toggle-row .label { flex: 1; }
+  .meal-toggle-row .time { color: #C09070; font-size: 7px; }
+</style>
+</head>
+<body>
+
+<h2>Section 5 — Notifications intelligentes</h2>
+<p class="subtitle">L'app observe. Si un repas attendu n'est pas encore noté, elle envoie un rappel discret — une seule fois, au bon moment.</p>
+
+<!-- LOGIQUE -->
+<div class="section-title">5.1 · Logique de déclenchement</div>
+
+<div class="logic-box" style="margin-bottom: 20px;">
+  Pour chaque repas configuré, au <code>milieu de la plage horaire</code> :<br>
+  → L'app vérifie si une entrée existe pour ce repas aujourd'hui<br>
+  → Si <strong>non</strong> → envoie la notification<br>
+  → Si <strong>oui</strong> → rien, silence<br><br>
+  <strong>Exemples avec les plages par défaut :</strong><br>
+  ☀️ Petit-déjeuner (6h–10h) → rappel à <code>08:00</code> si rien noté<br>
+  🌞 Déjeuner (11h–14h) → rappel à <code>12:30</code> si rien noté<br>
+  🌤 Collation (14h–18h) → rappel à <code>16:00</code> si rien noté<br>
+  🌙 Dîner (18h–22h) → rappel à <code>20:00</code> si rien noté<br><br>
+  <strong>Règles strictes :</strong><br>
+  • Maximum 1 notification par repas par jour<br>
+  • Silence total entre 22h00 et 07h00<br>
+  • Si l'utilisatrice note après la notification → pas de 2ème rappel
+</div>
+
+<!-- ÉCRANS -->
+<div class="section-title">5.2 · Les notifications en situation</div>
+
+<div class="flow-row">
+
+  <!-- Lock screen -->
+  <div class="flow-step">
+    <div class="step-label">Écran verrouillé</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="lockscreen-bg">
+        <div style="display:flex;justify-content:space-between;padding:6px 12px;font-size:8px;color:rgba(255,255,255,0.7);">
+          <span>12:32</span><span>●●● 🔋</span>
+        </div>
+        <div class="lockscreen-time">
+          <div class="big">12:32</div>
+          <div class="small">Vendredi 7 août</div>
+        </div>
+        <!-- Notification sur lock screen -->
+        <div class="notif-banner" style="margin: 0 8px;">
+          <div class="notif-icon">🥔</div>
+          <div class="notif-content">
+            <div class="notif-app">Les notes de patate</div>
+            <div class="notif-title">Ton déjeuner ? 🌞</div>
+            <div class="notif-body">Il est 12h30 et tu n'as pas encore noté ton déjeuner.</div>
+          </div>
+          <div class="notif-time">maint.</div>
+        </div>
+        <!-- Home indicator -->
+        <div style="margin-top:auto;padding-bottom:8px;text-align:center;font-size:7px;color:rgba(255,255,255,0.4);">
+          ↑ glisse pour déverrouiller
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Notification sur l'écran verrouillé, style iOS natif</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- Bannière en haut pendant utilisation -->
+  <div class="flow-step">
+    <div class="step-label">Bannière (app ouverte)</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>12:32</span><span>●●● 🔋</span></div>
+      <div class="screen-body" style="position:relative;">
+        <!-- Bannière en haut -->
+        <div class="notif-banner" style="margin: 0 0 10px; position:relative; z-index:10;">
+          <div class="notif-icon">🥔</div>
+          <div class="notif-content">
+            <div class="notif-app">Les notes de patate</div>
+            <div class="notif-title">Ton déjeuner ? 🌞</div>
+            <div class="notif-body">Il est 12h30 — tu n'as pas encore noté.</div>
+          </div>
+        </div>
+        <!-- App en arrière-plan -->
+        <div style="font-size:11px;font-weight:700;color:#2D1A0E;margin-bottom:3px;">Bonjour Léa ☀️</div>
+        <div style="background:#FDEEE8;border-radius:20px;padding:3px 10px;font-size:8px;color:#C4664A;font-weight:600;display:inline-block;margin-bottom:8px;">🌞 Déjeuner · 12:32</div>
+        <div style="position:relative;text-align:center;margin:8px 0;">
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70px;height:70px;border-radius:50%;background:rgba(232,85,32,0.08);"></div>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(232,85,32,0.14);"></div>
+          <div style="position:relative;z-index:1;width:46px;height:46px;background:linear-gradient(145deg,#F5855A,#E85520);border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 5px 14px rgba(232,85,32,0.4);">🎙</div>
+        </div>
+        <div style="font-size:7px;color:#C09070;text-align:center;">Appuie et parle</div>
+      </div>
+    </div>
+    <div class="screen-note">Tap sur la bannière → ouvre directement le micro</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- Après avoir tapé la notif : micro prêt -->
+  <div class="flow-step">
+    <div class="step-label">Tap sur la notif</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>12:32</span><span>●●● 🔋</span></div>
+      <div class="screen-body" style="align-items:center;justify-content:center;text-align:center;">
+        <!-- Badge repas pré-rempli -->
+        <div style="background:#FDEEE8;border-radius:20px;padding:4px 12px;font-size:8px;color:#C4664A;font-weight:700;margin-bottom:16px;">
+          🌞 Déjeuner · 12:32 ✎
+        </div>
+        <!-- Gros micro prêt -->
+        <div style="position:relative;margin-bottom:10px;">
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:96px;height:96px;border-radius:50%;background:rgba(232,85,32,0.08);"></div>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;background:rgba(232,85,32,0.15);"></div>
+          <div style="position:relative;z-index:1;width:64px;height:64px;background:linear-gradient(145deg,#F5855A,#E85520);border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 7px 20px rgba(232,85,32,0.45);">🎙</div>
+        </div>
+        <div style="font-size:9px;color:#C09070;font-style:italic;margin-bottom:6px;">Appuie et parle</div>
+        <div style="font-size:7.5px;color:#E85520;font-weight:600;background:#FDEEE8;border-radius:8px;padding:4px 10px;">
+          Déjeuner déjà sélectionné
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">App s'ouvre avec le repas pré-sélectionné — 0 friction</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- Réglages notifications -->
+  <div class="flow-step">
+    <div class="step-label">Réglages notifs</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>12:32</span><span>●●● 🔋</span></div>
+      <div class="screen-body">
+        <div style="font-size:11px;font-weight:700;color:#2D1A0E;margin-bottom:8px;">Rappels repas</div>
+
+        <!-- Toggle global -->
+        <div class="settings-row" style="margin-bottom:2px;">
+          <div>
+            <div class="settings-label">Rappels activés</div>
+            <div class="settings-sub">Notification si repas non noté</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+
+        <div style="height:8px;"></div>
+
+        <!-- Par repas -->
+        <div style="font-size:7px;color:#C09070;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Par repas</div>
+
+        <div class="meal-toggle-row">
+          <span class="icon">☀️</span>
+          <div class="label">
+            <div>Petit-déjeuner</div>
+            <div style="font-size:6.5px;color:#C09070;">Rappel à 08:00</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="meal-toggle-row">
+          <span class="icon">🌞</span>
+          <div class="label">
+            <div>Déjeuner</div>
+            <div style="font-size:6.5px;color:#C09070;">Rappel à 12:30</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+        <div class="meal-toggle-row">
+          <span class="icon">🌤</span>
+          <div class="label">
+            <div>Collation</div>
+            <div style="font-size:6.5px;color:#C09070;">Rappel à 16:00</div>
+          </div>
+          <div class="toggle off"></div>
+        </div>
+        <div class="meal-toggle-row">
+          <span class="icon">🌙</span>
+          <div class="label">
+            <div>Dîner</div>
+            <div style="font-size:6.5px;color:#C09070;">Rappel à 20:00</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+
+        <div style="height:8px;"></div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Silence nocturne</div>
+            <div class="settings-sub">Aucune notif entre 22h et 7h</div>
+          </div>
+          <div style="font-size:7.5px;color:#E85520;font-weight:600;">Toujours actif</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Contrôle fin par repas. Collation désactivée ici.</div>
+  </div>
+
+</div>
+
+<!-- TEXTES DES NOTIFS -->
+<div class="section-title">5.3 · Textes des notifications</div>
+
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+  <div style="flex:1;min-width:180px;background:white;border-radius:12px;padding:14px;border:1.5px solid #F0D0B8;">
+    <div style="font-size:10px;font-weight:700;color:#5C3020;margin-bottom:8px;">☀️ Petit-déjeuner</div>
+    <div style="font-size:10px;color:#4A2F20;font-weight:600;margin-bottom:3px;">Tu as bien déjeuné ce matin ? 🌅</div>
+    <div style="font-size:9px;color:#9A7060;">Il est 8h — note ton petit-déjeuner avant de commencer ta journée.</div>
+  </div>
+  <div style="flex:1;min-width:180px;background:white;border-radius:12px;padding:14px;border:1.5px solid #F0D0B8;">
+    <div style="font-size:10px;font-weight:700;color:#5C3020;margin-bottom:8px;">🌞 Déjeuner</div>
+    <div style="font-size:10px;color:#4A2F20;font-weight:600;margin-bottom:3px;">Ton déjeuner ? 🌞</div>
+    <div style="font-size:9px;color:#9A7060;">Il est 12h30 et tu n'as pas encore noté ton déjeuner.</div>
+  </div>
+  <div style="flex:1;min-width:180px;background:white;border-radius:12px;padding:14px;border:1.5px solid #F0D0B8;">
+    <div style="font-size:10px;font-weight:700;color:#5C3020;margin-bottom:8px;">🌤 Collation</div>
+    <div style="font-size:10px;color:#4A2F20;font-weight:600;margin-bottom:3px;">Une petite collation aujourd'hui ? 🌤</div>
+    <div style="font-size:9px;color:#9A7060;">N'oublie pas de noter si tu as grignoté quelque chose.</div>
+  </div>
+  <div style="flex:1;min-width:180px;background:white;border-radius:12px;padding:14px;border:1.5px solid #F0D0B8;">
+    <div style="font-size:10px;font-weight:700;color:#5C3020;margin-bottom:8px;">🌙 Dîner</div>
+    <div style="font-size:10px;color:#4A2F20;font-weight:600;margin-bottom:3px;">Et pour le dîner ? 🌙</div>
+    <div style="font-size:9px;color:#9A7060;">Il est 20h — raconte-moi ce que tu as mangé ce soir.</div>
+  </div>
+</div>
+
+<div class="note-box">
+  <strong>Comportement clé :</strong> un tap sur la notification ouvre directement l'app avec le <strong>bon repas pré-sélectionné</strong> — elle appuie sur le micro et parle. Zéro navigation, zéro choix supplémentaire.<br><br>
+  <strong>Implémentation :</strong> <code>expo-notifications</code> avec des notifications locales planifiées dynamiquement chaque jour selon les plages horaires définies. Aucun serveur nécessaire.
+</div>
+
+</body>
+</html>

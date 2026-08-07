@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ressentis</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #F5F0EB; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 24px; }
+  h2 { font-size: 20px; font-weight: 700; color: #2D1A0E; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #9A7060; margin-bottom: 24px; line-height: 1.5; }
+  .section-title { font-size: 13px; font-weight: 700; color: #5C3020; margin: 20px 0 12px; padding-left: 10px; border-left: 3px solid #E85520; }
+
+  /* iPhone 168×364px */
+  .iphone { width: 168px; height: 364px; background: #FFF8F5; border-radius: 32px; border: 5px solid #1A1A1A; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+  .notch { width: 60px; height: 10px; background: #1A1A1A; border-radius: 0 0 10px 10px; margin: 0 auto; flex-shrink: 0; }
+  .status-bar { display: flex; justify-content: space-between; padding: 4px 12px 0; font-size: 8px; color: #5C3020; flex-shrink: 0; }
+  .screen-body { flex: 1; display: flex; flex-direction: column; padding: 8px 10px 10px; overflow: hidden; }
+
+  .flow-row { display: flex; gap: 16px; align-items: flex-start; overflow-x: auto; padding-bottom: 12px; }
+  .flow-step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+  .step-label { font-size: 10px; font-weight: 700; color: #E85520; background: #FDEEE8; padding: 3px 10px; border-radius: 20px; white-space: nowrap; text-align: center; }
+  .flow-arrow { font-size: 18px; color: #D0A880; flex-shrink: 0; margin-top: 140px; }
+  .screen-note { font-size: 9px; color: #888; text-align: center; max-width: 168px; line-height: 1.4; }
+
+  /* Option cards */
+  .options-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+  .opt-card { flex: 1; min-width: 180px; background: white; border: 2px solid #F0D0B8; border-radius: 16px; padding: 16px; cursor: pointer; transition: all 0.15s; }
+  .opt-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+  .opt-card.recommended { border-color: #E85520; }
+  .opt-title { font-size: 12px; font-weight: 700; color: #2D1A0E; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .opt-badge { font-size: 8px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: auto; }
+  .opt-body { font-size: 11px; color: #7A5A40; line-height: 1.6; margin-bottom: 8px; }
+  .pros { font-size: 9px; color: #3A6020; line-height: 1.7; }
+  .cons { font-size: 9px; color: #8A4020; line-height: 1.7; margin-top: 3px; }
+
+  /* Mic buttons */
+  .mic-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+  .halo { position: absolute; border-radius: 50%; }
+  .mic-btn { position: relative; z-index: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(232,85,32,0.4); }
+
+  /* Ressenti chips */
+  .chip { display: inline-flex; align-items: center; gap: 4px; border-radius: 20px; padding: 5px 10px; font-size: 8px; font-weight: 600; margin: 2px; cursor: pointer; }
+  .chip.selected { border: 2px solid currentColor; }
+
+  /* Timeline */
+  .tl { position: relative; padding-left: 16px; }
+  .tl::before { content: ''; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: #F0C8A8; }
+  .tl-dot { position: absolute; left: 1px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #FFF8F5; }
+  .tl-entry { position: relative; margin-bottom: 9px; }
+
+  .note-box { padding: 14px; background: #FFF5F0; border: 1px solid #F0C8A8; border-radius: 12px; font-size: 12px; color: #7A4020; line-height: 1.7; margin-top: 16px; }
+
+  /* Ressenti colors — violet doux pour distinguer des repas */
+  .r-bg { background: #F3EEFF; }
+  .r-border { border-color: #C0A0E0; }
+  .r-color { color: #7B5EA7; }
+  .r-dot-color { background: #9B7EC8; }
+</style>
+</head>
+<body>
+
+<h2>Ressentis — Intégration dans le design</h2>
+<p class="subtitle">Un ressenti peut être ajouté à n'importe quel moment, indépendamment d'un repas. Il apparaît dans le journal chronologiquement, visuellement distinct des repas.</p>
+
+<!-- OPTIONS -->
+<div class="section-title">Comment déclencher un ressenti ?</div>
+
+<div class="options-row">
+
+  <div class="opt-card recommended">
+    <div class="opt-title">
+      💜 Bouton dédié sous le micro
+      <span class="opt-badge" style="background:#FDEEE8;color:#E85520;">Recommandé</span>
+    </div>
+    <div class="opt-body">Un petit bouton "💜 Ressenti" sous le bouton micro. Toujours visible, toujours accessible. Ouvre une sheet rapide avec les catégories.</div>
+    <div class="pros">✅ Clair et distinct<br>✅ Pas de confusion avec l'enregistrement repas<br>✅ Accessible depuis l'écran principal ET le journal</div>
+    <div class="cons">⚠️ Ajoute un élément visuel à l'écran principal</div>
+  </div>
+
+  <div class="opt-card">
+    <div class="opt-title">⚡ Tap court sur le micro</div>
+    <div class="opt-body">Tap court = ressenti, appui long = repas. Deux comportements pour un même bouton.</div>
+    <div class="pros">✅ Interface épurée, 1 seul bouton</div>
+    <div class="cons">⚠️ Discoverability faible — elle ne saura pas<br>⚠️ Risque de confusion tap/appui long</div>
+  </div>
+
+  <div class="opt-card">
+    <div class="opt-title">🔼 Bouton dans le journal uniquement</div>
+    <div class="opt-body">Le ressenti n'est ajoutée que depuis le journal (glissement ↑). Pas accessible depuis l'écran principal.</div>
+    <div class="pros">✅ Écran principal intact</div>
+    <div class="cons">⚠️ Friction : il faut glisser ↑ d'abord<br>⚠️ Un ressenti peut arriver quand elle n'a pas le temps</div>
+  </div>
+
+</div>
+
+<!-- ÉCRANS -->
+<div class="section-title">Écrans — Bouton dédié (option recommandée)</div>
+
+<div class="flow-row">
+
+  <!-- Écran principal avec bouton ressenti -->
+  <div class="flow-step">
+    <div class="step-label">Écran principal</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>14:22</span><span>●●● 🔋</span></div>
+      <div class="screen-body" style="align-items:center;">
+        <div style="font-size:12px;font-weight:700;color:#2D1A0E;margin-bottom:3px;align-self:flex-start;">Bonjour Eugénie ☀️</div>
+        <div style="background:#FDEEE8;border-radius:20px;padding:3px 10px;font-size:8px;color:#C4664A;font-weight:600;margin-bottom:12px;">🌤 Collation · 14:22 ✎</div>
+
+        <!-- Gros mic -->
+        <div class="mic-wrap" style="width:90px;height:90px;margin-bottom:8px;">
+          <div class="halo" style="width:88px;height:88px;background:rgba(232,85,32,0.08);"></div>
+          <div class="halo" style="width:72px;height:72px;background:rgba(232,85,32,0.14);"></div>
+          <div class="mic-btn" style="width:58px;height:58px;background:linear-gradient(145deg,#F5855A,#E85520);font-size:22px;">🎙</div>
+        </div>
+        <div style="font-size:7px;color:#C09070;font-style:italic;margin-bottom:10px;">Appuie et parle</div>
+
+        <!-- Bouton ressenti — petit, discret, sous le micro -->
+        <div style="display:flex;align-items:center;gap:5px;background:#F3EEFF;border-radius:20px;padding:5px 12px;border:1.5px solid #C0A0E0;margin-bottom:10px;cursor:pointer;">
+          <span style="font-size:11px;">💜</span>
+          <span style="font-size:8px;font-weight:600;color:#7B5EA7;">Ajouter un ressenti</span>
+        </div>
+
+        <!-- Dernières entrées -->
+        <div style="width:100%;background:#FDEEE8;border-radius:10px;padding:8px 9px;margin-bottom:5px;display:flex;align-items:flex-start;gap:6px;">
+          <span style="font-size:12px;">🌞</span>
+          <div>
+            <div style="font-size:7.5px;font-weight:600;color:#4A2F20;">12:46 · Salade, pain</div>
+            <div style="font-size:6.5px;color:#C09070;">Déjeuner</div>
+          </div>
+        </div>
+        <!-- Ressenti dans le feed -->
+        <div style="width:100%;background:#F3EEFF;border-radius:10px;padding:8px 9px;display:flex;align-items:flex-start;gap:6px;border:1px solid #D8C8F0;">
+          <span style="font-size:12px;">💜</span>
+          <div>
+            <div style="font-size:7.5px;font-weight:600;color:#5A3A80;">13:30 · Ballonnement</div>
+            <div style="font-size:6.5px;color:#9B7EC8;">Ressenti</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Bouton 💜 discret sous le micro. Ressentis visibles dans le feed en violet.</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- Sheet sélecteur de ressenti -->
+  <div class="flow-step">
+    <div class="step-label">Sélecteur de ressenti</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>14:22</span><span>●●● 🔋</span></div>
+      <div class="screen-body" style="justify-content:flex-end;padding:0;">
+        <!-- Sheet qui monte -->
+        <div style="background:white;border-radius:20px 20px 0 0;padding:14px 12px 16px;box-shadow:0 -4px 20px rgba(0,0,0,0.12);">
+          <div style="width:32px;height:3px;background:#D0B8A8;border-radius:2px;margin:0 auto 12px;"></div>
+          <div style="font-size:11px;font-weight:700;color:#2D1A0E;margin-bottom:3px;">Comment tu te sens ?</div>
+          <div style="font-size:8px;color:#C09070;margin-bottom:10px;">14:22 · maintenant</div>
+
+          <!-- Catégories rapides -->
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;">
+            <div class="chip" style="background:#FFF0E8;color:#E85520;border:1.5px solid #F0C0A0;">😮‍💨 Ballonnement</div>
+            <div class="chip" style="background:#F3EEFF;color:#7B5EA7;border:1.5px solid #C0A0E0;">🤢 Nausée</div>
+            <div class="chip selected" style="background:#FFF0F0;color:#C03030;border:1.5px solid #E09090;">😣 Douleur</div>
+            <div class="chip" style="background:#FFF8E8;color:#9A7020;border:1.5px solid #E0C080;">😴 Fatigue</div>
+            <div class="chip" style="background:#F0FFF0;color:#3A7030;border:1.5px solid #90D090;">😊 Bien</div>
+            <div class="chip" style="background:#F5F5F5;color:#606060;border:1.5px solid #C0C0C0;">✏️ Autre</div>
+          </div>
+
+          <!-- Si "Douleur" sélectionné → préciser -->
+          <div style="background:#FFF0F0;border-radius:10px;padding:8px;margin-bottom:8px;border:1px solid #F0C0C0;">
+            <div style="font-size:8px;font-weight:600;color:#8A2020;margin-bottom:6px;">Où as-tu mal ?</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <div class="chip" style="background:white;color:#8A2020;border:1.5px solid #F0C0C0;">🫃 Ventre</div>
+              <div class="chip" style="background:white;color:#8A2020;border:1.5px solid #F0C0C0;">🤯 Tête</div>
+              <div class="chip" style="background:white;color:#8A2020;border:1.5px solid #F0C0C0;">💪 Autre</div>
+            </div>
+          </div>
+
+          <!-- Note vocale optionnelle -->
+          <div style="display:flex;align-items:center;gap:5px;background:#F5F0FA;border-radius:8px;padding:6px 8px;margin-bottom:10px;">
+            <span style="font-size:10px;">🎙</span>
+            <span style="font-size:7.5px;color:#9B7EC8;">Ajouter une note vocale (optionnel)</span>
+          </div>
+
+          <div style="background:linear-gradient(135deg,#9B7EC8,#7B5EA7);color:white;border-radius:10px;padding:8px;text-align:center;font-size:9px;font-weight:700;">
+            💜 Noter ce ressenti
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Sheet rapide. Catégories prédéfinies + note vocale optionnelle.</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- Journal avec ressentis mêlés aux repas -->
+  <div class="flow-step">
+    <div class="step-label">Journal mixte</div>
+    <div class="iphone" style="background:white;">
+      <div class="notch"></div>
+      <div class="status-bar" style="color:#2D1A0E;"><span>14:25</span><span>●●● 🔋</span></div>
+      <div class="screen-body" style="background:white;">
+        <div style="width:32px;height:3px;background:#D0B8A8;border-radius:2px;margin:0 auto 8px;"></div>
+        <div style="font-size:11px;font-weight:700;color:#2D1A0E;margin-bottom:6px;">Aujourd'hui</div>
+
+        <div class="tl">
+          <!-- Petit-déj -->
+          <div class="tl-entry">
+            <div class="tl-dot" style="background:#F07050;top:2px;"></div>
+            <div style="font-size:8px;font-weight:700;color:#5C3020;margin-bottom:2px;">☀️ Petit-déj · 08:12</div>
+            <div style="background:#FDEEE8;border-radius:7px;padding:5px 7px;font-size:7px;color:#4A2F20;">Café, tartines, banane.</div>
+          </div>
+
+          <!-- Déjeuner -->
+          <div class="tl-entry">
+            <div class="tl-dot" style="background:#F07050;top:2px;"></div>
+            <div style="font-size:8px;font-weight:700;color:#5C3020;margin-bottom:2px;">🌞 Déjeuner · 12:46</div>
+            <div style="background:#FDEEE8;border-radius:7px;padding:5px 7px;font-size:7px;color:#4A2F20;">Salade composée, pain.</div>
+          </div>
+
+          <!-- Ressenti entre deux repas -->
+          <div class="tl-entry">
+            <div class="tl-dot r-dot-color" style="top:2px;"></div>
+            <div style="font-size:8px;font-weight:700;color:#7B5EA7;margin-bottom:2px;">💜 Ressenti · 13:30</div>
+            <div style="background:#F3EEFF;border-radius:7px;padding:5px 7px;font-size:7px;color:#5A3A80;border:1px solid #D8C8F0;">
+              😣 Douleur · ventre<br>
+              <span style="color:#9B7EC8;font-style:italic;">~45min après le déjeuner</span>
+            </div>
+          </div>
+
+          <!-- Ressenti positif -->
+          <div class="tl-entry">
+            <div class="tl-dot r-dot-color" style="top:2px;"></div>
+            <div style="font-size:8px;font-weight:700;color:#7B5EA7;margin-bottom:2px;">💜 Ressenti · 14:10</div>
+            <div style="background:#F3EEFF;border-radius:7px;padding:5px 7px;font-size:7px;color:#5A3A80;border:1px solid #D8C8F0;">
+              😊 Je me sens bien
+            </div>
+          </div>
+
+          <!-- Collation en attente -->
+          <div class="tl-entry" style="opacity:0.5;">
+            <div class="tl-dot" style="background:#F0C0A0;top:2px;"></div>
+            <div style="font-size:8px;color:#C09070;">🌤 Collation · en attente…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Ressentis en violet dans la timeline. Note automatique "~45min après le déjeuner".</div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <!-- Détail ressenti + lien repas -->
+  <div class="flow-step">
+    <div class="step-label">Détail + lien repas</div>
+    <div class="iphone" style="background:white;">
+      <div class="notch"></div>
+      <div class="status-bar" style="color:#2D1A0E;"><span>14:25</span><span>●●● 🔋</span></div>
+      <div class="screen-body" style="background:white;">
+        <div style="font-size:10px;font-weight:700;color:#2D1A0E;margin-bottom:8px;">Ressenti · 13:30</div>
+
+        <!-- Ressenti -->
+        <div style="background:#F3EEFF;border-radius:12px;padding:12px;margin-bottom:8px;border:1.5px solid #C0A0E0;">
+          <div style="font-size:16px;margin-bottom:4px;">😣</div>
+          <div style="font-size:11px;font-weight:700;color:#5A3A80;margin-bottom:2px;">Douleur · ventre</div>
+          <div style="font-size:8px;color:#9B7EC8;">Noté à 13:30</div>
+        </div>
+
+        <!-- Lien automatique avec repas précédent -->
+        <div style="background:#FFF8F5;border:1px solid #F0D0B8;border-radius:10px;padding:8px;margin-bottom:8px;">
+          <div style="font-size:7.5px;color:#C09070;margin-bottom:4px;">Repas précédent :</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:12px;">🌞</span>
+            <div>
+              <div style="font-size:8px;font-weight:600;color:#5C3020;">Déjeuner · 12:46</div>
+              <div style="font-size:7px;color:#C09070;">Salade composée, pain.</div>
+            </div>
+          </div>
+          <div style="margin-top:6px;font-size:7px;color:#9B7EC8;font-style:italic;">⏱ 44 minutes après le repas</div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;background:#F3EEFF;border-radius:8px;padding:6px;text-align:center;font-size:7.5px;color:#7B5EA7;font-weight:600;">✏️ Modifier</div>
+          <div style="flex:1;background:#FFF0F0;border-radius:8px;padding:6px;text-align:center;font-size:7.5px;color:#C03030;font-weight:600;">🗑 Supprimer</div>
+        </div>
+
+        <div style="margin-top:8px;background:#F0F8EC;border-radius:8px;padding:7px;font-size:7px;color:#4A7030;text-align:center;">
+          💡 Ballonnement ou douleur souvent après ce repas ? L'app te le dira si un schéma se répète.
+        </div>
+      </div>
+    </div>
+    <div class="screen-note">Lien automatique avec le repas précédent + délai calculé.</div>
+  </div>
+
+</div>
+
+<!-- DATA MODEL UPDATE -->
+<div class="section-title">Mise à jour du modèle de données</div>
+
+<div style="background:white;border-radius:12px;padding:14px 16px;border:1px solid #F0D0B8;margin-bottom:16px;">
+  <div style="font-size:11px;font-weight:700;color:#5C3020;margin-bottom:8px;">Nouvelle table : <code style="background:#FFF0E8;padding:2px 5px;border-radius:4px;color:#C4664A;">ressentis</code></div>
+  <div style="font-size:10px;line-height:2;color:#5C3020;font-family:monospace;">
+    id &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; INTEGER PRIMARY KEY<br>
+    recorded_at &nbsp;&nbsp; DATETIME NOT NULL &nbsp;&nbsp;&nbsp;— heure exacte<br>
+    category &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TEXT NOT NULL &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— bloating|nausea|pain|fatigue|good|other<br>
+    sub_category &nbsp; TEXT &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— belly|head|other (si pain)<br>
+    note &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TEXT &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— note vocale transcrite (optionnel)<br>
+    entry_id &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; INTEGER &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— FK → entries.id (repas précédent, auto-lié)<br>
+    delay_minutes &nbsp;INTEGER &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— calculé auto : temps depuis le repas précédent
+  </div>
+</div>
+
+<div class="note-box">
+  <strong>Ce qui est automatique :</strong><br>
+  • Le lien avec le repas précédent est calculé automatiquement (on cherche la dernière entrée <code>entries</code> avant le ressenti)<br>
+  • Le délai en minutes est stocké pour permettre des analyses futures ("tu as souvent mal au ventre ~40min après le déjeuner")<br>
+  • La note vocale suit le même pipeline : transcript brut → Apple Intelligence → texte propre<br><br>
+  <strong>Catégories proposées :</strong> 😮‍💨 Ballonnement · 🤢 Nausée · 😣 Douleur · 😴 Fatigue · 😊 Je me sens bien · ✏️ Autre (vocal)<br><br>
+  <strong>Couleur :</strong> violet/prune pour distinguer visuellement des repas (corail) dans toute l'app.
+</div>
+
+</body>
+</html>

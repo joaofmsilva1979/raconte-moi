@@ -1,0 +1,253 @@
+<h2>Onboarding — Les 5 écrans</h2>
+<p class="subtitle">Une seule fois au premier lancement. Progression visible. Tout modifiable plus tard dans Réglages.</p>
+
+<style>
+.screens-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.phone-ob {
+  min-width: 140px;
+  background: #FFF8F5;
+  border-radius: 20px;
+  padding: 14px 11px;
+  border: 3px solid #2D1A0E;
+  font-family: -apple-system, sans-serif;
+  font-size: 8px;
+  position: relative;
+  flex-shrink: 0;
+}
+.ob-progress {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+.ob-dot {
+  width: 20px; height: 3px;
+  border-radius: 2px;
+  background: #F0D0B8;
+}
+.ob-dot.active { background: #E85520; }
+.ob-title { font-size: 11px; font-weight: 700; color: #2D1A0E; margin-bottom: 3px; text-align: center; }
+.ob-sub { font-size: 8px; color: #C09070; text-align: center; margin-bottom: 10px; line-height: 1.4; }
+.ob-btn {
+  background: linear-gradient(135deg, #F5855A, #E85520);
+  color: white;
+  border-radius: 10px;
+  padding: 7px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 9px;
+  margin-top: 10px;
+}
+.ob-input {
+  background: #FFF0E8;
+  border: 1.5px solid #F0C0A0;
+  border-radius: 8px;
+  padding: 7px 8px;
+  color: #2D1A0E;
+  font-size: 9px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+.screen-label {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: #C4664A;
+  margin-bottom: 6px;
+  background: #FDEEE8;
+  border-radius: 6px;
+  padding: 2px 6px;
+  display: inline-block;
+}
+</style>
+
+<div class="screens-row">
+
+  <!-- Écran 1 : Bienvenue + prénom -->
+  <div style="text-align:center;">
+    <div class="screen-label">1 — Bienvenue</div>
+    <div class="phone-ob">
+      <div class="ob-progress">
+        <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+      </div>
+      <div style="font-size:28px; text-align:center; margin-bottom:6px;">🥔</div>
+      <div class="ob-title">Les Notes<br>de Patate</div>
+      <div class="ob-sub">Ton journal alimentaire vocal, privé et simple.</div>
+      <div style="font-size:8px; color:#5C3020; margin-bottom:3px; font-weight:600;">Comment tu t'appelles ?</div>
+      <div class="ob-input" style="color:#E85520;">Léa▌</div>
+      <div class="ob-btn">Bonjour →</div>
+    </div>
+  </div>
+
+  <!-- Écran 2 : Objectif -->
+  <div style="text-align:center;">
+    <div class="screen-label">2 — Objectif</div>
+    <div class="phone-ob">
+      <div class="ob-progress">
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+      </div>
+      <div class="ob-title">Pourquoi tu notes ?</div>
+      <div class="ob-sub">Ça n'a aucune incidence sur tes données.</div>
+      <div style="display:flex; flex-direction:column; gap:5px; margin-top:6px;">
+        <div style="background:#FDEEE8; border:2px solid #E85520; border-radius:8px; padding:7px 8px; color:#5C3020; font-weight:600;">
+          👀 Surveiller ce que je mange
+        </div>
+        <div style="background:#FFF8F5; border:1.5px solid #F0D0B8; border-radius:8px; padding:7px 8px; color:#9A7060;">
+          🧠 Me souvenir de ce que j'ai mangé
+        </div>
+        <div style="background:#FFF8F5; border:1.5px solid #F0D0B8; border-radius:8px; padding:7px 8px; color:#9A7060;">
+          ✏️ Autre chose
+        </div>
+      </div>
+      <div class="ob-btn">Continuer →</div>
+    </div>
+  </div>
+
+  <!-- Écran 3 : Plages horaires -->
+  <div style="text-align:center;">
+    <div class="screen-label">3 — Mes repas</div>
+    <div class="phone-ob">
+      <div class="ob-progress">
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
+        <div class="ob-dot"></div>
+      </div>
+      <div class="ob-title">Mes horaires</div>
+      <div class="ob-sub">Glisse pour ajuster. L'app détecte le bon repas automatiquement.</div>
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+        <!-- Petit-dej -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+            <span style="font-weight:600; color:#5C3020;">☀️ Petit-déj</span>
+            <span style="color:#E85520; font-weight:600;">6h–10h</span>
+          </div>
+          <div style="background:#F0D0B8; border-radius:3px; height:4px; position:relative;">
+            <div style="position:absolute; left:10%; right:40%; background:#E85520; height:100%; border-radius:3px;"></div>
+          </div>
+        </div>
+        <!-- Dejeuner -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+            <span style="font-weight:600; color:#5C3020;">🌞 Déjeuner</span>
+            <span style="color:#E85520; font-weight:600;">11h–14h</span>
+          </div>
+          <div style="background:#F0D0B8; border-radius:3px; height:4px; position:relative;">
+            <div style="position:absolute; left:42%; right:25%; background:#E85520; height:100%; border-radius:3px;"></div>
+          </div>
+        </div>
+        <!-- Collation -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+            <span style="font-weight:600; color:#5C3020;">🌤 Collation</span>
+            <span style="color:#E85520; font-weight:600;">14h–18h</span>
+          </div>
+          <div style="background:#F0D0B8; border-radius:3px; height:4px; position:relative;">
+            <div style="position:absolute; left:58%; right:8%; background:#E85520; height:100%; border-radius:3px;"></div>
+          </div>
+        </div>
+        <!-- Diner -->
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+            <span style="font-weight:600; color:#5C3020;">🌙 Dîner</span>
+            <span style="color:#E85520; font-weight:600;">18h–22h</span>
+          </div>
+          <div style="background:#F0D0B8; border-radius:3px; height:4px; position:relative;">
+            <div style="position:absolute; left:72%; right:0%; background:#E85520; height:100%; border-radius:3px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ob-btn">Parfait →</div>
+    </div>
+  </div>
+
+  <!-- Écran 4 : Couleur -->
+  <div style="text-align:center;">
+    <div class="screen-label">4 — Ma couleur</div>
+    <div class="phone-ob">
+      <div class="ob-progress">
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot"></div>
+      </div>
+      <div class="ob-title">Ta couleur</div>
+      <div class="ob-sub">L'app s'adapte à toi.</div>
+      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin: 8px 0;">
+        <div style="width:20px;height:20px;border-radius:50%;background:#E85520;border:2px solid #2D1A0E;margin:0 auto;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#C4623A;margin:0 auto;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#C8943A;margin:0 auto;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#5C7A4E;margin:0 auto;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#3A8A8A;margin:0 auto;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#4F7FFF;margin:0 auto;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#7B5EA7;margin:0 auto;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#C96B8A;margin:0 auto;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#A03050;margin:0 auto;"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#5C4A35;margin:0 auto;"></div>
+      </div>
+      <!-- Mini preview -->
+      <div style="background:#FDEEE8; border-radius:10px; padding:8px; text-align:center;">
+        <div style="width:28px;height:28px;background:linear-gradient(135deg,#F5855A,#E85520);border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:12px;">🎙</div>
+        <div style="font-size:7px;color:#5C3020;font-weight:600;">Aperçu</div>
+      </div>
+      <div class="ob-btn">J'adore →</div>
+    </div>
+  </div>
+
+  <!-- Écran 5 : Permissions -->
+  <div style="text-align:center;">
+    <div class="screen-label">5 — Permissions</div>
+    <div class="phone-ob">
+      <div class="ob-progress">
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+        <div class="ob-dot active"></div>
+      </div>
+      <div class="ob-title">Dernière étape !</div>
+      <div class="ob-sub">L'app a besoin de 2 permissions pour fonctionner.</div>
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+        <div style="background:#FDEEE8; border-radius:8px; padding:8px; display:flex; gap:6px; align-items:center;">
+          <span style="font-size:16px;">🎙</span>
+          <div>
+            <div style="font-weight:600; color:#5C3020;">Microphone</div>
+            <div style="color:#C09070; font-size:7px;">Pour enregistrer ta voix</div>
+          </div>
+        </div>
+        <div style="background:#FFF3EE; border-radius:8px; padding:8px; display:flex; gap:6px; align-items:center; border:1px dashed #F0C0A0;">
+          <span style="font-size:16px;">🔔</span>
+          <div>
+            <div style="font-weight:600; color:#5C3020;">Notifications</div>
+            <div style="color:#C09070; font-size:7px;">Rappels repas (optionnel)</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:8px; background:#F0F8EC; border-radius:8px; padding:6px; font-size:7px; color:#4A7030; text-align:center;">
+        🔒 Aucune donnée ne quitte cet iPhone
+      </div>
+      <div class="ob-btn">C'est parti ! 🥔</div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px; padding:14px; background:#FFF5F0; border:1px solid #F0C8A8; border-radius:10px; font-size:12px; color:#7A4020; line-height:1.6;">
+  <strong>Règle d'or :</strong> tout ce qui est configuré ici est modifiable à tout moment dans Réglages (prénom, plages horaires, couleur, fréquence backup). L'onboarding est rapide — moins de 90 secondes.
+</div>

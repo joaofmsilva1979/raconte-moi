@@ -1,0 +1,15 @@
+{"type":"server-started","port":56332,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:56332","screen_dir":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content","state_dir":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/state"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/approches-design.html"}
+{"source":"user-event","type":"click","text":"Salut Léa 👋\n          Petit-déjeuner · il y a 2h\n        \n        \n        \n          \n            🎙\n          \n          Appuie et parle\n        \n        \n        \n          ☀️ 08:12 · Café + tartines\n        \n        \n          🌞 Déjeuner · en attente…\n        \n        \n        ↑ Glisse pour voir tout le journal\n      \n    \n    \n      C — Ultra-minimal (ma reco)\n      Un seul écran intelligent. Le bouton est ÉNORME, impossible de rater. Les 2-3 derniers repas apparaissent en dessous. Le journal complet se déploie par glissement vers le haut. Bleu/indigo, moderne, épuré.\n      \n        ✅ 0 navigation = 0 confusion\n        ✅ Micro toujours visible\n        ✅ Journal accessible sans quitter l'écran","choice":"c","id":null,"timestamp":1786086170168}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/direction-finale.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/couleurs-onboarding.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/flux-interaction.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/waiting-1.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/onboarding-flow.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/enregistrement-flow.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/journal-stockage.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/pipeline-reformulation.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/notifications.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/waiting-spec.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/ressentis.html"}
+{"type":"screen-added","file":"/Users/joao.silva/Projects/les-notes-de-patate/.superpowers/brainstorm/2261-1786085987/content/export.html"}
