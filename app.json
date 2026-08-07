@@ -21,7 +21,7 @@
         }
       ],
       [
-        "expo-av",
+        "expo-audio",
         {
           "microphonePermission": "Les notes de patate a besoin de ton micro pour enregistrer ce que tu as mangé."
         }

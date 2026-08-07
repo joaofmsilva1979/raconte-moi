@@ -17,14 +17,26 @@ jest.mock('expo-notifications', () => ({
   setNotificationHandler: jest.fn(),
 }));
 
-jest.mock('expo-av', () => ({
-  Audio: {
-    requestPermissionsAsync: jest.fn(() =>
-      Promise.resolve({ granted: true, status: 'granted' })
-    ),
-    getPermissionsAsync: jest.fn(() =>
-      Promise.resolve({ granted: true, status: 'granted' })
-    ),
-    setAudioModeAsync: jest.fn(() => Promise.resolve()),
+jest.mock('expo-audio', () => ({
+  requestRecordingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ granted: true, status: 'granted' })
+  ),
+  getRecordingPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ granted: true, status: 'granted' })
+  ),
+  setAudioModeAsync: jest.fn(() => Promise.resolve()),
+  useAudioRecorder: jest.fn(() => ({
+    prepareToRecordAsync: jest.fn(() => Promise.resolve()),
+    record: jest.fn(),
+    stop: jest.fn(() => Promise.resolve()),
+    uri: null,
+    id: 0,
+  })),
+  useAudioRecorderState: jest.fn(() => ({
+    isRecording: false,
+    currentTime: 0,
+  })),
+  RecordingPresets: {
+    HIGH_QUALITY: {},
   },
 }));
