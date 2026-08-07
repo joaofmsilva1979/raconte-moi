@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline reformulation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #F5F0EB; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 24px; }
+  h2 { font-size: 20px; font-weight: 700; color: #2D1A0E; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #9A7060; margin-bottom: 24px; line-height: 1.5; }
+
+  /* Pipeline */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 32px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .pipe-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border: 2px solid #F0D0B8;
+    border-radius: 14px;
+    padding: 14px 12px;
+    min-width: 110px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .pipe-step.highlight {
+    border-color: #E85520;
+    background: #FFFAF8;
+    box-shadow: 0 4px 16px rgba(232,85,32,0.15);
+  }
+  .pipe-step.new-step {
+    border-color: #7B5EA7;
+    background: #FBF8FF;
+    box-shadow: 0 4px 16px rgba(123,94,167,0.18);
+  }
+  .pipe-icon { font-size: 24px; margin-bottom: 6px; }
+  .pipe-label { font-size: 9px; font-weight: 700; color: #2D1A0E; margin-bottom: 3px; }
+  .pipe-sub { font-size: 8px; color: #9A7060; line-height: 1.3; }
+  .pipe-tag {
+    font-size: 7px; font-weight: 700;
+    padding: 2px 6px; border-radius: 8px;
+    margin-top: 6px;
+  }
+  .pipe-arrow {
+    font-size: 16px; color: #D0A880;
+    flex-shrink: 0; padding: 0 4px;
+    margin-bottom: 20px;
+  }
+  .new-badge {
+    font-size: 7px; font-weight: 700; color: white;
+    background: #7B5EA7; border-radius: 8px;
+    padding: 2px 6px; margin-top: 6px;
+  }
+
+  /* Options reformulation */
+  .options-grid { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+  .option-card {
+    flex: 1; min-width: 200px;
+    background: white;
+    border: 2px solid #F0D0B8;
+    border-radius: 16px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .option-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+  .option-card.recommended { border-color: #E85520; }
+  .option-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .option-icon { font-size: 20px; }
+  .option-title { font-size: 12px; font-weight: 700; color: #2D1A0E; }
+  .option-badge {
+    font-size: 8px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    margin-left: auto;
+  }
+  .option-body { font-size: 11px; color: #7A5A40; line-height: 1.6; margin-bottom: 10px; }
+  .pros-cons { display: flex; gap: 8px; }
+  .pros, .cons { flex: 1; font-size: 9px; line-height: 1.6; }
+  .pros { color: #3A6020; }
+  .cons { color: #8A4020; }
+  .pros::before { content: "✅ "; }
+
+  /* iPhone preview */
+  .iphone {
+    width: 168px; height: 364px;
+    background: #FFF8F5;
+    border-radius: 32px;
+    border: 5px solid #1A1A1A;
+    display: flex; flex-direction: column;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .notch { width: 60px; height: 10px; background: #1A1A1A; border-radius: 0 0 10px 10px; margin: 0 auto; }
+  .status-bar { display: flex; justify-content: space-between; padding: 4px 12px 0; font-size: 8px; color: #5C3020; }
+  .screen-body { flex: 1; display: flex; flex-direction: column; padding: 8px 10px 10px; overflow: hidden; }
+
+  .screen-row { display: flex; gap: 16px; align-items: flex-start; }
+  .screen-label {
+    font-size: 10px; font-weight: 700; color: #E85520;
+    background: #FDEEE8; padding: 3px 10px;
+    border-radius: 20px; text-align: center;
+    margin-bottom: 8px;
+  }
+  .screen-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .flow-arrow { font-size: 18px; color: #D0A880; margin-top: 140px; flex-shrink: 0; }
+
+  .raw-box {
+    background: #F5F0F0;
+    border: 1.5px solid #E0C8C0;
+    border-radius: 8px; padding: 7px 8px;
+    font-size: 7.5px; color: #8A6050;
+    line-height: 1.5; width: 100%;
+    font-style: italic;
+  }
+  .clean-box {
+    background: white;
+    border: 1.5px solid #F0D0B8;
+    border-radius: 8px; padding: 7px 8px;
+    font-size: 7.5px; color: #2D1A0E;
+    line-height: 1.5; width: 100%;
+  }
+  .spinner {
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px; font-size: 7px; color: #9070C0;
+    margin: 4px 0;
+  }
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: #9070C0; }
+  .edit-hint {
+    font-size: 7px; color: #C09070;
+    text-align: center; font-style: italic;
+    margin-top: 3px;
+  }
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, #F5855A, #E85520);
+    color: white; border-radius: 10px;
+    padding: 8px; font-size: 9px; font-weight: 700;
+    text-align: center; margin-top: auto;
+  }
+  .note-box {
+    padding: 14px; background: #FFF5F0;
+    border: 1px solid #F0C8A8; border-radius: 12px;
+    font-size: 12px; color: #7A4020; line-height: 1.7;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h2>Nouveau pipeline — avec reformulation IA</h2>
+<p class="subtitle">Capture → transcript brut → reformulation propre → correction possible → sauvegarde. L'audio ne quitte jamais l'iPhone.</p>
+
+<!-- PIPELINE VISUEL -->
+<div class="pipeline">
+  <div class="pipe-step highlight">
+    <div class="pipe-icon">🎙</div>
+    <div class="pipe-label">Capture audio</div>
+    <div class="pipe-sub">Appui long sur le micro</div>
+    <div class="pipe-tag" style="background:#FDEEE8;color:#C4664A;">On-device</div>
+  </div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-step highlight">
+    <div class="pipe-icon">👂</div>
+    <div class="pipe-label">Transcription</div>
+    <div class="pipe-sub">iOS Speech Recognition</div>
+    <div class="pipe-tag" style="background:#FDEEE8;color:#C4664A;">On-device</div>
+  </div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-step new-step">
+    <div class="pipe-icon">✨</div>
+    <div class="pipe-label">Reformulation</div>
+    <div class="pipe-sub">Texte brut → phrase claire et naturelle</div>
+    <div class="new-badge">NOUVEAU</div>
+  </div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-step">
+    <div class="pipe-icon">✏️</div>
+    <div class="pipe-label">Révision</div>
+    <div class="pipe-sub">Corriger / compléter avant de sauver</div>
+    <div class="pipe-tag" style="background:#E8F5E0;color:#3A6020;">Optionnel</div>
+  </div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-step">
+    <div class="pipe-icon">💾</div>
+    <div class="pipe-label">Sauvegarde</div>
+    <div class="pipe-sub">SQLite local, jamais envoyé ailleurs</div>
+    <div class="pipe-tag" style="background:#FDEEE8;color:#C4664A;">Local</div>
+  </div>
+</div>
+
+<!-- OPTIONS -->
+<div style="font-size:13px;font-weight:700;color:#5C3020;margin-bottom:12px;padding-left:10px;border-left:3px solid #E85520;">
+  Où tourne la reformulation ?
+</div>
+
+<div class="options-grid">
+
+  <!-- Option A : Claude API -->
+  <div class="option-card recommended">
+    <div class="option-header">
+      <div class="option-icon">🤖</div>
+      <div class="option-title">Claude API (cloud)</div>
+      <div class="option-badge" style="background:#FDEEE8;color:#E85520;">Recommandé</div>
+    </div>
+    <div class="option-body">
+      Un micro-prompt envoyé à Claude : <em>"Reformule ce que j'ai mangé en une phrase claire et naturelle."</em><br><br>
+      <strong>Coût réel :</strong> ~0,0001$ par note. Pour 5 repas/jour × 30 jours = 0,015$/mois. Quasi gratuit.
+    </div>
+    <div class="pros-cons">
+      <div class="pros">Meilleure qualité<br>Gère les fautes vocales<br>Toujours à jour</div>
+      <div class="cons" style="color:#8A4020;">⚠️ Besoin internet<br>⚠️ Texte envoyé brièvement<br>⚠️ Clé API à gérer</div>
+    </div>
+  </div>
+
+  <!-- Option B : Apple Intelligence -->
+  <div class="option-card">
+    <div class="option-header">
+      <div class="option-icon">🍎</div>
+      <div class="option-title">Apple Intelligence</div>
+      <div class="option-badge" style="background:#F0F0F5;color:#505080;">iOS 18.1+</div>
+    </div>
+    <div class="option-body">
+      Reformulation 100% on-device via les Writing Tools d'Apple Intelligence. Aucune donnée ne quitte l'iPhone, même pour la reformulation.
+    </div>
+    <div class="pros-cons">
+      <div class="pros">100% privé<br>Fonctionne hors-ligne<br>Gratuit</div>
+      <div class="cons" style="color:#8A4020;">⚠️ iPhone 15 Pro+ seulement<br>⚠️ API limitée en React Native<br>⚠️ Qualité variable</div>
+    </div>
+  </div>
+
+  <!-- Option C : Hybride -->
+  <div class="option-card">
+    <div class="option-header">
+      <div class="option-icon">🔀</div>
+      <div class="option-title">Hybride intelligent</div>
+      <div class="option-badge" style="background:#E8F5E0;color:#3A6020;">Flexible</div>
+    </div>
+    <div class="option-body">
+      Si internet disponible → Claude API. Sinon → affiche le transcript brut avec possibilité de corriger à la main. Le meilleur des deux mondes.
+    </div>
+    <div class="pros-cons">
+      <div class="pros">Fonctionne toujours<br>Qualité max si connecté<br>Graceful fallback</div>
+      <div class="cons" style="color:#8A4020;">⚠️ Légèrement plus complexe<br>⚠️ Expérience variable</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ÉCRAN DE CONFIRMATION REDESSINÉ -->
+<div style="font-size:13px;font-weight:700;color:#5C3020;margin-bottom:12px;padding-left:10px;border-left:3px solid #7B5EA7;">
+  Nouvel écran de confirmation (avec reformulation)
+</div>
+
+<div class="screen-row">
+
+  <div class="screen-col">
+    <div class="screen-label">Pendant la reformulation</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>09:15</span><span>●●● 🔋</span></div>
+      <div class="screen-body">
+        <div style="font-size:10px;font-weight:700;color:#2D1A0E;margin-bottom:8px;">Traitement…</div>
+        <div style="font-size:8px;color:#C09070;margin-bottom:6px;">Ce que tu as dit :</div>
+        <div class="raw-box">
+          "euh un bol de céréales avec du lait et pis un jus d'orange"
+        </div>
+        <div class="spinner" style="margin:10px 0;">
+          <div class="dot"></div>
+          <div class="dot" style="opacity:0.6;"></div>
+          <div class="dot" style="opacity:0.3;"></div>
+          <span style="margin-left:4px;">Reformulation…</span>
+        </div>
+        <div style="font-size:7px;color:#B0A0C0;text-align:center;font-style:italic;">✨ Claude reformule ta note</div>
+        <div style="margin-top:auto;background:#F5F0FA;border-radius:8px;padding:8px;font-size:7px;color:#7060A0;text-align:center;">
+          🔒 Seul le texte transite<br>jamais l'audio
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <div class="screen-col">
+    <div class="screen-label">Résultat + correction</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>09:15</span><span>●●● 🔋</span></div>
+      <div class="screen-body">
+        <div style="font-size:10px;font-weight:700;color:#2D1A0E;margin-bottom:6px;">Vérifie ta note</div>
+        <div style="font-size:8px;color:#C09070;margin-bottom:4px;">✨ Reformulé :</div>
+        <div class="clean-box" style="border-color:#C0A0E0;margin-bottom:4px;">
+          Un bol de céréales au lait et un jus d'orange.
+        </div>
+        <div class="edit-hint">Tape pour corriger ou compléter</div>
+        <div style="height:1px;background:#F0D8C8;margin:8px 0;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="font-size:8px;color:#C09070;">🕗 09:15 · ☀️ Petit-déjeuner</div>
+          <div style="font-size:8px;color:#E85520;font-weight:600;">Changer</div>
+        </div>
+        <div style="display:flex;gap:6px;font-size:8px;color:#C09070;margin-bottom:8px;">
+          <div style="background:#FDEEE8;border-radius:6px;padding:3px 7px;cursor:pointer;">🎙 Réenregistrer</div>
+          <div style="background:#FDEEE8;border-radius:6px;padding:3px 7px;cursor:pointer;">↩️ Voir original</div>
+        </div>
+        <div class="btn-primary">✓ Sauvegarder</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow">→</div>
+
+  <div class="screen-col">
+    <div class="screen-label">Dans le journal</div>
+    <div class="iphone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>09:16</span><span>●●● 🔋</span></div>
+      <div class="screen-body">
+        <div style="font-size:10px;font-weight:700;color:#2D1A0E;margin-bottom:6px;">Aujourd'hui</div>
+        <div style="position:relative;padding-left:16px;border-left:2px solid #F0C8A8;">
+          <div style="position:relative;margin-bottom:10px;">
+            <div style="position:absolute;left:-20px;top:2px;width:10px;height:10px;border-radius:50%;background:#F07050;border:2px solid #FFF8F5;"></div>
+            <div style="font-size:8px;font-weight:700;color:#5C3020;margin-bottom:3px;">☀️ Petit-déj · 09:15</div>
+            <div style="background:#FDEEE8;border-radius:7px;padding:6px 8px;font-size:7.5px;color:#4A2F20;line-height:1.5;">
+              Un bol de céréales au lait et un jus d'orange.
+            </div>
+            <div style="font-size:6.5px;color:#D0A880;margin-top:2px;display:flex;align-items:center;gap:4px;">
+              <span>✨ reformulé</span>
+              <span>·</span>
+              <span style="color:#E85520;cursor:pointer;">voir original</span>
+            </div>
+          </div>
+          <div style="position:relative;opacity:0.5;">
+            <div style="position:absolute;left:-20px;top:2px;width:10px;height:10px;border-radius:50%;background:#F0C0A0;border:2px solid #FFF8F5;"></div>
+            <div style="font-size:8px;font-weight:500;color:#C09070;">🌞 Déjeuner · en attente…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="note-box" style="margin-top:20px;">
+  <strong>Prompt de reformulation (exemple) :</strong><br>
+  <em style="background:#F5EEE6;padding:4px 8px;border-radius:6px;display:inline-block;margin-top:4px;font-size:11px;">
+    "Reformule ce que j'ai mangé en une seule phrase claire et naturelle en français. Ne rajoute rien, ne retire rien. Texte : [transcript brut]"
+  </em><br><br>
+  • L'entrée dans le journal garde une petite mention "✨ reformulé" avec lien "voir original" pour la transparence.<br>
+  • Elle peut toujours <strong>réenregistrer</strong> ou <strong>corriger à la main</strong> avant de sauvegarder.<br>
+  • Si pas de connexion → on affiche le transcript brut directement, elle corrige si besoin.
+</div>
+
+</body>
+</html>
