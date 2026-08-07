@@ -19,6 +19,12 @@
           "icon": "./assets/notification-icon.png",
           "color": "#E85520"
         }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Les notes de patate a besoin de ton micro pour enregistrer ce que tu as mangé."
+        }
       ]
     ],
     "experiments": {

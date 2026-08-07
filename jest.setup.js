@@ -16,3 +16,15 @@ jest.mock('expo-notifications', () => ({
   getExpoPushTokenAsync: jest.fn(),
   setNotificationHandler: jest.fn(),
 }));
+
+jest.mock('expo-av', () => ({
+  Audio: {
+    requestPermissionsAsync: jest.fn(() =>
+      Promise.resolve({ granted: true, status: 'granted' })
+    ),
+    getPermissionsAsync: jest.fn(() =>
+      Promise.resolve({ granted: true, status: 'granted' })
+    ),
+    setAudioModeAsync: jest.fn(() => Promise.resolve()),
+  },
+}));
