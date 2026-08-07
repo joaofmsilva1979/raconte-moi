@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Les notes de patate",
+    "slug": "les-notes-de-patate",
+    "version": "1.0.0",
+    "scheme": "lesnotesdepatate",
+    "platforms": ["ios"],
+    "ios": {
+      "bundleIdentifier": "lu.ciglesch.lesnotesdepatate",
+      "supportsTablet": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#E85520"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
