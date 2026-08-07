@@ -8,7 +8,6 @@ import { COLOR_PALETTES } from '@/constants/colors';
 
 export default function ColorScreen() {
   const { settings, savePrimaryColor } = useSettingsStore();
-  const theme = useColorTheme();
   const [selected, setSelected] = useState(settings?.primary_color ?? '#E85520');
   const selectedPalette = COLOR_PALETTES.find(p => p.primary === selected) ?? COLOR_PALETTES[0];
 
