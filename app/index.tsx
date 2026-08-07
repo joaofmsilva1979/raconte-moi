@@ -1,16 +1,29 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { getAppSettings } from '@/db/settingsRepository';
 
-export default function HomeScreen() {
+export default function IndexScreen() {
+  useEffect(() => {
+    getAppSettings().then(settings => {
+      if (!settings.onboarding_done) {
+        router.replace('/onboarding');
+      }
+    });
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>🥔 Les notes de patate</Text>
-      <Text style={styles.sub}>Foundation OK — Plan 02 : Onboarding</Text>
+      <ActivityIndicator size="large" color="#E85520" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF8F5' },
-  text: { fontSize: 24, fontWeight: '700', color: '#2D1A0E', marginBottom: 8 },
-  sub: { fontSize: 13, color: '#C09070' },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF8F5',
+  },
 });

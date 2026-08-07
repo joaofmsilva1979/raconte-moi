@@ -40,3 +40,10 @@ jest.mock('expo-audio', () => ({
     HIGH_QUALITY: {},
   },
 }));
+
+jest.mock('expo-router', () => ({
+  router: {
+    replace: jest.fn(),
+    push: jest.fn(),
+  },
+}));
