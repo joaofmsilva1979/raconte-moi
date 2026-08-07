@@ -3,6 +3,7 @@
     "name": "Les notes de patate",
     "slug": "les-notes-de-patate",
     "version": "1.0.0",
+    "orientation": "portrait",
     "scheme": "lesnotesdepatate",
     "platforms": ["ios"],
     "ios": {
