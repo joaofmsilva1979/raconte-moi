@@ -22,6 +22,14 @@ jest.mock('@/components/JournalSheet', () => ({
   JournalSheet: () => null,
 }));
 
+jest.mock('@/store/ressentisStore', () => ({
+  useRessentisStore: jest.fn(),
+}));
+
+jest.mock('@/components/RessentisSheet', () => ({
+  RessentisSheet: () => null,
+}));
+
 jest.mock('@/hooks/useColorTheme', () => ({
   useColorTheme: () => ({
     primary: '#E85520',
@@ -36,11 +44,13 @@ import { render, fireEvent, act } from '@testing-library/react-native';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useRecordingStore } from '@/store/recordingStore';
 import { useJournalStore } from '@/store/journalStore';
+import { useRessentisStore } from '@/store/ressentisStore';
 import HomeScreen from '@/app/index';
 
 const mockSettings = useSettingsStore as jest.MockedFunction<typeof useSettingsStore>;
 const mockRecording = useRecordingStore as jest.MockedFunction<typeof useRecordingStore>;
 const mockJournal = useJournalStore as jest.MockedFunction<typeof useJournalStore>;
+const mockRessentis = useRessentisStore as jest.MockedFunction<typeof useRessentisStore>;
 
 const baseDoneSettings = {
   settings: {
@@ -81,6 +91,11 @@ describe('HomeScreen', () => {
     mockSettings.mockReturnValue(baseDoneSettings as any);
     mockRecording.mockReturnValue(baseRecordingState as any);
     mockJournal.mockReturnValue(baseJournalState as any);
+    mockRessentis.mockReturnValue({
+      isSheetOpen: false,
+      openSheet: jest.fn(),
+      closeSheet: jest.fn(),
+    } as any);
   });
 
   it('redirects to /onboarding when onboarding_done is false', async () => {
@@ -177,5 +192,18 @@ describe('HomeScreen', () => {
     });
 
     expect(refreshCurrentDay).toHaveBeenCalled();
+  });
+
+  it('renders the add-ressenti button', async () => {
+    const { getByTestId } = await render(<HomeScreen />);
+    expect(getByTestId('add-ressenti-btn')).toBeTruthy();
+  });
+
+  it('calls openSheet (ressentis) when add-ressenti is pressed', async () => {
+    const openSheet = jest.fn();
+    mockRessentis.mockReturnValue({ isSheetOpen: false, openSheet, closeSheet: jest.fn() } as any);
+    const { getByTestId } = await render(<HomeScreen />);
+    fireEvent.press(getByTestId('add-ressenti-btn'));
+    expect(openSheet).toHaveBeenCalled();
   });
 });

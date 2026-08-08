@@ -5,10 +5,12 @@ import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { useRecordingStore } from '@/store/recordingStore';
 import { useJournalStore } from '@/store/journalStore';
+import { useRessentisStore } from '@/store/ressentisStore';
 import { MicButton } from '@/components/MicButton';
 import { WaveformView } from '@/components/WaveformView';
 import { MealBadge } from '@/components/MealBadge';
 import { JournalSheet } from '@/components/JournalSheet';
+import { RessentisSheet } from '@/components/RessentisSheet';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,6 +25,7 @@ export default function HomeScreen() {
     stopRecording,
   } = useRecordingStore();
   const { openSheet, closeSheet, refreshCurrentDay } = useJournalStore();
+  const { openSheet: openRessentisSheet } = useRessentisStore();
 
   useEffect(() => {
     loadSettings();
@@ -101,6 +104,14 @@ export default function HomeScreen() {
       </Text>
 
       <TouchableOpacity
+        testID="add-ressenti-btn"
+        onPress={openRessentisSheet}
+        style={styles.ressentisBtn}
+      >
+        <Text style={styles.ressentsBtnText}>💜 Ajouter un ressenti</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
         testID="open-journal-btn"
         onPress={openSheet}
         style={styles.journalOpener}
@@ -108,6 +119,7 @@ export default function HomeScreen() {
         <Text style={[styles.journalOpenerText, { color: primary }]}>↑ Journal</Text>
       </TouchableOpacity>
 
+      <RessentisSheet primaryColor={primary} />
       <JournalSheet primaryColor={primary} onAddEntry={closeSheet} />
     </SafeAreaView>
   );
@@ -163,5 +175,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     opacity: 0.7,
+  },
+  ressentisBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  ressentsBtnText: {
+    fontSize: 13,
+    color: '#8B5CF6',
+    fontWeight: '600',
   },
 });
