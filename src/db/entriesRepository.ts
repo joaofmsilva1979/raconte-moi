@@ -42,3 +42,11 @@ export async function updateEntryTranscript(id: number, transcript: string): Pro
     [transcript, id]
   );
 }
+
+export async function getLastEntryBefore(dateTimeStr: string): Promise<Entry | null> {
+  const db = await getDatabase();
+  return db.getFirstAsync<Entry>(
+    `SELECT * FROM entries WHERE recorded_at < ? ORDER BY recorded_at DESC LIMIT 1`,
+    [dateTimeStr]
+  );
+}
