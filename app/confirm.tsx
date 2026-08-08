@@ -1,0 +1,155 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useColorTheme } from '@/hooks/useColorTheme';
+import { useRecordingStore } from '@/store/recordingStore';
+import { MealBadge } from '@/components/MealBadge';
+
+export default function ConfirmScreen() {
+  const router = useRouter();
+  const { primary } = useColorTheme();
+  const {
+    editedText,
+    rawText,
+    wasReformulated,
+    mealType,
+    recordedAt,
+    updateEditedText,
+    saveEntry,
+    discard,
+    reRecord,
+  } = useRecordingStore();
+
+  const [showOriginal, setShowOriginal] = useState(false);
+
+  async function handleSave() {
+    await saveEntry();
+    router.replace('/');
+  }
+
+  function handleDiscard() {
+    discard();
+    router.back();
+  }
+
+  function handleReRecord() {
+    reRecord();
+    router.back();
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <Text style={styles.title}>Vérifie ta note</Text>
+
+        <MealBadge
+          mealType={mealType}
+          time={recordedAt ?? new Date()}
+          onPress={() => router.push('/meal-picker')}
+          primaryColor={primary}
+        />
+
+        <View style={styles.textSection}>
+          {wasReformulated && (
+            <Text style={styles.reformulatedLabel}>✨ Reformulé :</Text>
+          )}
+          <TextInput
+            style={styles.textInput}
+            value={editedText}
+            onChangeText={updateEditedText}
+            multiline
+          />
+          <Text style={styles.hint}>Tape pour corriger ou compléter</Text>
+        </View>
+
+        {wasReformulated && (
+          <TouchableOpacity onPress={() => setShowOriginal((v) => !v)}>
+            <Text style={[styles.link, { color: primary }]}>Voir original</Text>
+          </TouchableOpacity>
+        )}
+
+        {showOriginal && (
+          <View style={styles.originalBox}>
+            <Text style={styles.originalText}>"{rawText}"</Text>
+          </View>
+        )}
+
+        {wasReformulated && (
+          <Text style={styles.reformuledBadge}>✨ reformulé</Text>
+        )}
+
+        <TouchableOpacity
+          testID="save-button"
+          onPress={handleSave}
+          style={[styles.btnPrimary, { backgroundColor: primary }]}
+        >
+          <Text style={styles.btnPrimaryText}>✓ Sauvegarder</Text>
+        </TouchableOpacity>
+
+        <View style={styles.secondaryRow}>
+          <TouchableOpacity
+            testID="re-record-button"
+            onPress={handleReRecord}
+            style={styles.btnSecondary}
+          >
+            <Text style={[styles.btnSecondaryText, { color: primary }]}>🎙 Réenregistrer</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="discard-button"
+            onPress={handleDiscard}
+            style={styles.btnSecondary}
+          >
+            <Text style={[styles.btnSecondaryText, { color: primary }]}>✕ Annuler</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.privacy}>🔒 Restera sur cet iPhone</Text>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#FFF8F5' },
+  scroll: { padding: 24, gap: 16 },
+  title: { fontSize: 20, fontWeight: '700', color: '#2D1A0E' },
+  textSection: { gap: 6 },
+  reformulatedLabel: { fontSize: 12, color: '#C09070' },
+  textInput: {
+    borderWidth: 1.5,
+    borderColor: '#F0D0B8',
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+    color: '#2D1A0E',
+    minHeight: 60,
+    backgroundColor: 'white',
+  },
+  hint: { fontSize: 11, color: '#C09070', fontStyle: 'italic', textAlign: 'center' },
+  link: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  originalBox: { backgroundColor: '#F5F0F0', borderRadius: 10, padding: 12 },
+  originalText: { fontSize: 13, color: '#8A6050', fontStyle: 'italic' },
+  reformuledBadge: { fontSize: 11, color: '#9070C0', textAlign: 'center' },
+  btnPrimary: { borderRadius: 14, padding: 14, alignItems: 'center' },
+  btnPrimaryText: { color: 'white', fontWeight: '700', fontSize: 16 },
+  secondaryRow: { flexDirection: 'row', gap: 8 },
+  btnSecondary: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 11,
+    alignItems: 'center',
+    backgroundColor: '#FFF0E8',
+    borderWidth: 1,
+    borderColor: '#F0C0A0',
+  },
+  btnSecondaryText: { fontWeight: '600', fontSize: 13 },
+  privacy: { fontSize: 11, color: '#C0B0A0', textAlign: 'center' },
+});
