@@ -1,12 +1,14 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, PanResponder } from 'react-native';
 import { useRouter, Redirect } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { useRecordingStore } from '@/store/recordingStore';
+import { useJournalStore } from '@/store/journalStore';
 import { MicButton } from '@/components/MicButton';
 import { WaveformView } from '@/components/WaveformView';
 import { MealBadge } from '@/components/MealBadge';
+import { JournalSheet } from '@/components/JournalSheet';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function HomeScreen() {
     startRecording,
     stopRecording,
   } = useRecordingStore();
+  const { openSheet, closeSheet, refreshCurrentDay } = useJournalStore();
 
   useEffect(() => {
     loadSettings();
@@ -31,6 +34,23 @@ export default function HomeScreen() {
     }
   }, [phase]);
 
+  const prevPhaseRef = useRef(phase);
+  useEffect(() => {
+    if (prevPhaseRef.current !== 'idle' && phase === 'idle') {
+      refreshCurrentDay();
+    }
+    prevPhaseRef.current = phase;
+  }, [phase]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, { dy }) => dy < -40,
+      onPanResponderRelease: (_, { dy }) => {
+        if (dy < -40) openSheet();
+      },
+    })
+  ).current;
+
   if (!settings?.onboarding_done) {
     return <Redirect href="/onboarding" />;
   }
@@ -41,7 +61,10 @@ export default function HomeScreen() {
   const greeting = hour < 18 ? 'Bonjour' : 'Bonsoir';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: background }]}
+      {...panResponder.panHandlers}
+    >
       <Text style={styles.greeting}>
         {greeting} {settings.first_name} ☀️
       </Text>
@@ -76,6 +99,16 @@ export default function HomeScreen() {
       <Text style={styles.hint}>
         {isRecording ? 'Relâche pour terminer' : 'Appuie et parle'}
       </Text>
+
+      <TouchableOpacity
+        testID="open-journal-btn"
+        onPress={openSheet}
+        style={styles.journalOpener}
+      >
+        <Text style={[styles.journalOpenerText, { color: primary }]}>↑ Journal</Text>
+      </TouchableOpacity>
+
+      <JournalSheet primaryColor={primary} onAddEntry={closeSheet} />
     </SafeAreaView>
   );
 }
@@ -119,5 +152,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#C09070',
     fontStyle: 'italic',
+  },
+  journalOpener: {
+    position: 'absolute',
+    bottom: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+  },
+  journalOpenerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    opacity: 0.7,
   },
 });

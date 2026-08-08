@@ -14,6 +14,14 @@ jest.mock('@/store/recordingStore', () => ({
   useRecordingStore: jest.fn(),
 }));
 
+jest.mock('@/store/journalStore', () => ({
+  useJournalStore: jest.fn(),
+}));
+
+jest.mock('@/components/JournalSheet', () => ({
+  JournalSheet: () => null,
+}));
+
 jest.mock('@/hooks/useColorTheme', () => ({
   useColorTheme: () => ({
     primary: '#E85520',
@@ -27,10 +35,12 @@ import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useRecordingStore } from '@/store/recordingStore';
+import { useJournalStore } from '@/store/journalStore';
 import HomeScreen from '@/app/index';
 
 const mockSettings = useSettingsStore as jest.MockedFunction<typeof useSettingsStore>;
 const mockRecording = useRecordingStore as jest.MockedFunction<typeof useRecordingStore>;
+const mockJournal = useJournalStore as jest.MockedFunction<typeof useJournalStore>;
 
 const baseDoneSettings = {
   settings: {
@@ -54,6 +64,13 @@ const baseRecordingState = {
   stopRecording: jest.fn().mockResolvedValue(undefined),
 };
 
+const baseJournalState = {
+  isSheetOpen: false,
+  openSheet: jest.fn().mockResolvedValue(undefined),
+  closeSheet: jest.fn(),
+  refreshCurrentDay: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('HomeScreen', () => {
   const push = jest.fn();
   const replace = jest.fn();
@@ -63,6 +80,7 @@ describe('HomeScreen', () => {
     (require('expo-router').useRouter as jest.Mock).mockReturnValue({ push, replace });
     mockSettings.mockReturnValue(baseDoneSettings as any);
     mockRecording.mockReturnValue(baseRecordingState as any);
+    mockJournal.mockReturnValue(baseJournalState as any);
   });
 
   it('redirects to /onboarding when onboarding_done is false', async () => {
@@ -122,5 +140,42 @@ describe('HomeScreen', () => {
 
     await render(<HomeScreen />);
     expect(push).toHaveBeenCalledWith('/confirm');
+  });
+
+  it('renders the journal opener button', async () => {
+    const { getByTestId } = await render(<HomeScreen />);
+    expect(getByTestId('open-journal-btn')).toBeTruthy();
+  });
+
+  it('calls openSheet when journal opener is pressed', async () => {
+    const openSheet = jest.fn().mockResolvedValue(undefined);
+    mockJournal.mockReturnValue({ ...baseJournalState, openSheet } as any);
+
+    const { getByTestId } = await render(<HomeScreen />);
+    fireEvent.press(getByTestId('open-journal-btn'));
+    expect(openSheet).toHaveBeenCalled();
+  });
+
+  it('calls refreshCurrentDay when phase returns to idle from a non-idle phase', async () => {
+    const refreshCurrentDay = jest.fn().mockResolvedValue(undefined);
+    mockJournal.mockReturnValue({ ...baseJournalState, refreshCurrentDay } as any);
+
+    mockRecording.mockReturnValue({
+      ...baseRecordingState,
+      phase: 'saving' as const,
+    } as any);
+
+    const { rerender } = await render(<HomeScreen />);
+
+    mockRecording.mockReturnValue({
+      ...baseRecordingState,
+      phase: 'idle' as const,
+    } as any);
+
+    await act(async () => {
+      await rerender(<HomeScreen />);
+    });
+
+    expect(refreshCurrentDay).toHaveBeenCalled();
   });
 });
