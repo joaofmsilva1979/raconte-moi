@@ -8,7 +8,10 @@
     "platforms": ["ios"],
     "ios": {
       "bundleIdentifier": "lu.ciglesch.lesnotesdepatate",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Les notes de patate utilise la reconnaissance vocale pour transcrire ce que tu as mangé."
+      }
     },
     "plugins": [
       "expo-router",
@@ -25,7 +28,9 @@
         {
           "microphonePermission": "Les notes de patate a besoin de ton micro pour enregistrer ce que tu as mangé."
         }
-      ]
+      ],
+      "@react-native-voice/voice",
+      ["./plugins/withAppleIntelligence"]
     ],
     "experiments": {
       "typedRoutes": true
