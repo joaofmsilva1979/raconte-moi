@@ -27,14 +27,14 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
 
   openSheet: async () => {
     const today = formatDate(new Date());
-    set({ isSheetOpen: true, viewedDate: today });
+    set({ isSheetOpen: true });
     await get().loadDay(today);
   },
 
   closeSheet: () => set({ isSheetOpen: false }),
 
   loadDay: async (dateStr: string) => {
-    set({ isLoading: true, viewedDate: dateStr });
+    set({ isLoading: true, viewedDate: dateStr, entries: [] });
     try {
       const entries = await getEntriesForDay(dateStr);
       set({ entries, isLoading: false });
