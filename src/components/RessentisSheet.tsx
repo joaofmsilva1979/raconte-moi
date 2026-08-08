@@ -14,10 +14,12 @@ interface RessentisSheetProps {
 }
 
 export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
-  const { isSheetOpen, category, sub_category, selectCategory, selectSubCategory, saveRessenti, closeSheet } =
+  const { isSheetOpen, categories, sub_category, toggleCategory, selectSubCategory, saveRessenti, closeSheet } =
     useRessentisStore();
 
   if (!isSheetOpen) return null;
+
+  const painSelected = categories.includes('pain');
 
   return (
     <View testID="ressentis-sheet" style={styles.sheet}>
@@ -25,14 +27,14 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
 
       <Text style={styles.question}>Comment tu te sens ?</Text>
 
-      <ScrollView contentContainerStyle={styles.categories}>
+      <ScrollView contentContainerStyle={styles.categoriesContainer}>
         {RESSENTI_CATEGORIES.map((item) => {
-          const selected = category === item.category;
+          const selected = categories.includes(item.category);
           return (
             <TouchableOpacity
               key={item.category}
               testID={`category-btn-${item.category}`}
-              onPress={() => selectCategory(item.category)}
+              onPress={() => toggleCategory(item.category)}
               style={[styles.categoryBtn, selected && styles.categoryBtnSelected]}
             >
               <Text style={styles.categoryIcon}>{item.icon}</Text>
@@ -44,7 +46,7 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
         })}
       </ScrollView>
 
-      {category === 'pain' && (
+      {painSelected && (
         <View style={styles.subSection}>
           <Text style={styles.subQuestion}>Où as-tu mal ?</Text>
           <View style={styles.subCategories}>
@@ -68,7 +70,7 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
         </View>
       )}
 
-      {category != null && (
+      {categories.length > 0 && (
         <TouchableOpacity
           testID="save-ressenti-btn"
           onPress={saveRessenti}
@@ -116,7 +118,7 @@ const styles = StyleSheet.create({
     color: '#2D1A0E',
     marginBottom: 16,
   },
-  categories: {
+  categoriesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,

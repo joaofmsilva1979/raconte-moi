@@ -13,12 +13,24 @@ const GOALS: { value: GoalType; emoji: string; label: string }[] = [
 ];
 
 export default function GoalScreen() {
-  const [selected, setSelected] = useState<GoalType>('remember');
+  const [selected, setSelected] = useState<Set<GoalType>>(new Set(['remember']));
   const { saveGoal } = useSettingsStore();
   const { primary, background } = useColorTheme();
 
+  const toggleGoal = (goal: GoalType) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(goal)) {
+        if (next.size > 1) next.delete(goal);
+      } else {
+        next.add(goal);
+      }
+      return next;
+    });
+  };
+
   const handleContinue = async () => {
-    await saveGoal(selected);
+    await saveGoal([...selected][0]);
     router.push('/onboarding/slots');
   };
 
@@ -32,31 +44,34 @@ export default function GoalScreen() {
           Ça n'a aucune incidence sur tes données.
         </Text>
 
-        {GOALS.map(goal => (
-          <TouchableOpacity
-            key={goal.value}
-            style={[
-              styles.option,
-              selected === goal.value && {
-                borderColor: primary,
-                backgroundColor: background,
-                borderWidth: 2,
-              },
-            ]}
-            onPress={() => setSelected(goal.value)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.optionEmoji}>{goal.emoji}</Text>
-            <Text
+        {GOALS.map(goal => {
+          const isSelected = selected.has(goal.value);
+          return (
+            <TouchableOpacity
+              key={goal.value}
               style={[
-                styles.optionText,
-                selected === goal.value && { color: '#2D1A0E', fontWeight: '600' },
+                styles.option,
+                isSelected && {
+                  borderColor: primary,
+                  backgroundColor: background,
+                  borderWidth: 2,
+                },
               ]}
+              onPress={() => toggleGoal(goal.value)}
+              activeOpacity={0.8}
             >
-              {goal.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text style={styles.optionEmoji}>{goal.emoji}</Text>
+              <Text
+                style={[
+                  styles.optionText,
+                  isSelected && { color: '#2D1A0E', fontWeight: '600' },
+                ]}
+              >
+                {goal.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <TouchableOpacity
