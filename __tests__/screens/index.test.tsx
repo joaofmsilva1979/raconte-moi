@@ -1,33 +1,126 @@
-import React from 'react';
-import { render, waitFor } from '@testing-library/react-native';
-import { router } from 'expo-router';
-import { getAppSettings } from '@/db/settingsRepository';
+jest.mock('expo-router', () => {
+  const { Text } = require('react-native');
+  return {
+    useRouter: jest.fn(),
+    Redirect: ({ href }: { href: string }) => <Text testID="redirect">{href}</Text>,
+  };
+});
 
-jest.mock('@/db/settingsRepository', () => ({
-  getAppSettings: jest.fn(),
+jest.mock('@/store/settingsStore', () => ({
+  useSettingsStore: jest.fn(),
 }));
 
-import IndexScreen from '../../app/index';
+jest.mock('@/store/recordingStore', () => ({
+  useRecordingStore: jest.fn(),
+}));
 
-describe('IndexScreen — route guard', () => {
+jest.mock('@/hooks/useColorTheme', () => ({
+  useColorTheme: () => ({
+    primary: '#E85520',
+    background: '#FFF8F5',
+    accent: '#F5855A',
+    name: 'orange',
+  }),
+}));
+
+import React from 'react';
+import { render, fireEvent, act } from '@testing-library/react-native';
+import { useSettingsStore } from '@/store/settingsStore';
+import { useRecordingStore } from '@/store/recordingStore';
+import HomeScreen from '@/app/index';
+
+const mockSettings = useSettingsStore as jest.MockedFunction<typeof useSettingsStore>;
+const mockRecording = useRecordingStore as jest.MockedFunction<typeof useRecordingStore>;
+
+const baseDoneSettings = {
+  settings: {
+    first_name: 'Eugénie',
+    primary_color: '#E85520',
+    goal: 'watch' as const,
+    onboarding_done: true,
+    icloud_backup: false,
+    backup_interval: 7,
+    last_backup_at: null,
+  },
+  loadSettings: jest.fn().mockResolvedValue(undefined),
+};
+
+const baseRecordingState = {
+  phase: 'idle' as const,
+  partialTranscript: '',
+  mealType: 'breakfast' as const,
+  recordedAt: null,
+  startRecording: jest.fn(),
+  stopRecording: jest.fn().mockResolvedValue(undefined),
+};
+
+describe('HomeScreen', () => {
+  const push = jest.fn();
+  const replace = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
-    (router.replace as jest.Mock).mockClear();
+    (require('expo-router').useRouter as jest.Mock).mockReturnValue({ push, replace });
+    mockSettings.mockReturnValue(baseDoneSettings as any);
+    mockRecording.mockReturnValue(baseRecordingState as any);
   });
 
-  it('redirige vers /onboarding si onboarding_done est false', async () => {
-    (getAppSettings as jest.Mock).mockResolvedValue({ onboarding_done: false });
-    render(<IndexScreen />);
-    await waitFor(() => {
-      expect(router.replace).toHaveBeenCalledWith('/onboarding');
-    });
+  it('redirects to /onboarding when onboarding_done is false', async () => {
+    mockSettings.mockReturnValue({
+      ...baseDoneSettings,
+      settings: { ...baseDoneSettings.settings, onboarding_done: false },
+    } as any);
+    const { getByText } = await render(<HomeScreen />);
+    expect(getByText('/onboarding')).toBeTruthy();
   });
 
-  it('ne redirige pas si onboarding_done est true', async () => {
-    (getAppSettings as jest.Mock).mockResolvedValue({ onboarding_done: true });
-    render(<IndexScreen />);
-    await waitFor(() => {
-      expect(router.replace).not.toHaveBeenCalled();
+  it('shows greeting with first name', async () => {
+    const { getByText } = await render(<HomeScreen />);
+    expect(getByText(/Eugénie/)).toBeTruthy();
+  });
+
+  it('renders the MicButton', async () => {
+    const { getByTestId } = await render(<HomeScreen />);
+    expect(getByTestId('mic-button')).toBeTruthy();
+  });
+
+  it('calls startRecording on mic pressIn', async () => {
+    const { getByTestId } = await render(<HomeScreen />);
+    fireEvent(getByTestId('mic-button'), 'pressIn');
+    expect(baseRecordingState.startRecording).toHaveBeenCalled();
+  });
+
+  it('calls stopRecording with partialTranscript on mic pressOut', async () => {
+    mockRecording.mockReturnValue({
+      ...baseRecordingState,
+      phase: 'recording' as const,
+      partialTranscript: 'café au lait',
+    } as any);
+
+    const { getByTestId } = await render(<HomeScreen />);
+    await act(async () => {
+      fireEvent(getByTestId('mic-button'), 'pressOut');
     });
+    expect(baseRecordingState.stopRecording).toHaveBeenCalledWith('café au lait');
+  });
+
+  it('shows WaveformView when recording', async () => {
+    mockRecording.mockReturnValue({
+      ...baseRecordingState,
+      phase: 'recording' as const,
+    } as any);
+
+    const { getByTestId } = await render(<HomeScreen />);
+    expect(getByTestId('waveform')).toBeTruthy();
+  });
+
+  it('navigates to /confirm when phase becomes confirming', async () => {
+    mockRecording.mockReturnValue({
+      ...baseRecordingState,
+      phase: 'confirming' as const,
+    } as any);
+
+    await render(<HomeScreen />);
+    expect(push).toHaveBeenCalledWith('/confirm');
   });
 });
