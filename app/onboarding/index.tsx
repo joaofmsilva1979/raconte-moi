@@ -36,7 +36,7 @@ export default function WelcomeScreen() {
           style={styles.input}
           value={name}
           onChangeText={setName}
-          placeholder="Eugénie"
+          placeholder="Ton prénom"
           placeholderTextColor="#C09070"
           autoFocus
           returnKeyType="done"

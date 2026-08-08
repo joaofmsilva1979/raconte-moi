@@ -29,13 +29,13 @@ describe('WelcomeScreen (Étape 1)', () => {
     const { getByText, getByPlaceholderText } = await render(<WelcomeScreen />);
     expect(getByText('Les notes de patate')).toBeTruthy();
     expect(getByText("Comment tu t'appelles ?")).toBeTruthy();
-    expect(getByPlaceholderText('Eugénie')).toBeTruthy();
+    expect(getByPlaceholderText('Ton prénom')).toBeTruthy();
     expect(getByText('Bonjour →')).toBeTruthy();
   });
 
   it('navigue vers /onboarding/goal avec un prénom valide', async () => {
     const { getByPlaceholderText, getByText } = await render(<WelcomeScreen />);
-    await fireEvent.changeText(getByPlaceholderText('Eugénie'), 'Marie');
+    await fireEvent.changeText(getByPlaceholderText('Ton prénom'), 'Marie');
     await fireEvent.press(getByText('Bonjour →'));
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/onboarding/goal');

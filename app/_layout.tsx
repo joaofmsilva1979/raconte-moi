@@ -1,14 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { initDatabase } from '@/db/database';
 import { useSettingsStore } from '@/store/settingsStore';
 
 export default function RootLayout() {
+  const [dbReady, setDbReady] = useState(false);
+
   useEffect(() => {
-    initDatabase().then(() => {
-      useSettingsStore.getState().loadSettings();
-    }).catch(console.error);
+    initDatabase()
+      .then(() => useSettingsStore.getState().loadSettings())
+      .then(() => setDbReady(true))
+      .catch(console.error);
   }, []);
+
+  if (!dbReady) return null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
