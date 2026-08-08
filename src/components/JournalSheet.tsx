@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useJournalStore } from '@/store/journalStore';
 import { JournalTimeline } from '@/components/JournalTimeline';
-import { formatDateLabel } from '@/utils/dateUtils';
+import { formatDateLabel, formatDate } from '@/utils/dateUtils';
 import { DEFAULT_MEAL_SLOTS } from '@/constants/meals';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
@@ -34,7 +34,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
   } = useJournalStore();
 
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = formatDate(new Date());
   const canGoNext = viewedDate < today;
 
   useEffect(() => {
