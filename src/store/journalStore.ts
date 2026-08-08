@@ -1,11 +1,13 @@
 import { create } from 'zustand';
-import { Entry } from '@/types';
+import { Entry, Ressenti } from '@/types';
 import { getEntriesForDay } from '@/db/entriesRepository';
+import { getRessentisForDay } from '@/db/ressentisRepository';
 import { formatDate, addDays } from '@/utils/dateUtils';
 
 interface JournalState {
   viewedDate: string;
   entries: Entry[];
+  ressentis: Ressenti[];
   isLoading: boolean;
   isSheetOpen: boolean;
 }
@@ -22,6 +24,7 @@ interface JournalActions {
 export const useJournalStore = create<JournalState & JournalActions>((set, get) => ({
   viewedDate: formatDate(new Date()),
   entries: [],
+  ressentis: [],
   isLoading: false,
   isSheetOpen: false,
 
@@ -34,10 +37,13 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
   closeSheet: () => set({ isSheetOpen: false }),
 
   loadDay: async (dateStr: string) => {
-    set({ isLoading: true, viewedDate: dateStr, entries: [] });
+    set({ isLoading: true, viewedDate: dateStr, entries: [], ressentis: [] });
     try {
-      const entries = await getEntriesForDay(dateStr);
-      set({ entries, isLoading: false });
+      const [entries, ressentis] = await Promise.all([
+        getEntriesForDay(dateStr),
+        getRessentisForDay(dateStr),
+      ]);
+      set({ entries, ressentis, isLoading: false });
     } catch {
       set({ isLoading: false });
     }

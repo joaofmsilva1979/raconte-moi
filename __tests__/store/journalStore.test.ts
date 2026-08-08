@@ -2,6 +2,10 @@ jest.mock('@/db/entriesRepository', () => ({
   getEntriesForDay: jest.fn(),
 }));
 
+jest.mock('@/db/ressentisRepository', () => ({
+  getRessentisForDay: jest.fn().mockResolvedValue([]),
+}));
+
 jest.mock('@/utils/dateUtils', () => ({
   formatDate: jest.fn(),
   addDays: jest.fn(),
@@ -33,6 +37,7 @@ const SAMPLE_ENTRY = {
 const INITIAL_STATE = {
   viewedDate: FAKE_TODAY,
   entries: [],
+  ressentis: [],
   isLoading: false,
   isSheetOpen: false,
 };
@@ -42,6 +47,7 @@ describe('journalStore', () => {
     jest.clearAllMocks();
     mockFormatDate.mockReturnValue(FAKE_TODAY);
     mockGetEntries.mockResolvedValue([]);
+    (require('@/db/ressentisRepository').getRessentisForDay as jest.Mock).mockResolvedValue([]);
     act(() => { useJournalStore.setState(INITIAL_STATE); });
   });
 
@@ -90,6 +96,17 @@ describe('journalStore', () => {
 
       await act(async () => { resolve!([]); await Promise.resolve(); });
       expect(useJournalStore.getState().isLoading).toBe(false);
+    });
+
+    it('loads ressentis for the given date', async () => {
+      const mockRessentis = [{ id: 1, recorded_at: '2026-08-08T13:30:00.000Z', category: 'bloating' }];
+      (require('@/db/ressentisRepository').getRessentisForDay as jest.Mock).mockResolvedValue(mockRessentis);
+
+      await act(async () => {
+        await useJournalStore.getState().loadDay(FAKE_TODAY);
+      });
+
+      expect(useJournalStore.getState().ressentis).toEqual(mockRessentis);
     });
   });
 

@@ -2,10 +2,16 @@ jest.mock('@/utils/dateUtils', () => ({
   formatTime: jest.fn((iso: string) => '09:00'),
 }));
 
+jest.mock('@/constants/ressentis', () => ({
+  RESSENTI_LABELS: { bloating: 'Ballonnement', pain: 'Douleur', good: 'Je me sens bien', nausea: 'Nausée', fatigue: 'Fatigue', other: 'Autre' },
+  RESSENTI_ICONS: { bloating: '😮‍💨', pain: '😣', good: '😊', nausea: '🤢', fatigue: '😴', other: '✏️' },
+  SUB_CATEGORY_LABELS: { belly: 'ventre', head: 'tête', other: 'autre' },
+}));
+
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { JournalTimeline } from '@/components/JournalTimeline';
-import { Entry, MealSlot } from '@/types';
+import { Entry, MealSlot, Ressenti } from '@/types';
 
 const SLOTS: MealSlot[] = [
   { meal_type: 'breakfast', label: 'Petit-déjeuner', icon: '☀️', start_hour: 6, end_hour: 10 },
@@ -59,5 +65,37 @@ describe('JournalTimeline', () => {
     expect(getByTestId('pending-lunch')).toBeTruthy();
     expect(getByTestId('pending-snack')).toBeTruthy();
     expect(getByTestId('pending-dinner')).toBeTruthy();
+  });
+
+  const RESSENTI: Ressenti = {
+    id: 10,
+    recorded_at: '2026-08-08T13:30:00.000Z',
+    category: 'bloating',
+    sub_category: null,
+    note: null,
+    entry_id: null,
+    delay_minutes: null,
+  };
+
+  it('renders a ressenti item when ressentis prop is provided', async () => {
+    const { getByTestId } = await render(
+      <JournalTimeline entries={[]} slots={SLOTS} primaryColor="#E85520" ressentis={[RESSENTI]} />
+    );
+    expect(getByTestId('timeline-ressenti-10')).toBeTruthy();
+    expect(getByTestId('ressenti-card-10')).toBeTruthy();
+  });
+
+  it('renders ressentis even when entries are empty', async () => {
+    const { getByText } = await render(
+      <JournalTimeline entries={[]} slots={SLOTS} primaryColor="#E85520" ressentis={[RESSENTI]} />
+    );
+    expect(getByText(/Ballonnement/)).toBeTruthy();
+  });
+
+  it('renders without ressentis when prop is omitted (backward compatible)', async () => {
+    const { queryByTestId } = await render(
+      <JournalTimeline entries={[]} slots={SLOTS} primaryColor="#E85520" />
+    );
+    expect(queryByTestId('timeline-ressenti-10')).toBeNull();
   });
 });
