@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     color: '#2D1A0E',
-    alignSelf: 'flex-start',
+    textAlign: 'center',
   },
   liveArea: {
     alignItems: 'center',

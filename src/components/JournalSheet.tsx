@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import { router } from 'expo-router';
 import { useJournalStore } from '@/store/journalStore';
 import { JournalTimeline } from '@/components/JournalTimeline';
 import { formatDateLabel, formatDate } from '@/utils/dateUtils';
@@ -83,6 +84,10 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
       </View>
 
       <View style={styles.dateNav}>
+        <TouchableOpacity testID="settings-btn" onPress={() => router.push('/settings')} style={styles.settingsBtn}>
+          <Text style={styles.settingsIcon}>⚙️</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           onPress={goToPreviousDay}
           testID="prev-day-btn"
@@ -158,6 +163,8 @@ const styles = StyleSheet.create({
   navBtn: { padding: 8 },
   navArrow: { fontSize: 24, fontWeight: '600' },
   dateLabel: { fontSize: 14, fontWeight: '700', color: '#2D1A0E' },
+  settingsBtn: { padding: 8 },
+  settingsIcon: { fontSize: 18 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingVertical: 12 },
   addBtn: {

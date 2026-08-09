@@ -1,3 +1,7 @@
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+}));
+
 jest.mock('@/store/journalStore', () => ({
   useJournalStore: jest.fn(),
 }));
@@ -21,6 +25,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { useJournalStore } from '@/store/journalStore';
 import { JournalSheet } from '@/components/JournalSheet';
+import { router } from 'expo-router';
 
 const mockUseJournalStore = useJournalStore as jest.MockedFunction<typeof useJournalStore>;
 
@@ -89,5 +94,16 @@ describe('JournalSheet', () => {
     );
     fireEvent.press(getByTestId('add-entry-btn'));
     expect(onAddEntry).toHaveBeenCalled();
+  });
+
+  it('renders settings button when sheet is open', async () => {
+    const { getByTestId } = await render(<JournalSheet primaryColor="#E85520" onAddEntry={jest.fn()} />);
+    expect(getByTestId('settings-btn')).toBeTruthy();
+  });
+
+  it('navigates to settings on settings button press', async () => {
+    const { getByTestId } = await render(<JournalSheet primaryColor="#E85520" onAddEntry={jest.fn()} />);
+    fireEvent.press(getByTestId('settings-btn'));
+    expect(router.push).toHaveBeenCalledWith('/settings');
   });
 });

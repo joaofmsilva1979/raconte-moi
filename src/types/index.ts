@@ -48,6 +48,11 @@ export interface AppSettings {
   icloud_backup: boolean;
   backup_interval: number; // jours
   last_backup_at: string | null;
+  notifications_enabled: boolean;
+  notifications_breakfast: boolean;
+  notifications_lunch: boolean;
+  notifications_snack: boolean;
+  notifications_dinner: boolean;
 }
 
 export interface ColorPalette {

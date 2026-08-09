@@ -22,6 +22,8 @@ export async function getAppSettings(): Promise<AppSettings> {
     first_name, primary_color, goal,
     onboarding_done, icloud_backup,
     backup_interval, last_backup_at,
+    notifications_enabled, notifications_breakfast, notifications_lunch,
+    notifications_snack, notifications_dinner,
   ] = await Promise.all([
     getSetting('first_name'),
     getSetting('primary_color'),
@@ -30,6 +32,11 @@ export async function getAppSettings(): Promise<AppSettings> {
     getSetting('icloud_backup'),
     getSetting('backup_interval'),
     getSetting('last_backup_at'),
+    getSetting('notifications_enabled'),
+    getSetting('notifications_breakfast'),
+    getSetting('notifications_lunch'),
+    getSetting('notifications_snack'),
+    getSetting('notifications_dinner'),
   ]);
 
   return {
@@ -40,6 +47,11 @@ export async function getAppSettings(): Promise<AppSettings> {
     icloud_backup: icloud_backup === 'true',
     backup_interval: backup_interval ? parseInt(backup_interval, 10) : 7,
     last_backup_at: last_backup_at ?? null,
+    notifications_enabled: notifications_enabled !== 'false',
+    notifications_breakfast: notifications_breakfast !== 'false',
+    notifications_lunch: notifications_lunch !== 'false',
+    notifications_snack: notifications_snack !== 'false',
+    notifications_dinner: notifications_dinner !== 'false',
   };
 }
 

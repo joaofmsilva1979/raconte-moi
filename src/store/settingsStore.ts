@@ -15,6 +15,11 @@ const DEFAULT_SETTINGS: AppSettings = {
   icloud_backup: false,
   backup_interval: 7,
   last_backup_at: null,
+  notifications_enabled: true,
+  notifications_breakfast: true,
+  notifications_lunch: true,
+  notifications_snack: true,
+  notifications_dinner: true,
 };
 
 interface SettingsState {
@@ -27,6 +32,13 @@ interface SettingsState {
   savePrimaryColor: (color: string) => Promise<void>;
   saveMealSlot: (meal_type: MealType, start_hour: number, end_hour: number) => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  saveNotificationSetting: (
+    key: 'notifications_enabled' | 'notifications_breakfast' | 'notifications_lunch' | 'notifications_snack' | 'notifications_dinner',
+    value: boolean
+  ) => Promise<void>;
+  saveIcloudBackup: (enabled: boolean) => Promise<void>;
+  saveBackupInterval: (days: number) => Promise<void>;
+  saveLastBackupAt: (isoDate: string) => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -70,5 +82,29 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     await setSetting('onboarding_done', 'true');
     const s = get().settings ?? { ...DEFAULT_SETTINGS };
     set({ settings: { ...s, onboarding_done: true } });
+  },
+
+  saveNotificationSetting: async (key, value) => {
+    await setSetting(key, value ? 'true' : 'false');
+    const s = get().settings ?? { ...DEFAULT_SETTINGS };
+    set({ settings: { ...s, [key]: value } });
+  },
+
+  saveIcloudBackup: async (enabled) => {
+    await setSetting('icloud_backup', enabled ? 'true' : 'false');
+    const s = get().settings ?? { ...DEFAULT_SETTINGS };
+    set({ settings: { ...s, icloud_backup: enabled } });
+  },
+
+  saveBackupInterval: async (days) => {
+    await setSetting('backup_interval', String(days));
+    const s = get().settings ?? { ...DEFAULT_SETTINGS };
+    set({ settings: { ...s, backup_interval: days } });
+  },
+
+  saveLastBackupAt: async (isoDate) => {
+    await setSetting('last_backup_at', isoDate);
+    const s = get().settings ?? { ...DEFAULT_SETTINGS };
+    set({ settings: { ...s, last_backup_at: isoDate } });
   },
 }));

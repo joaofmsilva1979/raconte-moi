@@ -101,12 +101,12 @@ const styles = StyleSheet.create({
   hourInput: {
     borderWidth: 1.5,
     borderRadius: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 4,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     textAlign: 'center',
-    width: 36,
+    width: 48,
   },
   sep: { fontSize: 14, fontWeight: '600', marginHorizontal: 2 },
   button: {

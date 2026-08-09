@@ -81,6 +81,15 @@ describe('settingsRepository', () => {
     expect(settings.primary_color).toBe('#E85520');
   });
 
+  it('getAppSettings retourne notifications_enabled: true quand la clé n\'est pas en DB', async () => {
+    const settings = await getAppSettings();
+    expect(settings.notifications_enabled).toBe(true);
+    expect(settings.notifications_breakfast).toBe(true);
+    expect(settings.notifications_lunch).toBe(true);
+    expect(settings.notifications_snack).toBe(true);
+    expect(settings.notifications_dinner).toBe(true);
+  });
+
   it('getMealSlots retourne les 4 slots par défaut', async () => {
     const slots = await getMealSlots();
     expect(slots).toHaveLength(4);
