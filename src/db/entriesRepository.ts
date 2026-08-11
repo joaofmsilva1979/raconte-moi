@@ -6,14 +6,15 @@ interface CreateEntryParams {
   meal_type: MealType;
   transcript: string;
   raw_text: string | null;
+  photo_uri?: string | null;
 }
 
 export async function createEntry(params: CreateEntryParams): Promise<number> {
   const db = await getDatabase();
   const result = await db.runAsync(
-    `INSERT INTO entries (recorded_at, meal_type, transcript, raw_text)
-     VALUES (?, ?, ?, ?)`,
-    [params.recorded_at, params.meal_type, params.transcript, params.raw_text]
+    `INSERT INTO entries (recorded_at, meal_type, transcript, raw_text, photo_uri)
+     VALUES (?, ?, ?, ?, ?)`,
+    [params.recorded_at, params.meal_type, params.transcript, params.raw_text, params.photo_uri ?? null]
   );
   return result.lastInsertRowId;
 }

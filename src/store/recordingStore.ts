@@ -16,6 +16,7 @@ interface RecordingState {
   wasReformulated: boolean;
   mealType: MealType;
   recordedAt: Date | null;
+  photoUri: string | null;
   error: string | null;
 }
 
@@ -24,6 +25,7 @@ interface RecordingActions {
   stopRecording: (finalText: string) => Promise<void>;
   updateEditedText: (text: string) => void;
   setMealType: (mealType: MealType) => void;
+  setPhotoUri: (uri: string | null) => void;
   saveEntry: () => Promise<void>;
   reRecord: () => void;
   discard: () => void;
@@ -37,6 +39,7 @@ const initialState: RecordingState = {
   wasReformulated: false,
   mealType: 'other',
   recordedAt: null,
+  photoUri: null,
   error: null,
 };
 
@@ -69,8 +72,10 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
 
   setMealType: (mealType: MealType) => set({ mealType }),
 
+  setPhotoUri: (photoUri: string | null) => set({ photoUri }),
+
   saveEntry: async () => {
-    const { editedText, rawText, wasReformulated, mealType, recordedAt } = get();
+    const { editedText, rawText, wasReformulated, mealType, recordedAt, photoUri } = get();
     set({ phase: 'saving' });
 
     await createEntry({
@@ -78,6 +83,7 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
       raw_text: wasReformulated ? rawText : null,
       meal_type: mealType,
       recorded_at: (recordedAt ?? new Date()).toISOString(),
+      photo_uri: photoUri,
     });
 
     await destroyListener();

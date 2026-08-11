@@ -7,11 +7,13 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { useRecordingStore } from '@/store/recordingStore';
 import { MealBadge } from '@/components/MealBadge';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ConfirmScreen() {
   const router = useRouter();
@@ -22,13 +24,41 @@ export default function ConfirmScreen() {
     wasReformulated,
     mealType,
     recordedAt,
+    photoUri,
     updateEditedText,
+    setPhotoUri,
     saveEntry,
     discard,
     reRecord,
   } = useRecordingStore();
 
   const [showOriginal, setShowOriginal] = useState(false);
+
+  async function handleTakePhoto() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  }
+
+  async function handlePickPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  }
 
   async function handleSave() {
     await saveEntry();
@@ -84,6 +114,24 @@ export default function ConfirmScreen() {
 
         {wasReformulated && (
           <Text style={styles.reformuledBadge}>✨ reformulé</Text>
+        )}
+
+        {photoUri ? (
+          <View style={styles.photoSection}>
+            <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+            <TouchableOpacity onPress={() => setPhotoUri(null)} style={styles.removePhotoBtn}>
+              <Text style={styles.removePhotoText}>✕ Supprimer la photo</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.photoRow}>
+            <TouchableOpacity style={styles.photoBtn} onPress={handleTakePhoto}>
+              <Text style={styles.photoBtnText}>📷 Photo du plat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.photoBtn} onPress={handlePickPhoto}>
+              <Text style={styles.photoBtnText}>🖼 Galerie</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         <TouchableOpacity
@@ -152,4 +200,14 @@ const styles = StyleSheet.create({
   },
   btnSecondaryText: { fontWeight: '600', fontSize: 13 },
   privacy: { fontSize: 11, color: '#C0B0A0', textAlign: 'center' },
+  photoRow: { flexDirection: 'row', gap: 8 },
+  photoBtn: {
+    flex: 1, padding: 11, borderRadius: 10, alignItems: 'center',
+    backgroundColor: '#FFF0E8', borderWidth: 1.5, borderColor: '#F0C0A0',
+  },
+  photoBtnText: { fontSize: 13, fontWeight: '600', color: '#5C3020' },
+  photoSection: { gap: 8 },
+  photoPreview: { width: '100%', height: 180, borderRadius: 12 },
+  removePhotoBtn: { alignItems: 'center', padding: 4 },
+  removePhotoText: { fontSize: 12, color: '#C09070', fontWeight: '600' },
 });
