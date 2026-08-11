@@ -14,11 +14,12 @@ export type GoalType = 'watch' | 'remember' | 'other';
 
 export interface Entry {
   id: number;
-  recorded_at: string; // ISO datetime
+  recorded_at: string;
   meal_type: MealType;
   transcript: string;
   raw_text: string | null;
   edited_at: string | null;
+  photo_uri: string | null;
   created_at: string;
 }
 
@@ -29,6 +30,8 @@ export interface Ressenti {
   sub_category: RessentSubCategory | null;
   note: string | null;
   entry_id: number | null;
+  meal_type: MealType | null;
+  meal_date: string | null; // YYYY-MM-DD — jour du repas (peut différer de recorded_at)
   delay_minutes: number | null;
 }
 

@@ -43,6 +43,24 @@ export async function updateEntryTranscript(id: number, transcript: string): Pro
   );
 }
 
+export async function updateEntryPhoto(id: number, photo_uri: string | null): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    `UPDATE entries SET photo_uri = ? WHERE id = ?`,
+    [photo_uri, id]
+  );
+}
+
+export async function getEntriesForDateRange(fromDate: string, toDate: string): Promise<Entry[]> {
+  const db = await getDatabase();
+  return db.getAllAsync<Entry>(
+    `SELECT * FROM entries
+     WHERE date(recorded_at) >= date(?) AND date(recorded_at) <= date(?)
+     ORDER BY recorded_at ASC`,
+    [fromDate, toDate]
+  );
+}
+
 export async function getLastEntryBefore(dateTimeStr: string): Promise<Entry | null> {
   const db = await getDatabase();
   return db.getFirstAsync<Entry>(

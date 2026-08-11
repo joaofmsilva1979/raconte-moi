@@ -100,7 +100,7 @@ export default function HomeScreen() {
       />
 
       <Text style={styles.hint}>
-        {isRecording ? 'Relâche pour terminer' : 'Appuie et parle'}
+        {isRecording ? 'Relâche pour terminer' : 'Maintiens appuyé et parle'}
       </Text>
 
       <TouchableOpacity

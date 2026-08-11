@@ -48,7 +48,20 @@ export async function initDatabase(): Promise<void> {
     );
   `);
 
+  await runMigrations(database);
   await seedDefaultMealSlots(database);
+}
+
+async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
+  try {
+    await database.execAsync(`ALTER TABLE ressentis ADD COLUMN meal_type TEXT;`);
+  } catch {}
+  try {
+    await database.execAsync(`ALTER TABLE entries ADD COLUMN photo_uri TEXT;`);
+  } catch {}
+  try {
+    await database.execAsync(`ALTER TABLE ressentis ADD COLUMN meal_date TEXT;`);
+  } catch {}
 }
 
 async function seedDefaultMealSlots(database: SQLite.SQLiteDatabase): Promise<void> {

@@ -17,7 +17,7 @@ import { scheduleReminders } from '@/services/notificationService';
 import { MealSlot, MealType } from '@/types';
 import { backupToIcloud, restoreFromIcloud, isBackupDue } from '@/services/icloudService';
 import { exportJournalAsPdf } from '@/services/pdfService';
-import { getEntriesForDay } from '@/db/entriesRepository';
+import { getEntriesForDateRange } from '@/db/entriesRepository';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -27,6 +27,46 @@ export default function SettingsScreen() {
 
   const [firstName, setFirstName] = useState(settings?.first_name ?? '');
   const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
+
+  function todayStr() {
+    return new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+  function daysAgoStr(n: number) {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  const [customFrom, setCustomFrom] = useState(() => daysAgoStr(7));
+  const [customTo, setCustomTo] = useState(() => todayStr());
+
+  function parseFrDate(frDate: string): string | null {
+    const parts = frDate.split('/');
+    if (parts.length !== 3) return null;
+    const [d, m, y] = parts;
+    if (!d || !m || !y || y.length !== 4) return null;
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+
+  async function exportRange(fromFr: string, toFr: string, label: string) {
+    const from = parseFrDate(fromFr);
+    const to = parseFrDate(toFr);
+    if (!from || !to) {
+      Alert.alert('Date invalide', 'Utilise le format JJ/MM/AAAA');
+      return;
+    }
+    const entries = await getEntriesForDateRange(from, to);
+    if (entries.length === 0) {
+      Alert.alert('Aucune note', 'Pas de notes sur cette période.');
+      return;
+    }
+    await exportJournalAsPdf(entries, settings?.first_name ?? '', label, primary);
+  }
+
+  function applyPreset(days: number) {
+    setCustomFrom(daysAgoStr(days));
+    setCustomTo(todayStr());
+  }
 
   useEffect(() => {
     setFirstName(settings?.first_name ?? '');
@@ -305,44 +345,59 @@ export default function SettingsScreen() {
         {/* Section: Export PDF */}
         <Text style={styles.sectionTitle}>EXPORT PDF</Text>
         <View style={styles.card}>
-          <TouchableOpacity
-            testID="export-week-btn"
-            style={[styles.actionBtn, { borderColor: primary }]}
-            onPress={async () => {
-              const entries = [];
-              const today = new Date();
-              for (let i = 0; i < 7; i++) {
-                const d = new Date(today);
-                d.setDate(today.getDate() - i);
-                const dateStr = d.toISOString().slice(0, 10);
-                const dayEntries = await getEntriesForDay(dateStr);
-                entries.push(...dayEntries);
-              }
-              const periodLabel = 'Semaine du ' + new Date(Date.now() - 6 * 86400000).toLocaleDateString('fr-FR');
-              await exportJournalAsPdf(entries, settings?.first_name ?? '', periodLabel, primary);
-            }}
-          >
-            <Text style={[styles.actionBtnText, { color: primary }]}>Exporter la semaine en cours</Text>
-          </TouchableOpacity>
+          <Text style={styles.rowSub}>Période rapide</Text>
+          <View style={styles.presetRow}>
+            {([7, 14, 30, 90] as const).map(days => (
+              <TouchableOpacity
+                key={days}
+                style={[styles.presetBtn, { borderColor: primary }]}
+                onPress={() => applyPreset(days)}
+              >
+                <Text style={[styles.presetText, { color: primary }]}>
+                  {days < 30 ? `${days}j` : days === 30 ? '1 mois' : '3 mois'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.dateRangeRow}>
+            <View style={styles.dateField}>
+              <Text style={styles.dateLabel}>Du</Text>
+              <TextInput
+                testID="export-from-input"
+                style={[styles.dateInput, { borderColor: primary }]}
+                value={customFrom}
+                onChangeText={setCustomFrom}
+                placeholder="JJ/MM/AAAA"
+                placeholderTextColor="#C09070"
+                keyboardType="number-pad"
+                maxLength={10}
+              />
+            </View>
+            <View style={styles.dateField}>
+              <Text style={styles.dateLabel}>Au</Text>
+              <TextInput
+                testID="export-to-input"
+                style={[styles.dateInput, { borderColor: primary }]}
+                value={customTo}
+                onChangeText={setCustomTo}
+                placeholder="JJ/MM/AAAA"
+                placeholderTextColor="#C09070"
+                keyboardType="number-pad"
+                maxLength={10}
+              />
+            </View>
+          </View>
 
           <TouchableOpacity
-            testID="export-month-btn"
+            testID="export-range-btn"
             style={[styles.actionBtn, { borderColor: primary }]}
-            onPress={async () => {
-              const entries = [];
-              const today = new Date();
-              for (let i = 0; i < 30; i++) {
-                const d = new Date(today);
-                d.setDate(today.getDate() - i);
-                const dateStr = d.toISOString().slice(0, 10);
-                const dayEntries = await getEntriesForDay(dateStr);
-                entries.push(...dayEntries);
-              }
-              const periodLabel = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-              await exportJournalAsPdf(entries, settings?.first_name ?? '', periodLabel, primary);
+            onPress={() => {
+              const label = `${customFrom} → ${customTo}`;
+              exportRange(customFrom, customTo, label);
             }}
           >
-            <Text style={[styles.actionBtnText, { color: primary }]}>Exporter le mois en cours</Text>
+            <Text style={[styles.actionBtnText, { color: primary }]}>📄 Exporter cette période</Text>
           </TouchableOpacity>
         </View>
 
@@ -452,4 +507,19 @@ const styles = StyleSheet.create({
   },
   actionBtnText: { fontSize: 14, fontWeight: '600' },
   rowSub: { fontSize: 12, color: '#C09070', marginBottom: 6 },
+  presetRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
+  presetBtn: {
+    flex: 1, borderWidth: 1.5, borderRadius: 8,
+    paddingVertical: 6, alignItems: 'center',
+  },
+  presetText: { fontSize: 13, fontWeight: '700' },
+  dateRangeRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+  dateField: { flex: 1, gap: 4 },
+  dateLabel: { fontSize: 11, color: '#C09070', fontWeight: '600', textTransform: 'uppercase' },
+  dateInput: {
+    borderWidth: 1.5, borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 8,
+    fontSize: 14, fontWeight: '600', color: '#2D1A0E',
+    textAlign: 'center',
+  },
 });

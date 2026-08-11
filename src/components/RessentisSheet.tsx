@@ -8,13 +8,14 @@ import {
 } from 'react-native';
 import { useRessentisStore } from '@/store/ressentisStore';
 import { RESSENTI_CATEGORIES, RESSENTI_SUB_CATEGORIES } from '@/constants/ressentis';
+import { DEFAULT_MEAL_SLOTS } from '@/constants/meals';
 
 interface RessentisSheetProps {
   primaryColor: string;
 }
 
 export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
-  const { isSheetOpen, categories, sub_category, toggleCategory, selectSubCategory, saveRessenti, closeSheet } =
+  const { isSheetOpen, categories, sub_category, selected_meal, meal_day, toggleCategory, selectSubCategory, selectMeal, setMealDay, saveRessenti, closeSheet } =
     useRessentisStore();
 
   if (!isSheetOpen) return null;
@@ -24,6 +25,38 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
   return (
     <View testID="ressentis-sheet" style={styles.sheet}>
       <View style={styles.handle} />
+
+      <Text style={styles.mealQuestion}>Suite à quel repas ?</Text>
+      <View style={styles.dayToggle}>
+        {(['today', 'yesterday'] as const).map((day) => (
+          <TouchableOpacity
+            key={day}
+            testID={`day-btn-${day}`}
+            onPress={() => setMealDay(day)}
+            style={[styles.dayBtn, meal_day === day && styles.dayBtnSelected]}
+          >
+            <Text style={[styles.dayBtnText, meal_day === day && styles.dayBtnTextSelected]}>
+              {day === 'today' ? "Aujourd'hui" : 'Hier'}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <View style={styles.mealRow}>
+        {DEFAULT_MEAL_SLOTS.map((slot) => {
+          const sel = selected_meal === slot.meal_type;
+          return (
+            <TouchableOpacity
+              key={slot.meal_type}
+              testID={`meal-btn-${slot.meal_type}`}
+              onPress={() => selectMeal(slot.meal_type as any)}
+              style={[styles.mealBtn, sel && styles.mealBtnSelected]}
+            >
+              <Text style={styles.mealIcon}>{slot.icon}</Text>
+              <Text style={[styles.mealLabel, sel && styles.mealLabelSelected]}>{slot.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
       <Text style={styles.question}>Comment tu te sens ?</Text>
 
@@ -178,4 +211,23 @@ const styles = StyleSheet.create({
   saveBtnText: { color: 'white', fontWeight: '700', fontSize: 15 },
   closeBtn: { marginTop: 10, alignItems: 'center', padding: 8 },
   closeBtnText: { fontSize: 13, color: '#9CA3AF' },
+  mealQuestion: { fontSize: 13, fontWeight: '700', color: '#C09070', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  dayToggle: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  dayBtn: {
+    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16,
+    borderWidth: 1.5, borderColor: '#E9D5FF', backgroundColor: '#F5F0FF',
+  },
+  dayBtnSelected: { backgroundColor: '#EDE9FE', borderColor: '#8B5CF6' },
+  dayBtnText: { fontSize: 13, fontWeight: '600', color: '#5C3020' },
+  dayBtnTextSelected: { color: '#6D28D9' },
+  mealRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 16 },
+  mealBtn: {
+    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16,
+    borderWidth: 1.5, borderColor: '#E9D5FF', backgroundColor: '#F5F0FF',
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+  },
+  mealBtnSelected: { backgroundColor: '#EDE9FE', borderColor: '#8B5CF6' },
+  mealIcon: { fontSize: 14 },
+  mealLabel: { fontSize: 12, fontWeight: '600', color: '#5C3020' },
+  mealLabelSelected: { color: '#6D28D9' },
 });
