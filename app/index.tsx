@@ -135,18 +135,18 @@ export default function HomeScreen() {
           <TouchableOpacity
             testID="add-ressenti-btn"
             onPress={openRessentisSheet}
-            style={[styles.primaryBtn, { backgroundColor: '#7C3AED' }]}
+            style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]}
             activeOpacity={0.82}
           >
-            <Text style={styles.primaryBtnText}>💜 Ressenti</Text>
+            <Text style={styles.actionBtnText}>💜 Ressenti</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="add-activity-btn"
             onPress={openActivitySheet}
-            style={styles.secondaryBtn}
+            style={[styles.actionBtn, { backgroundColor: '#16A34A' }]}
             activeOpacity={0.82}
           >
-            <Text style={styles.secondaryBtnText}>🏃</Text>
+            <Text style={styles.actionBtnText}>🏃 Activité</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -252,28 +252,17 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: 'center',
   },
-  primaryBtn: {
+  actionBtn: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 22,
     alignItems: 'center',
   },
-  primaryBtnText: {
+  actionBtnText: {
     fontSize: 15,
     color: 'white',
     fontWeight: '700',
     letterSpacing: -0.2,
-  },
-  secondaryBtn: {
-    width: 50, height: 50, borderRadius: 25,
-    backgroundColor: '#F0FFF4',
-    borderWidth: 1.5,
-    borderColor: '#BBF7D0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryBtnText: {
-    fontSize: 20,
   },
   activitySummary: {
     fontSize: 12,
