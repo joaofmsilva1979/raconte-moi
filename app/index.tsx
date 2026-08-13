@@ -73,20 +73,24 @@ export default function HomeScreen() {
       style={[styles.container, { backgroundColor: background }]}
       {...panResponder.panHandlers}
     >
-      {/* Top: greeting + meal badge + tendances */}
-      <View style={styles.topSection}>
-        <View style={styles.greetingRow}>
-          <Text style={styles.greeting}>
-            {greeting} {settings.first_name} ☀️
-          </Text>
-          <TouchableOpacity
-            testID="trends-btn"
-            onPress={() => router.push('/trends')}
-            style={styles.trendsBtn}
-          >
-            <Text style={styles.trendsBtnText}>📈</Text>
-          </TouchableOpacity>
+      {/* Top bar: trends icon */}
+      <View style={styles.topBar}>
+        <View style={{ width: 36 }} />
+        <View style={styles.greetingBlock}>
+          <Text style={styles.greeting}>{greeting}</Text>
+          <Text style={styles.greetingName}>{settings.first_name} ☀️</Text>
         </View>
+        <TouchableOpacity
+          testID="trends-btn"
+          onPress={() => router.push('/trends')}
+          style={styles.trendsBtn}
+        >
+          <Text style={styles.trendsBtnText}>📈</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Meal badge — compact, centered */}
+      <View style={styles.mealRow}>
         <MealBadge
           mealType={mealType}
           time={recordedAt ?? new Date()}
@@ -95,7 +99,7 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Center: mic + hint + live transcript */}
+      {/* Center: mic hero */}
       <View style={styles.centerSection}>
         {isRecording && (
           <View style={styles.liveArea}>
@@ -107,7 +111,7 @@ export default function HomeScreen() {
         )}
 
         {isProcessing && (
-          <Text style={styles.processingText}>Reformulation…</Text>
+          <Text style={styles.processingText}>Reformulation en cours…</Text>
         )}
 
         <MicButton
@@ -122,13 +126,13 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      {/* Bottom: action buttons + activity summary */}
+      {/* Bottom: pills + activity chip + journal */}
       <View style={styles.bottomSection}>
         {todayTotalMinutes > 0 && (
           <Text style={[styles.activitySummary, todayTotalMinutes >= DAILY_GOAL_MINUTES && styles.activitySummaryDone]}>
             {todayTotalMinutes >= DAILY_GOAL_MINUTES
-              ? `✓ Objectif atteint · ${todayTotalMinutes}min aujourd'hui`
-              : `⏱ ${todayTotalMinutes}min · objectif ${DAILY_GOAL_MINUTES}min`}
+              ? `✓ Objectif atteint · ${todayTotalMinutes} min`
+              : `⏱ ${todayTotalMinutes} min · objectif ${DAILY_GOAL_MINUTES} min`}
           </Text>
         )}
         <View style={styles.actionRow}>
@@ -149,16 +153,14 @@ export default function HomeScreen() {
             <Text style={styles.actionBtnText}>🏃 Activité</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          testID="open-journal-btn"
+          onPress={openSheet}
+          style={[styles.journalOpener, { borderColor: primary + '60' }]}
+        >
+          <Text style={[styles.journalOpenerText, { color: primary }]}>📖 Mon journal du jour</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* Journal opener — absolute bottom */}
-      <TouchableOpacity
-        testID="open-journal-btn"
-        onPress={openSheet}
-        style={[styles.journalOpener, { borderColor: primary }]}
-      >
-        <Text style={[styles.journalOpenerText, { color: primary }]}>📖 Mon journal du jour</Text>
-      </TouchableOpacity>
 
       <RessentisSheet primaryColor={primary} />
       <ActivitySheet primaryColor={primary} />
@@ -172,39 +174,50 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
   },
-  topSection: {
-    alignItems: 'center',
-    paddingTop: 8,
-    gap: 12,
-  },
-  greetingRow: {
+  topBar: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingTop: 6,
+  },
+  greetingBlock: {
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
   },
   greeting: {
-    fontSize: 26,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#9CA3AF',
+    letterSpacing: 0.1,
+  },
+  greetingName: {
+    fontSize: 34,
+    fontWeight: '800',
     color: '#1C0A00',
-    textAlign: 'center',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
+    marginTop: -4,
   },
   trendsBtn: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: '#F5F0FF',
     alignItems: 'center', justifyContent: 'center',
+    marginTop: 4,
   },
   trendsBtnText: { fontSize: 16 },
+  mealRow: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
   centerSection: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 20,
+    gap: 18,
   },
   bottomSection: {
     alignItems: 'center',
-    paddingBottom: 72,
+    paddingBottom: 16,
+    gap: 10,
+    width: '100%',
   },
   liveArea: {
     alignItems: 'center',
@@ -216,32 +229,34 @@ const styles = StyleSheet.create({
     color: '#2D1A0E',
     textAlign: 'center',
     backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1.5,
     borderColor: '#F0D0B8',
     width: '100%',
+    lineHeight: 20,
   },
   processingText: {
     fontSize: 13,
     color: '#9070C0',
     fontStyle: 'italic',
+    letterSpacing: 0.1,
   },
   hint: {
-    fontSize: 16,
-    color: '#2D1A0E',
-    fontWeight: '600',
+    fontSize: 15,
+    color: '#9CA3AF',
+    fontWeight: '500',
     textAlign: 'center',
+    letterSpacing: 0.1,
   },
   journalOpener: {
-    position: 'absolute',
-    bottom: 16,
-    alignSelf: 'center',
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 24,
     borderRadius: 20,
     borderWidth: 1.5,
     backgroundColor: 'rgba(255,255,255,0.7)',
+    alignSelf: 'stretch',
+    alignItems: 'center',
   },
   journalOpenerText: {
     fontSize: 14,
@@ -251,10 +266,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
+    alignSelf: 'stretch',
   },
   actionBtn: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 13,
     borderRadius: 22,
     alignItems: 'center',
   },
@@ -268,7 +284,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#854D0E',
     fontWeight: '600',
-    marginBottom: 10,
     backgroundColor: '#FEF9C3',
     paddingHorizontal: 14,
     paddingVertical: 5,

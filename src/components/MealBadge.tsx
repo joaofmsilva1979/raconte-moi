@@ -20,7 +20,7 @@ export function MealBadge({ mealType, time, onPress, primaryColor }: MealBadgePr
     <TouchableOpacity
       onPress={onPress}
       testID="meal-badge"
-      style={[styles.badge, { borderColor: primaryColor }]}
+      style={[styles.badge, { borderColor: primaryColor + '50' }]}
     >
       <View style={styles.row}>
         <Text style={[styles.text, { color: primaryColor }]}>
@@ -28,18 +28,17 @@ export function MealBadge({ mealType, time, onPress, primaryColor }: MealBadgePr
         </Text>
         <Text style={[styles.editIcon, { color: primaryColor }]}>✎</Text>
       </View>
-      <Text style={[styles.hint, { color: primaryColor }]}>Touche pour changer</Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   badge: {
-    backgroundColor: '#FDEEE8',
+    backgroundColor: 'rgba(255,255,255,0.75)',
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderWidth: 1.5,
     alignItems: 'center',
   },
   row: {
@@ -49,17 +48,12 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
+    letterSpacing: -0.2,
   },
   editIcon: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    opacity: 0.7,
-  },
-  hint: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#8B4513',
-    marginTop: 2,
+    opacity: 0.5,
   },
 });
