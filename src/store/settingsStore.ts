@@ -20,6 +20,11 @@ const DEFAULT_SETTINGS: AppSettings = {
   notifications_lunch: true,
   notifications_snack: true,
   notifications_dinner: true,
+  google_access_token: null,
+  google_refresh_token: null,
+  google_token_expiry: null,
+  google_user_email: null,
+  google_last_backup_at: null,
 };
 
 interface SettingsState {
@@ -39,6 +44,9 @@ interface SettingsState {
   saveIcloudBackup: (enabled: boolean) => Promise<void>;
   saveBackupInterval: (days: number) => Promise<void>;
   saveLastBackupAt: (isoDate: string) => Promise<void>;
+  saveGoogleTokens: (accessToken: string, refreshToken: string, expiresAt: string, email: string) => Promise<void>;
+  saveGoogleLastBackupAt: (isoDate: string) => Promise<void>;
+  clearGoogleAuth: () => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -106,5 +114,33 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     await setSetting('last_backup_at', isoDate);
     const s = get().settings ?? { ...DEFAULT_SETTINGS };
     set({ settings: { ...s, last_backup_at: isoDate } });
+  },
+
+  saveGoogleTokens: async (accessToken, refreshToken, expiresAt, email) => {
+    await Promise.all([
+      setSetting('google_access_token', accessToken),
+      setSetting('google_refresh_token', refreshToken),
+      setSetting('google_token_expiry', expiresAt),
+      setSetting('google_user_email', email),
+    ]);
+    const s = get().settings ?? { ...DEFAULT_SETTINGS };
+    set({ settings: { ...s, google_access_token: accessToken, google_refresh_token: refreshToken, google_token_expiry: expiresAt, google_user_email: email } });
+  },
+
+  saveGoogleLastBackupAt: async (isoDate) => {
+    await setSetting('google_last_backup_at', isoDate);
+    const s = get().settings ?? { ...DEFAULT_SETTINGS };
+    set({ settings: { ...s, google_last_backup_at: isoDate } });
+  },
+
+  clearGoogleAuth: async () => {
+    await Promise.all([
+      setSetting('google_access_token', ''),
+      setSetting('google_refresh_token', ''),
+      setSetting('google_token_expiry', ''),
+      setSetting('google_user_email', ''),
+    ]);
+    const s = get().settings ?? { ...DEFAULT_SETTINGS };
+    set({ settings: { ...s, google_access_token: null, google_refresh_token: null, google_token_expiry: null, google_user_email: null } });
   },
 }));

@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import * as AuthSession from 'expo-auth-session';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { COLOR_PALETTES } from '@/constants/colors';
@@ -23,16 +24,94 @@ import { getActivitiesForDateRange } from '@/db/activitiesRepository';
 import { getSleepForDateRange } from '@/db/sleepRepository';
 import { resetAllData } from '@/db/database';
 import * as FileSystem from 'expo-file-system/legacy';
+import {
+  GOOGLE_DISCOVERY,
+  GOOGLE_REDIRECT_URI,
+  GOOGLE_SCOPES,
+  exchangeCodeForTokens,
+  refreshAccessToken,
+  isTokenExpired,
+  backupToGoogleDrive,
+} from '@/services/googleDriveService';
+import { GOOGLE_CLIENT_ID } from '@/config/googleDrive';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { settings, mealSlots, saveFirstName, savePrimaryColor, saveMealSlot, saveNotificationSetting, saveIcloudBackup, saveBackupInterval, saveLastBackupAt } =
-    useSettingsStore();
+  const {
+    settings, mealSlots,
+    saveFirstName, savePrimaryColor, saveMealSlot, saveNotificationSetting,
+    saveIcloudBackup, saveBackupInterval, saveLastBackupAt,
+    saveGoogleTokens, saveGoogleLastBackupAt, clearGoogleAuth,
+  } = useSettingsStore();
   const { primary } = useColorTheme();
 
   const [firstName, setFirstName] = useState(settings?.first_name ?? '');
   const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
   const [rawHours, setRawHours] = useState<Record<string, string>>({});
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  // Google OAuth request
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: GOOGLE_CLIENT_ID,
+      scopes: GOOGLE_SCOPES,
+      redirectUri: GOOGLE_REDIRECT_URI,
+      responseType: 'code',
+      usePKCE: true,
+    },
+    GOOGLE_DISCOVERY
+  );
+
+  // Handle OAuth response
+  useEffect(() => {
+    if (response?.type !== 'success') return;
+    const { code } = response.params;
+    const verifier = request?.codeVerifier;
+    if (!code || !verifier) return;
+
+    (async () => {
+      try {
+        setGoogleBusy(true);
+        const tokens = await exchangeCodeForTokens(code, verifier);
+        await saveGoogleTokens(tokens.accessToken, tokens.refreshToken, tokens.expiresAt, tokens.email);
+        Alert.alert('Connecté ✓', `Compte Google : ${tokens.email}`);
+      } catch (e: any) {
+        Alert.alert('Erreur', e.message ?? 'Connexion échouée');
+      } finally {
+        setGoogleBusy(false);
+      }
+    })();
+  }, [response]);
+
+  async function getValidGoogleToken(): Promise<string> {
+    if (!settings?.google_refresh_token) throw new Error('Non connecté à Google');
+    if (!isTokenExpired(settings.google_token_expiry)) {
+      return settings.google_access_token!;
+    }
+    const refreshed = await refreshAccessToken(settings.google_refresh_token);
+    await saveGoogleTokens(
+      refreshed.accessToken,
+      settings.google_refresh_token,
+      refreshed.expiresAt,
+      settings.google_user_email ?? ''
+    );
+    return refreshed.accessToken;
+  }
+
+  async function handleGoogleBackup() {
+    try {
+      setGoogleBusy(true);
+      const token = await getValidGoogleToken();
+      await backupToGoogleDrive(token);
+      const now = new Date().toISOString();
+      await saveGoogleLastBackupAt(now);
+      Alert.alert('Backup effectué ✓', 'La base de données est sauvegardée sur Google Drive.');
+    } catch (e: any) {
+      Alert.alert('Erreur', e.message ?? 'Backup échoué');
+    } finally {
+      setGoogleBusy(false);
+    }
+  }
 
   function todayStr() {
     return new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -425,6 +504,55 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Section: Google Drive */}
+        <Text style={styles.sectionTitle}>Sauvegarde Google Drive</Text>
+        <View style={styles.card}>
+          {settings?.google_user_email ? (
+            <>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>☁️ {settings.google_user_email}</Text>
+                <TouchableOpacity onPress={() => {
+                  Alert.alert('Se déconnecter ?', 'Les données locales ne seront pas supprimées.', [
+                    { text: 'Annuler', style: 'cancel' },
+                    { text: 'Déconnecter', style: 'destructive', onPress: clearGoogleAuth },
+                  ]);
+                }}>
+                  <Text style={styles.disconnectText}>Déconnecter</Text>
+                </TouchableOpacity>
+              </View>
+              {settings.google_last_backup_at && (
+                <Text style={styles.rowSub}>
+                  Dernier backup : {new Date(settings.google_last_backup_at).toLocaleString('fr-FR')}
+                </Text>
+              )}
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: '#4285F4', opacity: googleBusy ? 0.6 : 1 }]}
+                onPress={handleGoogleBackup}
+                disabled={googleBusy}
+              >
+                <Text style={[styles.actionBtnText, { color: '#4285F4' }]}>
+                  {googleBusy ? 'Sauvegarde en cours…' : '☁️ Sauvegarder maintenant'}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <Text style={styles.rowSub}>
+                Sauvegarde automatique de la base de données vers ton Google Drive.
+              </Text>
+              <TouchableOpacity
+                style={[styles.actionBtn, { borderColor: '#4285F4', opacity: (!request || googleBusy) ? 0.6 : 1 }]}
+                onPress={() => promptAsync()}
+                disabled={!request || googleBusy}
+              >
+                <Text style={[styles.actionBtnText, { color: '#4285F4' }]}>
+                  🔑 Se connecter à Google
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
         {/* Section: Zone danger */}
         <Text style={styles.sectionTitle}>Zone danger</Text>
         <TouchableOpacity
@@ -553,6 +681,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   privacyText: { fontSize: 13, color: '#C09070', fontWeight: '600' },
+  disconnectText: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

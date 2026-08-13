@@ -24,6 +24,8 @@ export async function getAppSettings(): Promise<AppSettings> {
     backup_interval, last_backup_at,
     notifications_enabled, notifications_breakfast, notifications_lunch,
     notifications_snack, notifications_dinner,
+    google_access_token, google_refresh_token, google_token_expiry,
+    google_user_email, google_last_backup_at,
   ] = await Promise.all([
     getSetting('first_name'),
     getSetting('primary_color'),
@@ -37,6 +39,11 @@ export async function getAppSettings(): Promise<AppSettings> {
     getSetting('notifications_lunch'),
     getSetting('notifications_snack'),
     getSetting('notifications_dinner'),
+    getSetting('google_access_token'),
+    getSetting('google_refresh_token'),
+    getSetting('google_token_expiry'),
+    getSetting('google_user_email'),
+    getSetting('google_last_backup_at'),
   ]);
 
   return {
@@ -52,6 +59,11 @@ export async function getAppSettings(): Promise<AppSettings> {
     notifications_lunch: notifications_lunch !== 'false',
     notifications_snack: notifications_snack !== 'false',
     notifications_dinner: notifications_dinner !== 'false',
+    google_access_token: google_access_token ?? null,
+    google_refresh_token: google_refresh_token ?? null,
+    google_token_expiry: google_token_expiry ?? null,
+    google_user_email: google_user_email ?? null,
+    google_last_backup_at: google_last_backup_at ?? null,
   };
 }
 

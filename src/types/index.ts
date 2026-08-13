@@ -84,6 +84,12 @@ export interface AppSettings {
   notifications_lunch: boolean;
   notifications_snack: boolean;
   notifications_dinner: boolean;
+  // Google Drive
+  google_access_token: string | null;
+  google_refresh_token: string | null;
+  google_token_expiry: string | null;
+  google_user_email: string | null;
+  google_last_backup_at: string | null;
 }
 
 export interface ColorPalette {
