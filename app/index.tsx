@@ -128,23 +128,25 @@ export default function HomeScreen() {
           <Text style={[styles.activitySummary, todayTotalMinutes >= DAILY_GOAL_MINUTES && styles.activitySummaryDone]}>
             {todayTotalMinutes >= DAILY_GOAL_MINUTES
               ? `✓ Objectif atteint · ${todayTotalMinutes}min aujourd'hui`
-              : `🏃 ${todayTotalMinutes}min · objectif ${DAILY_GOAL_MINUTES}min`}
+              : `⏱ ${todayTotalMinutes}min · objectif ${DAILY_GOAL_MINUTES}min`}
           </Text>
         )}
         <View style={styles.actionRow}>
           <TouchableOpacity
             testID="add-ressenti-btn"
             onPress={openRessentisSheet}
-            style={styles.ressentisBtn}
+            style={[styles.primaryBtn, { backgroundColor: '#7C3AED' }]}
+            activeOpacity={0.82}
           >
-            <Text style={styles.ressentsBtnText}>💜 Ressenti</Text>
+            <Text style={styles.primaryBtnText}>💜 Ressenti</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="add-activity-btn"
             onPress={openActivitySheet}
-            style={styles.activityBtn}
+            style={styles.secondaryBtn}
+            activeOpacity={0.82}
           >
-            <Text style={styles.activityBtnText}>🏃 Activité</Text>
+            <Text style={styles.secondaryBtnText}>🏃</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -184,16 +186,16 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 26,
     fontWeight: '700',
-    color: '#2D1A0E',
+    color: '#1C0A00',
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   trendsBtn: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: '#F5F0FF',
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: '#E9D5FF',
   },
-  trendsBtnText: { fontSize: 18 },
+  trendsBtnText: { fontSize: 16 },
   centerSection: {
     flex: 1,
     alignItems: 'center',
@@ -247,33 +249,31 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
+    alignItems: 'center',
   },
-  ressentisBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    backgroundColor: '#F3EEFF',
-    borderWidth: 1.5,
-    borderColor: '#D8B4FE',
+  primaryBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 22,
+    alignItems: 'center',
   },
-  ressentsBtnText: {
-    fontSize: 14,
-    color: '#8B5CF6',
+  primaryBtnText: {
+    fontSize: 15,
+    color: 'white',
     fontWeight: '700',
+    letterSpacing: -0.2,
   },
-  activityBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+  secondaryBtn: {
+    width: 50, height: 50, borderRadius: 25,
     backgroundColor: '#F0FFF4',
     borderWidth: 1.5,
     borderColor: '#BBF7D0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  activityBtnText: {
-    fontSize: 14,
-    color: '#16A34A',
-    fontWeight: '700',
+  secondaryBtnText: {
+    fontSize: 20,
   },
   activitySummary: {
     fontSize: 12,
