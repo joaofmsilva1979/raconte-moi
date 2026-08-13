@@ -121,6 +121,16 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
   } catch {}
 }
 
+export async function resetAllData(): Promise<void> {
+  const database = await getDatabase();
+  await database.execAsync(`
+    DELETE FROM entries;
+    DELETE FROM ressentis;
+    DELETE FROM activities;
+    DELETE FROM sleep_logs;
+  `);
+}
+
 async function seedDefaultMealSlots(database: SQLite.SQLiteDatabase): Promise<void> {
   const existing = await database.getFirstAsync<{ count: number }>(
     'SELECT COUNT(*) as count FROM meal_slots'

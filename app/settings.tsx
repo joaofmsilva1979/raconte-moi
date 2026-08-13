@@ -21,6 +21,8 @@ import { getEntriesForDateRange } from '@/db/entriesRepository';
 import { getRessentisForDateRange } from '@/db/ressentisRepository';
 import { getActivitiesForDateRange } from '@/db/activitiesRepository';
 import { getSleepForDateRange } from '@/db/sleepRepository';
+import { resetAllData } from '@/db/database';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -423,6 +425,37 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Section: Zone danger */}
+        <Text style={styles.sectionTitle}>Zone danger</Text>
+        <TouchableOpacity
+          testID="reset-data-btn"
+          style={styles.resetBtn}
+          onPress={() => {
+            Alert.alert(
+              'Effacer toutes les données ?',
+              'Toutes les notes, ressentis, activités et photos seront supprimés définitivement. Les réglages sont conservés.',
+              [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                  text: 'Effacer',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await resetAllData();
+                    const photosDir = (FileSystem.documentDirectory ?? '') + 'photos/';
+                    try {
+                      const files = await FileSystem.readDirectoryAsync(photosDir);
+                      await Promise.all(files.map(f => FileSystem.deleteAsync(photosDir + f, { idempotent: true })));
+                    } catch {}
+                    Alert.alert('Données effacées', 'L\'app est prête pour un nouveau départ.');
+                  },
+                },
+              ]
+            );
+          }}
+        >
+          <Text style={styles.resetBtnText}>🗑 Effacer toutes les données</Text>
+        </TouchableOpacity>
+
         {/* Section: Confidentialité */}
         <View testID="privacy-badge" style={styles.privacyBadge}>
           <Text style={styles.privacyText}>🔒 Aucune donnée ne quitte cet iPhone</Text>
@@ -501,6 +534,16 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0D0B8',
   },
   switchLabel: { fontSize: 15, color: '#2D1A0E', fontWeight: '500' },
+  resetBtn: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  resetBtnText: { fontSize: 14, fontWeight: '700', color: '#DC2626' },
   privacyBadge: {
     marginTop: 32,
     alignItems: 'center',
