@@ -19,6 +19,8 @@ import { backupToIcloud, restoreFromIcloud, isBackupDue } from '@/services/iclou
 import { exportJournalAsPdf } from '@/services/pdfService';
 import { getEntriesForDateRange } from '@/db/entriesRepository';
 import { getRessentisForDateRange } from '@/db/ressentisRepository';
+import { getActivitiesForDateRange } from '@/db/activitiesRepository';
+import { getSleepForDateRange } from '@/db/sleepRepository';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -57,15 +59,17 @@ export default function SettingsScreen() {
       Alert.alert('Date invalide', 'Utilise le format JJ/MM/AAAA');
       return;
     }
-    const [entries, ressentis] = await Promise.all([
+    const [entries, ressentis, activities, sleepLogs] = await Promise.all([
       getEntriesForDateRange(from, to),
       getRessentisForDateRange(from, to),
+      getActivitiesForDateRange(from, to),
+      getSleepForDateRange(from, to),
     ]);
-    if (entries.length === 0 && ressentis.length === 0) {
+    if (entries.length === 0 && ressentis.length === 0 && activities.length === 0) {
       Alert.alert('Aucune donnée', 'Pas de notes ou de ressentis sur cette période.');
       return;
     }
-    await exportJournalAsPdf(entries, ressentis, settings?.first_name ?? '', label, primary, from, to);
+    await exportJournalAsPdf(entries, ressentis, settings?.first_name ?? '', label, primary, from, to, activities, sleepLogs);
   }
 
   function applyPreset(days: number) {

@@ -4,6 +4,10 @@ jest.mock('expo-print', () => ({
 jest.mock('expo-sharing', () => ({
   shareAsync: jest.fn().mockResolvedValue(undefined),
 }));
+jest.mock('expo-file-system/legacy', () => ({
+  documentDirectory: 'file:///documents/',
+  copyAsync: jest.fn().mockResolvedValue(undefined),
+}));
 
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -78,10 +82,10 @@ describe('pdfService', () => {
       });
     });
 
-    it('appelle Sharing.shareAsync avec l\'URI et le mimeType PDF', async () => {
-      await exportJournalAsPdf(mockEntries, [], 'Eugénie', 'Août 2026', '#E85520');
+    it('appelle Sharing.shareAsync avec un nom de fichier structuré et le mimeType PDF', async () => {
+      await exportJournalAsPdf(mockEntries, [], 'Eugénie', 'Août 2026', '#E85520', '2026-08-01', '2026-08-13');
       expect(Sharing.shareAsync).toHaveBeenCalledWith(
-        'file:///tmp/journal.pdf',
+        expect.stringContaining('NOTES-PATATE_Eugenie_DU20260801_AU20260813'),
         { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' }
       );
     });
