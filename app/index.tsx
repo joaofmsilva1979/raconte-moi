@@ -73,11 +73,20 @@ export default function HomeScreen() {
       style={[styles.container, { backgroundColor: background }]}
       {...panResponder.panHandlers}
     >
-      {/* Top: greeting + meal badge */}
+      {/* Top: greeting + meal badge + tendances */}
       <View style={styles.topSection}>
-        <Text style={styles.greeting}>
-          {greeting} {settings.first_name} ☀️
-        </Text>
+        <View style={styles.greetingRow}>
+          <Text style={styles.greeting}>
+            {greeting} {settings.first_name} ☀️
+          </Text>
+          <TouchableOpacity
+            testID="trends-btn"
+            onPress={() => router.push('/trends')}
+            style={styles.trendsBtn}
+          >
+            <Text style={styles.trendsBtnText}>📈</Text>
+          </TouchableOpacity>
+        </View>
         <MealBadge
           mealType={mealType}
           time={recordedAt ?? new Date()}
@@ -166,12 +175,25 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     gap: 12,
   },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
   greeting: {
     fontSize: 26,
     fontWeight: '700',
     color: '#2D1A0E',
     textAlign: 'center',
   },
+  trendsBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: '#F5F0FF',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: '#E9D5FF',
+  },
+  trendsBtnText: { fontSize: 18 },
   centerSection: {
     flex: 1,
     alignItems: 'center',
