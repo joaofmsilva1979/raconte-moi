@@ -33,7 +33,7 @@ function fmt(iso: string): string {
 function entryHtml(entry: Entry, primaryColor: string, photoMap: Record<string, string>): string {
   const photoSrc = entry.photo_uri ? (photoMap[entry.photo_uri] ?? null) : null;
   const photoHtml = photoSrc
-    ? `<img src="${photoSrc}" style="max-width:100%;border-radius:6px;margin-top:8px;display:block;">`
+    ? `<img src="${photoSrc}" style="max-width:30%;height:auto;border-radius:6px;margin-top:8px;display:block;">`
     : '';
   return `
     <div class="entry" style="border-left-color:${primaryColor}">
