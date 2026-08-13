@@ -10,15 +10,16 @@ interface CreateRessentParams {
   meal_type: MealType | null;
   meal_date: string | null;
   delay_minutes: number | null;
+  context: 'morning' | 'feeling' | null;
 }
 
 export async function createRessenti(params: CreateRessentParams): Promise<number> {
   const db = await getDatabase();
   const result = await db.runAsync(
-    `INSERT INTO ressentis (recorded_at, category, sub_category, note, entry_id, meal_type, meal_date, delay_minutes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ressentis (recorded_at, category, sub_category, note, entry_id, meal_type, meal_date, delay_minutes, context)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [params.recorded_at, params.category, params.sub_category,
-     params.note, params.entry_id, params.meal_type, params.meal_date, params.delay_minutes]
+     params.note, params.entry_id, params.meal_type, params.meal_date, params.delay_minutes, params.context]
   );
   return result.lastInsertRowId;
 }

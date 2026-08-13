@@ -40,6 +40,7 @@ export interface Ressenti {
   meal_type: MealType | null;
   meal_date: string | null; // YYYY-MM-DD — jour du repas (peut différer de recorded_at)
   delay_minutes: number | null;
+  context: 'morning' | 'feeling' | null; // mode d'entrée (null = données anciennes)
 }
 
 export interface Activity {

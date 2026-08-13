@@ -147,6 +147,7 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
       const rows: Promise<number>[] = [];
 
       for (const category of categories) {
+        const context = mode === 'morning' ? 'morning' : mode === 'feeling' ? 'feeling' : null;
         if (category === 'pain' && sub_categories.length > 0) {
           for (const sub of sub_categories) {
             rows.push(createRessenti({
@@ -158,6 +159,7 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
               meal_type: selected_meal,
               meal_date,
               delay_minutes,
+              context,
             }));
           }
         } else {
@@ -170,6 +172,7 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
             meal_type: selected_meal,
             meal_date,
             delay_minutes,
+            context,
           }));
         }
       }

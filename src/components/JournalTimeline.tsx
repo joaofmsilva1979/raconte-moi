@@ -73,9 +73,18 @@ export function JournalTimeline({
   sleepLog, onEditEntry, onEditRessenti,
 }: JournalTimelineProps) {
   const timeline = buildTimeline(entries, ressentis, slots);
-  const orphanRessentis = ressentis.filter(r => r.meal_type == null);
+
+  // Ressentis du réveil : context='morning' ou anciens sans context et sans meal_type
+  const morningRessentis = ressentis.filter(r => r.context === 'morning');
+  // Ressentis "comment tu te sens" sans repas lié (hors réveil)
+  const freeRessentis = ressentis.filter(r => r.meal_type == null && r.context !== 'morning');
   const hasActivities = activities.length > 0;
-  const isLastSection = orphanRessentis.length === 0 && !hasActivities;
+  const hasMorning = morningRessentis.length > 0;
+  const hasFree = freeRessentis.length > 0;
+
+  // La dernière section ne doit pas avoir de ligne verticale
+  const lastSectionIndex = hasActivities ? 2 : hasFree ? 1 : 0;
+  const getMealIsLast = (idx: number) => idx === timeline.length - 1 && lastSectionIndex === 0;
 
   return (
     <View style={styles.container} testID="journal-timeline">
@@ -92,9 +101,26 @@ export function JournalTimeline({
         </View>
       )}
 
+      {/* Ressentis du réveil — toujours en haut, avant les repas */}
+      {hasMorning && (
+        <View style={styles.row} testID="timeline-morning-ressentis">
+          <View style={styles.dotCol}>
+            <View style={[styles.dot, { backgroundColor: '#8B5CF6' }]} />
+            <View style={[styles.line, { backgroundColor: '#8B5CF640' }]} />
+          </View>
+          <View style={styles.content}>
+            <Text style={styles.slotLabel}>☀️ Au réveil</Text>
+            {morningRessentis.map((r) => (
+              <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Sections repas */}
       {timeline.map((item, idx) => {
         const { slot, slotEntries, slotRessentis } = item;
-        const isLast = idx === timeline.length - 1 && isLastSection;
+        const isLast = getMealIsLast(idx);
 
         return (
           <View key={`meal-${slot.meal_type}`} style={styles.row} testID={`timeline-slot-${slot.meal_type}`}>
@@ -136,21 +162,23 @@ export function JournalTimeline({
         );
       })}
 
-      {orphanRessentis.length > 0 && (
-        <View style={styles.row} testID="timeline-orphan-ressentis">
+      {/* Ressentis "comment tu te sens" sans repas — entre repas et activités */}
+      {hasFree && (
+        <View style={styles.row} testID="timeline-free-ressentis">
           <View style={styles.dotCol}>
             <View style={[styles.dot, { backgroundColor: '#8B5CF6' }]} />
             {hasActivities && <View style={[styles.line, { backgroundColor: '#8B5CF640' }]} />}
           </View>
           <View style={styles.content}>
             <Text style={styles.slotLabel}>💜 Ressentis</Text>
-            {orphanRessentis.map((r) => (
+            {freeRessentis.map((r) => (
               <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
             ))}
           </View>
         </View>
       )}
 
+      {/* Activités — toujours tout en bas */}
       {hasActivities && (
         <View style={styles.row} testID="timeline-activities">
           <View style={styles.dotCol}>
