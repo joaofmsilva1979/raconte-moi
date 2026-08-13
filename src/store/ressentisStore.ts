@@ -30,6 +30,7 @@ interface RessentisActions {
   openSheet: () => void;
   closeSheet: () => void;
   setMode: (mode: SheetMode) => void;
+  selectSlot: (slot: 'morning' | MealType | null) => void;
   toggleCategory: (category: RessentCategory) => void;
   toggleSubCategory: (sub: RessentSubCategory) => void;
   applyCustomLocation: (location: CustomPainLocation) => void;
@@ -81,6 +82,16 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
       else                              selected_meal = 'other';
     }
     set({ mode, moment: mode === 'morning' ? 'morning' : null, selected_meal });
+  },
+
+  selectSlot: (slot) => {
+    if (slot === null) {
+      set({ mode: 'feeling', moment: null, selected_meal: null });
+    } else if (slot === 'morning') {
+      set({ mode: 'morning', moment: 'morning', selected_meal: null });
+    } else {
+      set({ mode: 'meal', moment: null, selected_meal: slot });
+    }
   },
 
   toggleCategory: (category) => set((state) => {
