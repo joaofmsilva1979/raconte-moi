@@ -1,5 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Entry, Ressenti, MealType } from '@/types';
 import { RESSENTI_LABELS, RESSENTI_ICONS, SUB_CATEGORY_LABELS } from '@/constants/ressentis';
 
@@ -101,9 +102,22 @@ export async function exportJournalAsPdf(
   ressentis: Ressenti[],
   firstName: string,
   periodLabel: string,
-  primaryColor: string
+  primaryColor: string,
+  fromDate: string,
+  toDate: string,
 ): Promise<void> {
   const html = generateJournalHtml(entries, ressentis, firstName, periodLabel, primaryColor);
-  const { uri } = await Print.printToFileAsync({ html });
-  await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
+  const { uri: tempUri } = await Print.printToFileAsync({ html });
+
+  const safeName = firstName
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]/g, '')
+    || 'Journal';
+  const from = fromDate.replace(/-/g, '');
+  const to = toDate.replace(/-/g, '');
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const filename = `NOTES-PATATE_${safeName}_DU${from}_AU${to}_${today}.pdf`;
+
+  const destUri = (FileSystem.documentDirectory ?? '') + filename;
+  await FileSystem.copyAsync({ from: tempUri, to: destUri });
+  await Sharing.shareAsync(destUri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
 }

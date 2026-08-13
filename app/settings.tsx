@@ -65,7 +65,7 @@ export default function SettingsScreen() {
       Alert.alert('Aucune donnée', 'Pas de notes ou de ressentis sur cette période.');
       return;
     }
-    await exportJournalAsPdf(entries, ressentis, settings?.first_name ?? '', label, primary);
+    await exportJournalAsPdf(entries, ressentis, settings?.first_name ?? '', label, primary, from, to);
   }
 
   function applyPreset(days: number) {
