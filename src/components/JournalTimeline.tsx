@@ -45,16 +45,13 @@ function buildTimeline(
   medicationLogs: MedicationLog[],
   comfortAidLogs: ComfortAidLog[],
 ): TimelineItem[] {
-  const linkedMedTypes = new Set(medicationLogs.filter(m => m.meal_type).map(m => m.meal_type));
-  const linkedAidIds = new Set<number>(); // comfort aids don't link to meal slots — always standalone
-
   const mealItems: TimelineItem[] = slots.map((slot) => ({
     kind: 'meal' as const,
     slot,
     slotEntries: entries.filter((e) => e.meal_type === slot.meal_type),
     slotRessentis: ressentis.filter((r) => r.meal_type === slot.meal_type),
     slotMeds: medicationLogs.filter((m) => m.meal_type === slot.meal_type),
-    slotAids: [],
+    slotAids: comfortAidLogs.filter((a) => a.meal_type === slot.meal_type),
     sortKey: slot.start_hour * 60,
   }));
 
@@ -67,9 +64,11 @@ function buildTimeline(
     kind: 'med' as const, log: m, sortKey: toMinutes(m.recorded_at),
   }));
 
-  const aidItems: TimelineItem[] = comfortAidLogs.map((a) => ({
-    kind: 'aid' as const, log: a, sortKey: toMinutes(a.recorded_at),
-  }));
+  // aids with 'morning' go to the morning section (filtered at render time); rest standalone
+  const freeAids = comfortAidLogs.filter((a) => !a.meal_type || a.meal_type === 'morning');
+  const aidItems: TimelineItem[] = freeAids
+    .filter((a) => a.meal_type !== 'morning')
+    .map((a) => ({ kind: 'aid' as const, log: a, sortKey: toMinutes(a.recorded_at) }));
 
   return [...mealItems, ...feelingItems, ...medItems, ...aidItems].sort((a, b) => a.sortKey - b.sortKey);
 }
@@ -112,11 +111,12 @@ export function JournalTimeline({
   sleepLog, medicationLogs = [], comfortAidLogs = [], onEditEntry, onEditRessenti,
 }: JournalTimelineProps) {
   const morningRessentis = ressentis.filter(r => r.context === 'morning');
+  const morningAids = comfortAidLogs.filter(a => a.meal_type === 'morning');
   const freeRessentis = ressentis.filter(r => r.meal_type == null && r.context !== 'morning');
   const timeline = buildTimeline(entries, ressentis, slots, freeRessentis, medicationLogs, comfortAidLogs);
 
   const hasActivities = activities.length > 0;
-  const hasMorning = morningRessentis.length > 0;
+  const hasMorning = morningRessentis.length > 0 || morningAids.length > 0;
 
   const getIsLast = (idx: number) => idx === timeline.length - 1 && !hasActivities;
 
@@ -135,7 +135,7 @@ export function JournalTimeline({
         </View>
       )}
 
-      {/* Ressentis du réveil — toujours en haut, avant les repas */}
+      {/* Ressentis + accessoires du réveil — toujours en haut, avant les repas */}
       {hasMorning && (
         <View style={styles.row} testID="timeline-morning-ressentis">
           <View style={styles.dotCol}>
@@ -143,9 +143,16 @@ export function JournalTimeline({
             <View style={[styles.line, { backgroundColor: '#8B5CF640' }]} />
           </View>
           <View style={styles.content}>
-            <Text style={styles.slotLabel}>☀️ Au réveil</Text>
+            <Text style={styles.slotLabel}>🌅 Au réveil</Text>
             {morningRessentis.map((r) => (
               <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
+            ))}
+            {morningAids.map((a) => (
+              <View key={`morning-aid-${a.id}`} style={styles.aidCard}>
+                <Text style={styles.aidTime}>🩹 {formatTime(a.recorded_at)}</Text>
+                <Text style={styles.aidName}>{a.comfort_aid_name ?? '—'}</Text>
+                {a.note ? <Text style={styles.aidNote}>"{a.note}"</Text> : null}
+              </View>
             ))}
           </View>
         </View>
@@ -211,7 +218,7 @@ export function JournalTimeline({
           );
         }
 
-        const { slot, slotEntries, slotRessentis, slotMeds } = item;
+        const { slot, slotEntries, slotRessentis, slotMeds, slotAids } = item;
         return (
           <View key={`meal-${slot.meal_type}`} style={styles.row} testID={`timeline-slot-${slot.meal_type}`}>
             <View style={styles.dotCol}>
@@ -262,6 +269,13 @@ export function JournalTimeline({
               ))}
               {slotRessentis.map((r) => (
                 <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
+              ))}
+              {slotAids.map((a) => (
+                <View key={`slot-aid-${a.id}`} style={styles.aidCard}>
+                  <Text style={styles.aidTime}>🩹 {formatTime(a.recorded_at)}</Text>
+                  <Text style={styles.aidName}>{a.comfort_aid_name ?? '—'}</Text>
+                  {a.note ? <Text style={styles.aidNote}>"{a.note}"</Text> : null}
+                </View>
               ))}
             </View>
           </View>

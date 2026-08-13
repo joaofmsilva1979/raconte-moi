@@ -27,12 +27,13 @@ export async function deleteComfortAid(id: number): Promise<void> {
 export async function logComfortAid(params: {
   comfort_aid_id: number;
   recorded_at: string;
-  note?: string;
+  meal_type?: string | null;
+  note?: string | null;
 }): Promise<number> {
   const db = await getDatabase();
   const result = await db.runAsync(
-    'INSERT INTO comfort_aid_logs (comfort_aid_id, recorded_at, note) VALUES (?, ?, ?)',
-    [params.comfort_aid_id, params.recorded_at, params.note ?? null]
+    'INSERT INTO comfort_aid_logs (comfort_aid_id, recorded_at, meal_type, note) VALUES (?, ?, ?, ?)',
+    [params.comfort_aid_id, params.recorded_at, params.meal_type ?? null, params.note ?? null]
   );
   return result.lastInsertRowId;
 }

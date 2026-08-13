@@ -1,11 +1,14 @@
 import { create } from 'zustand';
-import { ComfortAid } from '@/types';
+import { ComfortAid, MealType } from '@/types';
 import { getComfortAids, addComfortAid, deleteComfortAid, logComfortAid } from '@/db/comfortAidsRepository';
+
+type AidSlot = MealType | 'morning';
 
 interface ComfortAidState {
   isSheetOpen: boolean;
   aids: ComfortAid[];
   selectedAidIds: number[];
+  mealType: AidSlot | null;
   note: string;
   recordedAt: string;
 }
@@ -17,6 +20,7 @@ interface ComfortAidActions {
   addNewAid: (name: string) => Promise<void>;
   removeAid: (id: number) => Promise<void>;
   toggleAid: (id: number) => void;
+  setMealType: (slot: AidSlot | null) => void;
   setNote: (note: string) => void;
   setRecordedAt: (iso: string) => void;
   saveComfortAidLogs: () => Promise<void>;
@@ -26,6 +30,7 @@ const INITIAL: ComfortAidState = {
   isSheetOpen: false,
   aids: [],
   selectedAidIds: [],
+  mealType: null,
   note: '',
   recordedAt: new Date().toISOString(),
 };
@@ -36,6 +41,7 @@ export const useComfortAidStore = create<ComfortAidState & ComfortAidActions>((s
   openSheet: () => set({
     isSheetOpen: true,
     selectedAidIds: [],
+    mealType: null,
     note: '',
     recordedAt: new Date().toISOString(),
   }),
@@ -43,6 +49,7 @@ export const useComfortAidStore = create<ComfortAidState & ComfortAidActions>((s
   closeSheet: () => set({
     isSheetOpen: false,
     selectedAidIds: [],
+    mealType: null,
     note: '',
     recordedAt: new Date().toISOString(),
   }),
@@ -73,25 +80,29 @@ export const useComfortAidStore = create<ComfortAidState & ComfortAidActions>((s
     };
   }),
 
+  setMealType: (mealType) => set({ mealType }),
+
   setNote: (note) => set({ note }),
 
   setRecordedAt: (recordedAt) => set({ recordedAt }),
 
   saveComfortAidLogs: async () => {
-    const { selectedAidIds, note, recordedAt } = get();
+    const { selectedAidIds, mealType, note, recordedAt } = get();
     if (selectedAidIds.length === 0) return;
     await Promise.all(
       selectedAidIds.map((comfort_aid_id) =>
         logComfortAid({
           comfort_aid_id,
-          note: note.trim() || null,
           recorded_at: recordedAt,
+          meal_type: mealType ?? null,
+          note: note.trim() || null,
         })
       )
     );
     set({
       isSheetOpen: false,
       selectedAidIds: [],
+      mealType: null,
       note: '',
       recordedAt: new Date().toISOString(),
     });

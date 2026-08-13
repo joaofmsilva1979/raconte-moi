@@ -85,6 +85,7 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
   try { await database.execAsync(`ALTER TABLE entries ADD COLUMN photo_uri TEXT;`); } catch {}
   try { await database.execAsync(`ALTER TABLE ressentis ADD COLUMN meal_date TEXT;`); } catch {}
   try { await database.execAsync(`ALTER TABLE ressentis ADD COLUMN context TEXT;`); } catch {}
+  try { await database.execAsync(`ALTER TABLE comfort_aid_logs ADD COLUMN meal_type TEXT;`); } catch {}
 
   // New feature tables
   try {

@@ -125,6 +125,7 @@ export interface ComfortAidLog {
   comfort_aid_id: number;
   comfort_aid_name?: string;
   recorded_at: string;
+  meal_type: MealType | 'morning' | null;
   note: string | null;
   created_at: string;
 }

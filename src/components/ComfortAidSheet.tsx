@@ -5,13 +5,24 @@ import {
   Keyboard, ScrollView, Alert,
 } from 'react-native';
 import { useComfortAidStore } from '@/store/comfortAidStore';
+import { MealType } from '@/types';
 
 interface Props { primaryColor: string }
 
+type AidSlot = MealType | 'morning';
+
+const SLOT_OPTS: { id: AidSlot; icon: string; label: string }[] = [
+  { id: 'morning',   icon: '🌅', label: 'Au réveil' },
+  { id: 'breakfast', icon: '☀️', label: 'Petit-déj' },
+  { id: 'lunch',     icon: '🌞', label: 'Déjeuner' },
+  { id: 'snack',     icon: '🌤', label: 'Collation' },
+  { id: 'dinner',    icon: '🌙', label: 'Dîner' },
+];
+
 export function ComfortAidSheet({ primaryColor }: Props) {
   const {
-    isSheetOpen, aids, selectedAidIds, note,
-    closeSheet, toggleAid, setNote, saveComfortAidLogs, addNewAid,
+    isSheetOpen, aids, selectedAidIds, mealType, note,
+    closeSheet, toggleAid, setMealType, setNote, saveComfortAidLogs, addNewAid,
   } = useComfortAidStore();
 
   const [newAidName, setNewAidName] = useState('');
@@ -102,6 +113,25 @@ export function ComfortAidSheet({ primaryColor }: Props) {
                 </TouchableOpacity>
               </View>
             )}
+
+            {/* Lien repas / moment */}
+            <Text style={styles.label}>Moment (optionnel)</Text>
+            <View style={styles.chipRow}>
+              {SLOT_OPTS.map(s => {
+                const sel = mealType === s.id;
+                return (
+                  <TouchableOpacity
+                    key={s.id}
+                    onPress={() => setMealType(sel ? null : s.id)}
+                    style={[styles.chip, sel && { backgroundColor: '#0EA5E9', borderColor: '#0EA5E9' }]}
+                  >
+                    <Text style={[styles.chipText, sel && styles.chipTextSel]}>
+                      {s.icon} {s.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
             {/* Note */}
             <Text style={styles.label}>Note (optionnel)</Text>
