@@ -23,6 +23,7 @@ interface RessentisState {
   moment: 'morning' | null;
   sleepQuality: SleepQuality | null;
   customPainLocations: CustomPainLocation[];
+  feeling_recorded_at: string; // heure modifiable pour mode feeling
 }
 
 interface RessentisActions {
@@ -38,6 +39,7 @@ interface RessentisActions {
   setSubNote: (text: string) => void;
   setMoment: (moment: 'morning' | null) => void;
   setSleepQuality: (quality: SleepQuality | null) => void;
+  setFeelingRecordedAt: (iso: string) => void;
   saveCustomLocation: (label: string) => Promise<void>;
   removeCustomLocation: (id: number) => Promise<void>;
   saveRessenti: () => Promise<void>;
@@ -55,6 +57,7 @@ const INITIAL: RessentisState = {
   moment: null,
   sleepQuality: null,
   customPainLocations: [],
+  feeling_recorded_at: new Date().toISOString(),
 };
 
 export const useRessentisStore = create<RessentisState & RessentisActions>((set, get) => ({
@@ -62,7 +65,7 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
 
   openSheet: async () => {
     const customPainLocations = await getCustomPainLocations();
-    set({ isSheetOpen: true, customPainLocations });
+    set({ isSheetOpen: true, customPainLocations, feeling_recorded_at: new Date().toISOString() });
   },
 
   closeSheet: () => set(INITIAL),
@@ -116,6 +119,8 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
 
   setSleepQuality: (sleepQuality) => set({ sleepQuality }),
 
+  setFeelingRecordedAt: (iso) => set({ feeling_recorded_at: iso }),
+
   saveCustomLocation: async (label) => {
     if (!label.trim()) return;
     await addCustomPainLocation(label.trim());
@@ -130,10 +135,11 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
   },
 
   saveRessenti: async () => {
-    const { categories, sub_categories, selected_meal, meal_day, notes, subNote, sleepQuality, mode } = get();
+    const { categories, sub_categories, selected_meal, meal_day, notes, subNote, sleepQuality, mode, feeling_recorded_at } = get();
     if (categories.length === 0 && sleepQuality === null) return;
 
     const now = new Date();
+    const recordedAt = mode === 'feeling' ? feeling_recorded_at : now.toISOString();
     const mealDate = new Date();
     if (meal_day === 'yesterday') mealDate.setDate(mealDate.getDate() - 1);
     const meal_date = mealDate.toISOString().slice(0, 10);
@@ -151,7 +157,7 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
         if (category === 'pain' && sub_categories.length > 0) {
           for (const sub of sub_categories) {
             rows.push(createRessenti({
-              recorded_at: now.toISOString(),
+              recorded_at: recordedAt,
               category,
               sub_category: sub,
               note: sub === 'other' ? (subNote || null) : null,
@@ -164,7 +170,7 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
           }
         } else {
           rows.push(createRessenti({
-            recorded_at: now.toISOString(),
+            recorded_at: recordedAt,
             category,
             sub_category: null,
             note: category === 'other' ? (notes['other'] || null) : null,

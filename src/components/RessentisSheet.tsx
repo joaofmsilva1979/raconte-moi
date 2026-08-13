@@ -8,6 +8,11 @@ import { RESSENTI_CATEGORIES, RESSENTI_SUB_CATEGORIES } from '@/constants/ressen
 import { DEFAULT_MEAL_SLOTS } from '@/constants/meals';
 import { SleepQuality } from '@/types';
 
+function isoToHHMM(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 interface RessentisSheetProps {
   primaryColor: string;
 }
@@ -27,11 +32,16 @@ const MODE_TABS: { id: SheetMode; icon: string; label: string }[] = [
 export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
   const {
     isSheetOpen, mode, categories, sub_categories, selected_meal, meal_day,
-    notes, subNote, sleepQuality, customPainLocations,
+    notes, subNote, sleepQuality, customPainLocations, feeling_recorded_at,
     setMode, toggleCategory, toggleSubCategory, applyCustomLocation, selectMeal,
-    setMealDay, setNote, setSubNote, setSleepQuality,
+    setMealDay, setNote, setSubNote, setSleepQuality, setFeelingRecordedAt,
     saveCustomLocation, removeCustomLocation, saveRessenti, closeSheet,
   } = useRessentisStore();
+
+  const [timeText, setTimeText] = React.useState(isoToHHMM(feeling_recorded_at));
+  React.useEffect(() => {
+    if (isSheetOpen) setTimeText(isoToHHMM(feeling_recorded_at));
+  }, [isSheetOpen]);
 
   if (!isSheetOpen) return null;
 
@@ -83,6 +93,32 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
 
           {mode === null && (
             <Text style={styles.hint}>Choisis un contexte pour commencer</Text>
+          )}
+
+          {mode === 'feeling' && (
+            <View style={styles.timeRow}>
+              <Text style={styles.timeRowLabel}>💜 Heure :</Text>
+              <TextInput
+                style={styles.timeInput}
+                value={timeText}
+                onChangeText={(v) => {
+                  setTimeText(v);
+                  if (/^\d{2}:\d{2}$/.test(v)) {
+                    const [h, m] = v.split(':').map(Number);
+                    if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+                      const d = new Date(feeling_recorded_at);
+                      d.setHours(h, m, 0, 0);
+                      setFeelingRecordedAt(d.toISOString());
+                    }
+                  }
+                }}
+                keyboardType="numbers-and-punctuation"
+                maxLength={5}
+                returnKeyType="done"
+                onSubmitEditing={Keyboard.dismiss}
+                blurOnSubmit
+              />
+            </View>
           )}
 
           <ScrollView
@@ -399,6 +435,14 @@ const styles = StyleSheet.create({
   },
   saveCustomText: { fontSize: 18 },
   saveCustomHint: { fontSize: 10, color: '#9370C0', fontStyle: 'italic', marginTop: 4 },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  timeRowLabel: { fontSize: 14, fontWeight: '700', color: '#6D28D9' },
+  timeInput: {
+    borderWidth: 1.5, borderColor: '#D8B4FE', borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 6, fontSize: 20,
+    fontWeight: '700', color: '#4C1D95', backgroundColor: 'white',
+    width: 85, textAlign: 'center',
+  },
   saveBtn: {
     marginTop: 16, backgroundColor: '#8B5CF6',
     borderRadius: 14, padding: 14, alignItems: 'center',

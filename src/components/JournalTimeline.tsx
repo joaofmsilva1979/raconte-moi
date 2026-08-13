@@ -16,24 +16,25 @@ interface JournalTimelineProps {
   onEditRessenti?: (ressenti: Ressenti) => void;
 }
 
-type TimelineItem = {
-  kind: 'meal';
-  slot: MealSlot;
-  slotEntries: Entry[];
-  slotRessentis: Ressenti[];
-  sortKey: number;
-};
+type TimelineItem =
+  | { kind: 'meal'; slot: MealSlot; slotEntries: Entry[]; slotRessentis: Ressenti[]; sortKey: number }
+  | { kind: 'feeling'; ressenti: Ressenti; sortKey: number };
 
-function buildTimeline(entries: Entry[], ressentis: Ressenti[], slots: MealSlot[]): TimelineItem[] {
-  return slots
-    .map((slot) => ({
-      kind: 'meal' as const,
-      slot,
-      slotEntries: entries.filter((e) => e.meal_type === slot.meal_type),
-      slotRessentis: ressentis.filter((r) => r.meal_type === slot.meal_type),
-      sortKey: slot.start_hour * 60,
-    }))
-    .sort((a, b) => a.sortKey - b.sortKey);
+function buildTimeline(entries: Entry[], ressentis: Ressenti[], slots: MealSlot[], freeRessentis: Ressenti[]): TimelineItem[] {
+  const mealItems: TimelineItem[] = slots.map((slot) => ({
+    kind: 'meal' as const,
+    slot,
+    slotEntries: entries.filter((e) => e.meal_type === slot.meal_type),
+    slotRessentis: ressentis.filter((r) => r.meal_type === slot.meal_type),
+    sortKey: slot.start_hour * 60,
+  }));
+
+  const feelingItems: TimelineItem[] = freeRessentis.map((r) => {
+    const d = new Date(r.recorded_at);
+    return { kind: 'feeling' as const, ressenti: r, sortKey: d.getHours() * 60 + d.getMinutes() };
+  });
+
+  return [...mealItems, ...feelingItems].sort((a, b) => a.sortKey - b.sortKey);
 }
 
 const SLEEP_LABEL: Record<number, string> = { 1: 'Mal dormi 😣', 2: 'Sommeil moyen 😐', 3: 'Bien dormi 😊' };
@@ -41,7 +42,7 @@ const SLEEP_COLOR: Record<number, string> = { 1: '#FEE2E2', 2: '#FEF9C3', 3: '#D
 const SLEEP_BORDER: Record<number, string> = { 1: '#FCA5A5', 2: '#FDE047', 3: '#86EFAC' };
 const SLEEP_TEXT: Record<number, string>  = { 1: '#991B1B', 2: '#854D0E', 3: '#166534' };
 
-function RessentisCard({ ressenti, onEdit }: { ressenti: Ressenti; onEdit?: (r: Ressenti) => void }) {
+function RessentisCard({ ressenti, onEdit, standalone }: { ressenti: Ressenti; onEdit?: (r: Ressenti) => void; standalone?: boolean }) {
   const label = RESSENTI_LABELS[ressenti.category];
   const icon = RESSENTI_ICONS[ressenti.category];
   const subLabel = ressenti.sub_category
@@ -50,6 +51,7 @@ function RessentisCard({ ressenti, onEdit }: { ressenti: Ressenti; onEdit?: (r: 
   const delayLabel = ressenti.delay_minutes != null
     ? ` · ~${ressenti.delay_minutes < 60 ? ressenti.delay_minutes + 'min' : Math.round(ressenti.delay_minutes / 60) + 'h'} après`
     : '';
+  const timeLabel = standalone ? `💜 ${formatTime(ressenti.recorded_at)}` : formatTime(ressenti.recorded_at);
 
   return (
     <TouchableOpacity
@@ -59,7 +61,7 @@ function RessentisCard({ ressenti, onEdit }: { ressenti: Ressenti; onEdit?: (r: 
       activeOpacity={onEdit ? 0.7 : 1}
     >
       <View style={styles.ressentiHeader}>
-        <Text style={styles.ressentisTime}>{formatTime(ressenti.recorded_at)}</Text>
+        <Text style={styles.ressentisTime}>{timeLabel}</Text>
         {onEdit && <Text style={styles.editHintPurple}>✏️</Text>}
       </View>
       <Text style={styles.ressentisText}>{icon} {label}{subLabel}{delayLabel}</Text>
@@ -72,19 +74,14 @@ export function JournalTimeline({
   entries, slots, primaryColor, ressentis = [], activities = [],
   sleepLog, onEditEntry, onEditRessenti,
 }: JournalTimelineProps) {
-  const timeline = buildTimeline(entries, ressentis, slots);
-
-  // Ressentis du réveil : context='morning' ou anciens sans context et sans meal_type
   const morningRessentis = ressentis.filter(r => r.context === 'morning');
-  // Ressentis "comment tu te sens" sans repas lié (hors réveil)
   const freeRessentis = ressentis.filter(r => r.meal_type == null && r.context !== 'morning');
+  const timeline = buildTimeline(entries, ressentis, slots, freeRessentis);
+
   const hasActivities = activities.length > 0;
   const hasMorning = morningRessentis.length > 0;
-  const hasFree = freeRessentis.length > 0;
 
-  // La dernière section ne doit pas avoir de ligne verticale
-  const lastSectionIndex = hasActivities ? 2 : hasFree ? 1 : 0;
-  const getMealIsLast = (idx: number) => idx === timeline.length - 1 && lastSectionIndex === 0;
+  const getIsLast = (idx: number) => idx === timeline.length - 1 && !hasActivities;
 
   return (
     <View style={styles.container} testID="journal-timeline">
@@ -117,11 +114,25 @@ export function JournalTimeline({
         </View>
       )}
 
-      {/* Sections repas */}
+      {/* Timeline unifiée : repas + ressentis "feeling" triés chronologiquement */}
       {timeline.map((item, idx) => {
-        const { slot, slotEntries, slotRessentis } = item;
-        const isLast = getMealIsLast(idx);
+        const isLast = getIsLast(idx);
 
+        if (item.kind === 'feeling') {
+          return (
+            <View key={`feeling-${item.ressenti.id}`} style={styles.row} testID={`timeline-feeling-${item.ressenti.id}`}>
+              <View style={styles.dotCol}>
+                <View style={[styles.dot, { backgroundColor: '#8B5CF6' }]} />
+                {!isLast && <View style={[styles.line, { backgroundColor: '#8B5CF640' }]} />}
+              </View>
+              <View style={styles.content}>
+                <RessentisCard ressenti={item.ressenti} onEdit={onEditRessenti} standalone />
+              </View>
+            </View>
+          );
+        }
+
+        const { slot, slotEntries, slotRessentis } = item;
         return (
           <View key={`meal-${slot.meal_type}`} style={styles.row} testID={`timeline-slot-${slot.meal_type}`}>
             <View style={styles.dotCol}>
@@ -161,22 +172,6 @@ export function JournalTimeline({
           </View>
         );
       })}
-
-      {/* Ressentis "comment tu te sens" sans repas — entre repas et activités */}
-      {hasFree && (
-        <View style={styles.row} testID="timeline-free-ressentis">
-          <View style={styles.dotCol}>
-            <View style={[styles.dot, { backgroundColor: '#8B5CF6' }]} />
-            {hasActivities && <View style={[styles.line, { backgroundColor: '#8B5CF640' }]} />}
-          </View>
-          <View style={styles.content}>
-            <Text style={styles.slotLabel}>💜 Ressentis</Text>
-            {freeRessentis.map((r) => (
-              <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
-            ))}
-          </View>
-        </View>
-      )}
 
       {/* Activités — toujours tout en bas */}
       {hasActivities && (
