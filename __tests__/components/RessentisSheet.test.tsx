@@ -23,10 +23,28 @@ const mockUseRessentisStore = useRessentisStore as jest.MockedFunction<typeof us
 
 const baseState = {
   isSheetOpen: true,
+  mode: 'feeling' as const,
   categories: [],
-  sub_category: null,
+  sub_categories: [],
+  selected_meal: null,
+  meal_day: 'today',
+  notes: {},
+  subNote: '',
+  moment: null,
+  sleepQuality: null,
+  customPainLocations: [],
+  setMode: jest.fn(),
   toggleCategory: jest.fn(),
-  selectSubCategory: jest.fn(),
+  toggleSubCategory: jest.fn(),
+  applyCustomLocation: jest.fn(),
+  selectMeal: jest.fn(),
+  setMealDay: jest.fn(),
+  setNote: jest.fn(),
+  setSubNote: jest.fn(),
+  setMoment: jest.fn(),
+  setSleepQuality: jest.fn(),
+  saveCustomLocation: jest.fn().mockResolvedValue(undefined),
+  removeCustomLocation: jest.fn().mockResolvedValue(undefined),
   saveRessenti: jest.fn().mockResolvedValue(undefined),
   closeSheet: jest.fn(),
 };
@@ -48,7 +66,20 @@ describe('RessentisSheet', () => {
     expect(getByTestId('ressentis-sheet')).toBeTruthy();
   });
 
-  it('renders all category buttons', async () => {
+  it('renders mode tabs', async () => {
+    const { getByTestId } = await render(<RessentisSheet primaryColor="#E85520" />);
+    expect(getByTestId('mode-tab-morning')).toBeTruthy();
+    expect(getByTestId('mode-tab-meal')).toBeTruthy();
+    expect(getByTestId('mode-tab-feeling')).toBeTruthy();
+  });
+
+  it('calls setMode when a mode tab is pressed', async () => {
+    const { getByTestId } = await render(<RessentisSheet primaryColor="#E85520" />);
+    fireEvent.press(getByTestId('mode-tab-morning'));
+    expect(baseState.setMode).toHaveBeenCalledWith('morning');
+  });
+
+  it('renders all category buttons in feeling mode', async () => {
     const { getByTestId } = await render(<RessentisSheet primaryColor="#E85520" />);
     expect(getByTestId('category-btn-bloating')).toBeTruthy();
     expect(getByTestId('category-btn-pain')).toBeTruthy();
@@ -90,5 +121,25 @@ describe('RessentisSheet', () => {
     const { getByTestId } = await render(<RessentisSheet primaryColor="#E85520" />);
     fireEvent.press(getByTestId('save-ressenti-btn'));
     expect(baseState.saveRessenti).toHaveBeenCalled();
+  });
+
+  it('shows sleep quality selector in morning mode', async () => {
+    mockUseRessentisStore.mockReturnValue({ ...baseState, mode: 'morning' } as any);
+    const { getByText } = await render(<RessentisSheet primaryColor="#E85520" />);
+    expect(getByText('Comment as-tu dormi ?')).toBeTruthy();
+  });
+
+  it('shows meal selector in meal mode', async () => {
+    mockUseRessentisStore.mockReturnValue({ ...baseState, mode: 'meal' } as any);
+    const { getByTestId } = await render(<RessentisSheet primaryColor="#E85520" />);
+    expect(getByTestId('day-btn-today')).toBeTruthy();
+  });
+
+  it('shows save button in morning mode when sleepQuality is set', async () => {
+    mockUseRessentisStore.mockReturnValue({
+      ...baseState, mode: 'morning', sleepQuality: 3,
+    } as any);
+    const { getByTestId } = await render(<RessentisSheet primaryColor="#E85520" />);
+    expect(getByTestId('save-ressenti-btn')).toBeTruthy();
   });
 });

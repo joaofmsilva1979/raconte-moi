@@ -1,5 +1,9 @@
 export type MealType = 'breakfast' | 'lunch' | 'snack' | 'dinner' | 'other';
 
+export type ActivityType = 'walk' | 'swim' | 'yoga' | 'bike' | 'stretch' | 'gym' | 'other';
+
+export type SleepQuality = 1 | 2 | 3;
+
 export type RessentCategory =
   | 'bloating'
   | 'nausea'
@@ -8,7 +12,10 @@ export type RessentCategory =
   | 'good'
   | 'other';
 
-export type RessentSubCategory = 'belly' | 'head' | 'other';
+export type RessentSubCategory =
+  | 'head' | 'jaw' | 'neck' | 'shoulders' | 'chest'
+  | 'upper_back' | 'lower_back' | 'belly' | 'hips' | 'pelvic' | 'legs'
+  | 'other';
 
 export type GoalType = 'watch' | 'remember' | 'other';
 
@@ -33,6 +40,26 @@ export interface Ressenti {
   meal_type: MealType | null;
   meal_date: string | null; // YYYY-MM-DD — jour du repas (peut différer de recorded_at)
   delay_minutes: number | null;
+}
+
+export interface Activity {
+  id: number;
+  recorded_at: string;
+  activity_type: ActivityType;
+  duration_minutes: number;
+  note: string | null;
+}
+
+export interface SleepLog {
+  id: number;
+  recorded_at: string;
+  log_date: string;
+  quality: SleepQuality;
+}
+
+export interface CustomPainLocation {
+  id: number;
+  label: string;
 }
 
 export interface MealSlot {

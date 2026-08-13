@@ -18,6 +18,7 @@ import { MealSlot, MealType } from '@/types';
 import { backupToIcloud, restoreFromIcloud, isBackupDue } from '@/services/icloudService';
 import { exportJournalAsPdf } from '@/services/pdfService';
 import { getEntriesForDateRange } from '@/db/entriesRepository';
+import { getRessentisForDateRange } from '@/db/ressentisRepository';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function SettingsScreen() {
 
   const [firstName, setFirstName] = useState(settings?.first_name ?? '');
   const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
+  const [rawHours, setRawHours] = useState<Record<string, string>>({});
 
   function todayStr() {
     return new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -55,12 +57,15 @@ export default function SettingsScreen() {
       Alert.alert('Date invalide', 'Utilise le format JJ/MM/AAAA');
       return;
     }
-    const entries = await getEntriesForDateRange(from, to);
-    if (entries.length === 0) {
-      Alert.alert('Aucune note', 'Pas de notes sur cette période.');
+    const [entries, ressentis] = await Promise.all([
+      getEntriesForDateRange(from, to),
+      getRessentisForDateRange(from, to),
+    ]);
+    if (entries.length === 0 && ressentis.length === 0) {
+      Alert.alert('Aucune donnée', 'Pas de notes ou de ressentis sur cette période.');
       return;
     }
-    await exportJournalAsPdf(entries, settings?.first_name ?? '', label, primary);
+    await exportJournalAsPdf(entries, ressentis, settings?.first_name ?? '', label, primary);
   }
 
   function applyPreset(days: number) {
@@ -77,23 +82,35 @@ export default function SettingsScreen() {
   }, [mealSlots]);
 
   const updateHour = (meal_type: MealType, field: 'start_hour' | 'end_hour', raw: string) => {
-    const val = parseInt(raw, 10);
-    if (isNaN(val)) return;
-    const hour = Math.min(23, Math.max(0, val));
-    setLocalSlots(prev =>
-      prev.map(s => {
-        if (s.meal_type !== meal_type) return s;
-        if (field === 'start_hour' && hour >= s.end_hour) return s;
-        if (field === 'end_hour' && hour <= s.start_hour) return s;
-        return { ...s, [field]: hour };
-      })
-    );
+    setRawHours(prev => ({ ...prev, [`${meal_type}_${field}`]: raw }));
   };
 
   const handleSlotBlur = async (meal_type: MealType) => {
     const slot = localSlots.find(s => s.meal_type === meal_type);
     if (!slot) return;
-    await saveMealSlot(slot.meal_type, slot.start_hour, slot.end_hour);
+
+    const startRaw = rawHours[`${meal_type}_start_hour`];
+    const endRaw = rawHours[`${meal_type}_end_hour`];
+    const startVal = startRaw !== undefined ? parseInt(startRaw, 10) : slot.start_hour;
+    const endVal = endRaw !== undefined ? parseInt(endRaw, 10) : slot.end_hour;
+
+    const start = isNaN(startVal) ? slot.start_hour : Math.min(23, Math.max(0, startVal));
+    const end = isNaN(endVal) ? slot.end_hour : Math.min(23, Math.max(0, endVal));
+
+    const validStart = start < end ? start : slot.start_hour;
+    const validEnd = end > start ? end : slot.end_hour;
+
+    setLocalSlots(prev => prev.map(s =>
+      s.meal_type === meal_type ? { ...s, start_hour: validStart, end_hour: validEnd } : s
+    ));
+    setRawHours(prev => {
+      const next = { ...prev };
+      delete next[`${meal_type}_start_hour`];
+      delete next[`${meal_type}_end_hour`];
+      return next;
+    });
+
+    await saveMealSlot(meal_type, validStart, validEnd);
     if (settings) {
       await scheduleReminders(localSlots, {
         enabled: settings.notifications_enabled,
@@ -142,6 +159,7 @@ export default function SettingsScreen() {
         options={{
           title: 'Réglages',
           headerShown: true,
+          headerBackTitle: 'Accueil',
           headerRight: () => (
             <TouchableOpacity onPress={() => router.back()}>
               <Text style={styles.closeButton}>Fermer</Text>
@@ -199,7 +217,7 @@ export default function SettingsScreen() {
                 <TextInput
                   testID={`slot-start-${slot.meal_type}`}
                   style={[styles.hourInput, { borderColor: primary, color: primary }]}
-                  value={String(slot.start_hour)}
+                  value={rawHours[`${slot.meal_type}_start_hour`] ?? String(slot.start_hour)}
                   onChangeText={v => updateHour(slot.meal_type, 'start_hour', v)}
                   onBlur={() => handleSlotBlur(slot.meal_type)}
                   keyboardType="number-pad"
@@ -210,7 +228,7 @@ export default function SettingsScreen() {
                 <TextInput
                   testID={`slot-end-${slot.meal_type}`}
                   style={[styles.hourInput, { borderColor: primary, color: primary }]}
-                  value={String(slot.end_hour)}
+                  value={rawHours[`${slot.meal_type}_end_hour`] ?? String(slot.end_hour)}
                   onChangeText={v => updateHour(slot.meal_type, 'end_hour', v)}
                   onBlur={() => handleSlotBlur(slot.meal_type)}
                   keyboardType="number-pad"
@@ -343,7 +361,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Section: Export PDF */}
-        <Text style={styles.sectionTitle}>EXPORT PDF</Text>
+        <Text style={styles.sectionTitle}>BILAN MÉDICAL</Text>
         <View style={styles.card}>
           <Text style={styles.rowSub}>Période rapide</Text>
           <View style={styles.presetRow}>

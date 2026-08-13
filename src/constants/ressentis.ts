@@ -18,9 +18,18 @@ export const RESSENTI_SUB_CATEGORIES: {
   label: string;
   icon: string;
 }[] = [
-  { sub: 'belly', label: 'Ventre', icon: '🫃' },
-  { sub: 'head',  label: 'Tête',   icon: '🤯' },
-  { sub: 'other', label: 'Autre',  icon: '💪' },
+  { sub: 'head',       label: 'Tête',      icon: '🤯' },
+  { sub: 'jaw',        label: 'Mâchoires', icon: '😬' },
+  { sub: 'neck',       label: 'Cou/Nuque', icon: '🦢' },
+  { sub: 'shoulders',  label: 'Épaules',   icon: '🤷' },
+  { sub: 'chest',      label: 'Thorax',    icon: '🫀' },
+  { sub: 'upper_back', label: 'Dos haut',  icon: '⬆️' },
+  { sub: 'lower_back', label: 'Dos bas',   icon: '⬇️' },
+  { sub: 'belly',      label: 'Ventre',    icon: '🫃' },
+  { sub: 'hips',       label: 'Hanches',   icon: '🦴' },
+  { sub: 'pelvic',     label: 'Pelvien',   icon: '🔻' },
+  { sub: 'legs',       label: 'Jambes',    icon: '🦵' },
+  { sub: 'other',      label: 'Autre',     icon: '✏️' },
 ];
 
 export const RESSENTI_LABELS: Record<RessentCategory, string> = {
@@ -42,7 +51,16 @@ export const RESSENTI_ICONS: Record<RessentCategory, string> = {
 };
 
 export const SUB_CATEGORY_LABELS: Record<RessentSubCategory, string> = {
-  belly: 'ventre',
-  head:  'tête',
-  other: 'autre',
+  head:       'tête',
+  jaw:        'mâchoires',
+  neck:       'cou/nuque',
+  shoulders:  'épaules',
+  chest:      'thorax',
+  upper_back: 'dos haut',
+  lower_back: 'dos bas',
+  belly:      'ventre',
+  hips:       'hanches',
+  pelvic:     'pelvien',
+  legs:       'jambes',
+  other:      'autre',
 };

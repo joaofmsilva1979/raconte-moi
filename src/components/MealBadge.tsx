@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import { MealType } from '@/types';
 import { MEAL_LABELS, MEAL_ICONS } from '@/constants/meals';
 
@@ -22,9 +22,13 @@ export function MealBadge({ mealType, time, onPress, primaryColor }: MealBadgePr
       testID="meal-badge"
       style={[styles.badge, { borderColor: primaryColor }]}
     >
-      <Text style={[styles.text, { color: primaryColor }]}>
-        {icon} {label} · {hh}:{mm} ✎
-      </Text>
+      <View style={styles.row}>
+        <Text style={[styles.text, { color: primaryColor }]}>
+          {icon} {label} · {hh}:{mm}
+        </Text>
+        <Text style={[styles.editIcon, { color: primaryColor }]}>✎</Text>
+      </View>
+      <Text style={[styles.hint, { color: primaryColor }]}>Touche pour changer</Text>
     </TouchableOpacity>
   );
 }
@@ -33,12 +37,29 @@ const styles = StyleSheet.create({
   badge: {
     backgroundColor: '#FDEEE8',
     borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderWidth: 1,
+    alignItems: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   text: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
+  },
+  editIcon: {
+    fontSize: 14,
+    fontWeight: '700',
+    opacity: 0.7,
+  },
+  hint: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#8B4513',
+    marginTop: 2,
   },
 });

@@ -10,23 +10,32 @@ export default function SlotsScreen() {
   const { mealSlots, saveMealSlot } = useSettingsStore();
   const { primary } = useColorTheme();
   const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
+  const [rawHours, setRawHours] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (mealSlots.length > 0) setLocalSlots(mealSlots);
   }, [mealSlots]);
 
   const updateHour = (meal_type: MealType, field: 'start_hour' | 'end_hour', raw: string) => {
+    setRawHours(prev => ({ ...prev, [`${meal_type}_${field}`]: raw }));
+  };
+
+  const commitHour = (meal_type: MealType, field: 'start_hour' | 'end_hour') => {
+    const key = `${meal_type}_${field}`;
+    const raw = rawHours[key];
+    if (raw === undefined) return;
     const val = parseInt(raw, 10);
-    if (isNaN(val)) return;
-    const hour = Math.min(23, Math.max(0, val));
     setLocalSlots(prev =>
       prev.map(s => {
         if (s.meal_type !== meal_type) return s;
+        if (isNaN(val)) return s;
+        const hour = Math.min(23, Math.max(0, val));
         if (field === 'start_hour' && hour >= s.end_hour) return s;
         if (field === 'end_hour' && hour <= s.start_hour) return s;
         return { ...s, [field]: hour };
       })
     );
+    setRawHours(prev => { const next = { ...prev }; delete next[key]; return next; });
   };
 
   const handleContinue = async () => {
@@ -51,8 +60,9 @@ export default function SlotsScreen() {
             <View style={styles.controls}>
               <TextInput
                 style={[styles.hourInput, { borderColor: primary, color: primary }]}
-                value={String(slot.start_hour)}
+                value={rawHours[`${slot.meal_type}_start_hour`] ?? String(slot.start_hour)}
                 onChangeText={v => updateHour(slot.meal_type, 'start_hour', v)}
+                onBlur={() => commitHour(slot.meal_type, 'start_hour')}
                 keyboardType="number-pad"
                 maxLength={2}
                 selectTextOnFocus
@@ -60,8 +70,9 @@ export default function SlotsScreen() {
               <Text style={[styles.sep, { color: primary }]}>h — </Text>
               <TextInput
                 style={[styles.hourInput, { borderColor: primary, color: primary }]}
-                value={String(slot.end_hour)}
+                value={rawHours[`${slot.meal_type}_end_hour`] ?? String(slot.end_hour)}
                 onChangeText={v => updateHour(slot.meal_type, 'end_hour', v)}
+                onBlur={() => commitHour(slot.meal_type, 'end_hour')}
                 keyboardType="number-pad"
                 maxLength={2}
                 selectTextOnFocus

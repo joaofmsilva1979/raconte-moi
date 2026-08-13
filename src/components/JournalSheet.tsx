@@ -19,9 +19,23 @@ import { JournalTimeline } from '@/components/JournalTimeline';
 import { formatDateLabel, formatDate } from '@/utils/dateUtils';
 import { DEFAULT_MEAL_SLOTS } from '@/constants/meals';
 import { updateEntryTranscript, updateEntryPhoto } from '@/db/entriesRepository';
-import { Entry } from '@/types';
+import { updateRessenti } from '@/db/ressentisRepository';
+import { Entry, Ressenti, RessentSubCategory } from '@/types';
+import { RESSENTI_LABELS, RESSENTI_ICONS, RESSENTI_SUB_CATEGORIES } from '@/constants/ressentis';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Image } from 'react-native';
+
+async function savePhotoToPermanentStorage(tempUri: string): Promise<string> {
+  const dir = FileSystem.documentDirectory + 'photos/';
+  const dirInfo = await FileSystem.getInfoAsync(dir);
+  if (!dirInfo.exists) await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+  const ext = tempUri.split('.').pop()?.split('?')[0] ?? 'jpg';
+  const filename = `photo_${Date.now()}.${ext}`;
+  const dest = dir + filename;
+  await FileSystem.copyAsync({ from: tempUri, to: dest });
+  return dest;
+}
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.75;
@@ -37,6 +51,8 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     isSheetOpen,
     entries,
     ressentis,
+    activities,
+    sleepLog,
     viewedDate,
     closeSheet,
     goToPreviousDay,
@@ -47,6 +63,10 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [editText, setEditText] = useState('');
   const [editPhoto, setEditPhoto] = useState<string | null>(null);
+
+  const [editingRessenti, setEditingRessenti] = useState<Ressenti | null>(null);
+  const [editRessentiNote, setEditRessentiNote] = useState('');
+  const [editRessentiSub, setEditRessentiSub] = useState<RessentSubCategory | null>(null);
 
   function handleEditEntry(entry: Entry) {
     setEditingEntry(entry);
@@ -62,11 +82,14 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
       aspect: [4, 3],
     });
     if (!result.canceled && result.assets[0]) {
-      setEditPhoto(result.assets[0].uri);
+      const permanent = await savePhotoToPermanentStorage(result.assets[0].uri);
+      setEditPhoto(permanent);
     }
   }
 
   async function handleTakePhoto() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') return;
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
       quality: 0.7,
@@ -74,7 +97,8 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
       aspect: [4, 3],
     });
     if (!result.canceled && result.assets[0]) {
-      setEditPhoto(result.assets[0].uri);
+      const permanent = await savePhotoToPermanentStorage(result.assets[0].uri);
+      setEditPhoto(permanent);
     }
   }
 
@@ -85,6 +109,22 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
       await updateEntryPhoto(editingEntry.id, editPhoto);
     }
     setEditingEntry(null);
+    await refreshCurrentDay();
+  }
+
+  function handleEditRessenti(ressenti: Ressenti) {
+    setEditingRessenti(ressenti);
+    setEditRessentiNote(ressenti.note ?? '');
+    setEditRessentiSub(ressenti.sub_category ?? null);
+  }
+
+  async function handleSaveRessentiEdit() {
+    if (!editingRessenti) return;
+    await updateRessenti(editingRessenti.id, {
+      sub_category: editRessentiSub,
+      note: editRessentiNote.trim() || null,
+    });
+    setEditingRessenti(null);
     await refreshCurrentDay();
   }
 
@@ -140,6 +180,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
       <View style={styles.dateNav}>
         <TouchableOpacity testID="settings-btn" onPress={() => router.push('/settings')} style={styles.settingsBtn}>
           <Text style={styles.settingsIcon}>⚙️</Text>
+          <Text style={styles.settingsLabel}>Réglages & Bilan</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -168,7 +209,10 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
           slots={DEFAULT_MEAL_SLOTS}
           primaryColor={primaryColor}
           ressentis={ressentis}
+          activities={activities}
+          sleepLog={sleepLog}
           onEditEntry={handleEditEntry}
+          onEditRessenti={handleEditRessenti}
         />
       </ScrollView>
 
@@ -237,6 +281,74 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <Modal
+        visible={!!editingRessenti}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditingRessenti(null)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.editModal}>
+            {editingRessenti && (
+              <>
+                <Text style={styles.editModalTitle}>
+                  {RESSENTI_ICONS[editingRessenti.category]} {RESSENTI_LABELS[editingRessenti.category]}
+                </Text>
+
+                {editingRessenti.category === 'pain' && (
+                  <View>
+                    <Text style={styles.ressentiSubTitle}>Où as-tu mal ?</Text>
+                    <View style={styles.subBtnsWrap}>
+                      {RESSENTI_SUB_CATEGORIES.map((item) => {
+                        const sel = editRessentiSub === item.sub;
+                        return (
+                          <TouchableOpacity
+                            key={item.sub}
+                            onPress={() => setEditRessentiSub(sel ? null : item.sub)}
+                            style={[styles.subBtnEdit, sel && styles.subBtnEditSelected]}
+                          >
+                            <Text style={[styles.subBtnEditText, sel && styles.subBtnEditTextSelected]}>
+                              {item.icon} {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+
+                <TextInput
+                  style={styles.editInput}
+                  value={editRessentiNote}
+                  onChangeText={setEditRessentiNote}
+                  multiline
+                  placeholder="Note libre (optionnel)…"
+                  placeholderTextColor="#C09070"
+                />
+
+                <View style={styles.editModalActions}>
+                  <TouchableOpacity
+                    style={styles.editCancelBtn}
+                    onPress={() => setEditingRessenti(null)}
+                  >
+                    <Text style={styles.editCancelText}>Annuler</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.editSaveBtn, { backgroundColor: '#8B5CF6' }]}
+                    onPress={handleSaveRessentiEdit}
+                  >
+                    <Text style={styles.editSaveText}>✓ Sauvegarder</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </Animated.View>
   );
 }
@@ -277,8 +389,9 @@ const styles = StyleSheet.create({
   navBtn: { padding: 8 },
   navArrow: { fontSize: 24, fontWeight: '600' },
   dateLabel: { fontSize: 14, fontWeight: '700', color: '#2D1A0E' },
-  settingsBtn: { padding: 8 },
+  settingsBtn: { padding: 8, flexDirection: 'row', alignItems: 'center', gap: 4 },
   settingsIcon: { fontSize: 18 },
+  settingsLabel: { fontSize: 12, fontWeight: '700', color: '#2D1A0E' },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingVertical: 12 },
   addBtn: {
@@ -331,4 +444,13 @@ const styles = StyleSheet.create({
   photoPreview: { width: 80, height: 60, borderRadius: 8 },
   removePhotoBtn: { padding: 6 },
   removePhotoText: { fontSize: 12, color: '#C09070', fontWeight: '600' },
+  ressentiSubTitle: { fontSize: 13, fontWeight: '700', color: '#6D28D9', marginBottom: 8 },
+  subBtnsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+  subBtnEdit: {
+    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14,
+    borderWidth: 1.5, borderColor: '#E9D5FF', backgroundColor: '#F5F0FF',
+  },
+  subBtnEditSelected: { backgroundColor: '#EDE9FE', borderColor: '#8B5CF6' },
+  subBtnEditText: { fontSize: 12, fontWeight: '600', color: '#5C3020' },
+  subBtnEditTextSelected: { color: '#6D28D9' },
 });

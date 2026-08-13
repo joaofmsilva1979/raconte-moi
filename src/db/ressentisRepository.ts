@@ -33,3 +33,25 @@ export async function getRessentisForDay(dateStr: string): Promise<Ressenti[]> {
     [dateStr, dateStr]
   );
 }
+
+export async function getRessentisForDateRange(fromDate: string, toDate: string): Promise<Ressenti[]> {
+  const db = await getDatabase();
+  return db.getAllAsync<Ressenti>(
+    `SELECT * FROM ressentis
+     WHERE (meal_date >= ? AND meal_date <= ?)
+        OR (meal_date IS NULL AND date(recorded_at) >= date(?) AND date(recorded_at) <= date(?))
+     ORDER BY recorded_at ASC`,
+    [fromDate, toDate, fromDate, toDate]
+  );
+}
+
+export async function updateRessenti(
+  id: number,
+  params: { sub_category: RessentSubCategory | null; note: string | null }
+): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    `UPDATE ressentis SET sub_category = ?, note = ? WHERE id = ?`,
+    [params.sub_category, params.note, id]
+  );
+}

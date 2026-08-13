@@ -81,7 +81,6 @@ describe('JournalTimeline', () => {
     const { getByTestId } = await render(
       <JournalTimeline entries={[]} slots={SLOTS} primaryColor="#E85520" ressentis={[RESSENTI]} />
     );
-    expect(getByTestId('timeline-ressenti-10')).toBeTruthy();
     expect(getByTestId('ressenti-card-10')).toBeTruthy();
   });
 

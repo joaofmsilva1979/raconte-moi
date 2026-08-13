@@ -1,11 +1,11 @@
-jest.mock('expo-file-system', () => ({
+jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: 'file:///var/mobile/Containers/Data/Application/ABC/Documents/',
   getInfoAsync: jest.fn(),
   makeDirectoryAsync: jest.fn().mockResolvedValue(undefined),
   copyAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import {
   getLocalDbPath,
   getIcloudBackupPath,

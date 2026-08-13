@@ -6,6 +6,14 @@ jest.mock('@/db/ressentisRepository', () => ({
   getRessentisForDay: jest.fn().mockResolvedValue([]),
 }));
 
+jest.mock('@/db/activitiesRepository', () => ({
+  getActivitiesForDay: jest.fn().mockResolvedValue([]),
+}));
+
+jest.mock('@/db/sleepRepository', () => ({
+  getSleepForDay: jest.fn().mockResolvedValue(null),
+}));
+
 jest.mock('@/utils/dateUtils', () => ({
   formatDate: jest.fn(),
   addDays: jest.fn(),

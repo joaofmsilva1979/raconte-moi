@@ -36,7 +36,7 @@ describe('pdfService', () => {
     let html: string;
 
     beforeAll(() => {
-      html = generateJournalHtml(mockEntries, 'Eugénie', 'Août 2026', '#E85520');
+      html = generateJournalHtml(mockEntries, [], 'Eugénie', 'Août 2026', '#E85520');
     });
 
     it('contient le prénom Eugénie', () => {
@@ -72,14 +72,14 @@ describe('pdfService', () => {
     });
 
     it('appelle Print.printToFileAsync avec le HTML contenant le prénom', async () => {
-      await exportJournalAsPdf(mockEntries, 'Eugénie', 'Août 2026', '#E85520');
+      await exportJournalAsPdf(mockEntries, [], 'Eugénie', 'Août 2026', '#E85520');
       expect(Print.printToFileAsync).toHaveBeenCalledWith({
         html: expect.stringContaining('Eugénie'),
       });
     });
 
     it('appelle Sharing.shareAsync avec l\'URI et le mimeType PDF', async () => {
-      await exportJournalAsPdf(mockEntries, 'Eugénie', 'Août 2026', '#E85520');
+      await exportJournalAsPdf(mockEntries, [], 'Eugénie', 'Août 2026', '#E85520');
       expect(Sharing.shareAsync).toHaveBeenCalledWith(
         'file:///tmp/journal.pdf',
         { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' }

@@ -3,13 +3,16 @@
     "name": "Les notes de patate",
     "slug": "les-notes-de-patate",
     "version": "1.0.0",
+    "icon": "./assets/icon.png",
     "orientation": "portrait",
     "scheme": "lesnotesdepatate",
     "platforms": ["ios"],
     "ios": {
-      "bundleIdentifier": "lu.ciglesch.lesnotesdepatate",
+      "bundleIdentifier": "app.notespatate",
       "supportsTablet": false,
       "infoPlist": {
+        "CFBundleDisplayName": "Les notes de patate",
+        "CFBundleName": "Les notes de patate",
         "NSSpeechRecognitionUsageDescription": "Les notes de patate utilise la reconnaissance vocale pour transcrire ce que tu as mangé."
       }
     },

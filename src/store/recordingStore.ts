@@ -15,6 +15,7 @@ interface RecordingState {
   editedText: string;
   wasReformulated: boolean;
   mealType: MealType;
+  mealTypeManuallySet: boolean;
   recordedAt: Date | null;
   photoUri: string | null;
   error: string | null;
@@ -38,6 +39,7 @@ const initialState: RecordingState = {
   editedText: '',
   wasReformulated: false,
   mealType: 'other',
+  mealTypeManuallySet: false,
   recordedAt: null,
   photoUri: null,
   error: null,
@@ -50,9 +52,11 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
     const now = new Date();
     set({ phase: 'recording', partialTranscript: '', recordedAt: now, error: null });
 
-    getMealSlots().then((slots) => {
-      set({ mealType: detectMealType(now, slots) });
-    });
+    if (!get().mealTypeManuallySet) {
+      getMealSlots().then((slots) => {
+        set({ mealType: detectMealType(now, slots) });
+      });
+    }
 
     startListening(
       (partial) => set({ partialTranscript: partial }),
@@ -70,7 +74,7 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
 
   updateEditedText: (text: string) => set({ editedText: text }),
 
-  setMealType: (mealType: MealType) => set({ mealType }),
+  setMealType: (mealType: MealType) => set({ mealType, mealTypeManuallySet: true }),
 
   setPhotoUri: (photoUri: string | null) => set({ photoUri }),
 

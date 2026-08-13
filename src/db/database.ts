@@ -17,7 +17,7 @@ export async function initDatabase(): Promise<void> {
     CREATE TABLE IF NOT EXISTS entries (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       recorded_at  DATETIME NOT NULL,
-      meal_type    TEXT NOT NULL CHECK(meal_type IN ('breakfast','lunch','snack','dinner','other')),
+      meal_type    TEXT NOT NULL,
       transcript   TEXT NOT NULL,
       raw_text     TEXT,
       edited_at    DATETIME,
@@ -27,15 +27,15 @@ export async function initDatabase(): Promise<void> {
     CREATE TABLE IF NOT EXISTS ressentis (
       id             INTEGER PRIMARY KEY AUTOINCREMENT,
       recorded_at    DATETIME NOT NULL,
-      category       TEXT NOT NULL CHECK(category IN ('bloating','nausea','pain','fatigue','good','other')),
-      sub_category   TEXT CHECK(sub_category IN ('belly','head','other')),
+      category       TEXT NOT NULL,
+      sub_category   TEXT,
       note           TEXT,
       entry_id       INTEGER REFERENCES entries(id),
       delay_minutes  INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS meal_slots (
-      meal_type   TEXT PRIMARY KEY CHECK(meal_type IN ('breakfast','lunch','snack','dinner')),
+      meal_type   TEXT PRIMARY KEY,
       label       TEXT NOT NULL,
       icon        TEXT NOT NULL,
       start_hour  INTEGER NOT NULL,
@@ -53,14 +53,70 @@ export async function initDatabase(): Promise<void> {
 }
 
 async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
+  // Remove CHECK constraints from ressentis (needed for expanded sub-categories)
   try {
-    await database.execAsync(`ALTER TABLE ressentis ADD COLUMN meal_type TEXT;`);
+    const tableInfo = await database.getFirstAsync<{ sql: string }>(
+      "SELECT sql FROM sqlite_master WHERE type='table' AND name='ressentis'"
+    );
+    if (tableInfo?.sql?.includes('CHECK')) {
+      await database.execAsync(`
+        CREATE TABLE ressentis_v2 (
+          id             INTEGER PRIMARY KEY AUTOINCREMENT,
+          recorded_at    DATETIME NOT NULL,
+          category       TEXT NOT NULL,
+          sub_category   TEXT,
+          note           TEXT,
+          entry_id       INTEGER REFERENCES entries(id),
+          delay_minutes  INTEGER,
+          meal_type      TEXT,
+          meal_date      TEXT
+        );
+        INSERT INTO ressentis_v2 SELECT id, recorded_at, category, sub_category, note, entry_id, delay_minutes, meal_type, meal_date FROM ressentis;
+        DROP TABLE ressentis;
+        ALTER TABLE ressentis_v2 RENAME TO ressentis;
+      `);
+    }
+  } catch (e) {
+    console.warn('[migration] ressentis schema:', e);
+  }
+
+  // Legacy column migrations (for older installs that skipped the table recreate)
+  try { await database.execAsync(`ALTER TABLE ressentis ADD COLUMN meal_type TEXT;`); } catch {}
+  try { await database.execAsync(`ALTER TABLE entries ADD COLUMN photo_uri TEXT;`); } catch {}
+  try { await database.execAsync(`ALTER TABLE ressentis ADD COLUMN meal_date TEXT;`); } catch {}
+
+  // New feature tables
+  try {
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS custom_pain_locations (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        label      TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
   } catch {}
+
   try {
-    await database.execAsync(`ALTER TABLE entries ADD COLUMN photo_uri TEXT;`);
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS activities (
+        id               INTEGER PRIMARY KEY AUTOINCREMENT,
+        recorded_at      TEXT NOT NULL,
+        activity_type    TEXT NOT NULL,
+        duration_minutes INTEGER NOT NULL,
+        note             TEXT
+      );
+    `);
   } catch {}
+
   try {
-    await database.execAsync(`ALTER TABLE ressentis ADD COLUMN meal_date TEXT;`);
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS sleep_logs (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        recorded_at TEXT NOT NULL,
+        log_date    TEXT NOT NULL,
+        quality     INTEGER NOT NULL
+      );
+    `);
   } catch {}
 }
 

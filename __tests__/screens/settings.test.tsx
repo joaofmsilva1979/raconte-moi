@@ -153,13 +153,13 @@ describe('SettingsScreen', () => {
     expect(getByTestId('backup-now-btn')).toBeTruthy();
   });
 
-  it('14. export-week-btn est présent', async () => {
+  it('14. export-range-btn est présent', async () => {
     const { getByTestId } = await render(<SettingsScreen />);
-    expect(getByTestId('export-week-btn')).toBeTruthy();
+    expect(getByTestId('export-range-btn')).toBeTruthy();
   });
 
-  it('15. export-month-btn est présent', async () => {
+  it('15. export-from-input est présent', async () => {
     const { getByTestId } = await render(<SettingsScreen />);
-    expect(getByTestId('export-month-btn')).toBeTruthy();
+    expect(getByTestId('export-from-input')).toBeTruthy();
   });
 });

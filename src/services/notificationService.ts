@@ -91,7 +91,6 @@ export async function scheduleReminders(
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: reminderHour,
         minute: 0,
-        repeats: true,
       },
     });
   }

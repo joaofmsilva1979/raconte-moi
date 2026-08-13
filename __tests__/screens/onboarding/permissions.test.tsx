@@ -32,7 +32,7 @@ describe('PermissionsScreen (Étape 5)', () => {
     const { getByText } = await render(<PermissionsScreen />);
     expect(getByText('Microphone')).toBeTruthy();
     expect(getByText('Notifications')).toBeTruthy();
-    expect(getByText("C'est parti ! 🥔")).toBeTruthy();
+    expect(getByText("Activer le microphone et les notifications")).toBeTruthy();
   });
 
   it("demande les permissions, complète l'onboarding et redirige vers /", async () => {
@@ -40,7 +40,7 @@ describe('PermissionsScreen (Étape 5)', () => {
     const Notifications = require('expo-notifications');
     const { getByText } = await render(<PermissionsScreen />);
 
-    await fireEvent.press(getByText("C'est parti ! 🥔"));
+    await fireEvent.press(getByText("Activer le microphone et les notifications"));
 
     await waitFor(() => {
       expect(requestRecordingPermissionsAsync).toHaveBeenCalled();

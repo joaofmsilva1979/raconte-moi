@@ -159,6 +159,7 @@ describe('recordingStore', () => {
         raw_text: 'café au lait',
         meal_type: 'breakfast',
         recorded_at: '2026-08-08T09:00:00.000Z',
+        photo_uri: null,
       });
     });
 

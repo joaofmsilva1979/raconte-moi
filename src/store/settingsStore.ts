@@ -15,7 +15,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   icloud_backup: false,
   backup_interval: 7,
   last_backup_at: null,
-  notifications_enabled: true,
+  notifications_enabled: false,
   notifications_breakfast: true,
   notifications_lunch: true,
   notifications_snack: true,

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform,
+  StyleSheet, KeyboardAvoidingView, Platform, Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -25,7 +25,7 @@ export default function WelcomeScreen() {
       <OnboardingProgress currentStep={1} totalSteps={5} />
 
       <View style={styles.content}>
-        <Text style={styles.emoji}>🥔</Text>
+        <Image source={require('@/assets/logo.png')} style={styles.logo} />
         <Text style={styles.title}>Les notes de patate</Text>
         <Text style={styles.subtitle}>
           Ton journal alimentaire vocal, privé et simple.
@@ -58,7 +58,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF8F5', padding: 24 },
   content: { flex: 1, justifyContent: 'center' },
-  emoji: { fontSize: 56, textAlign: 'center', marginBottom: 12 },
+  logo: { width: 100, height: 100, alignSelf: 'center', marginBottom: 12, borderRadius: 22 },
   title: {
     fontSize: 26, fontWeight: '700', color: '#2D1A0E',
     textAlign: 'center', marginBottom: 8,

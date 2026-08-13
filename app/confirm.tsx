@@ -12,7 +12,9 @@ import {
 import { useRouter } from 'expo-router';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { useRecordingStore } from '@/store/recordingStore';
+import { useRessentisStore } from '@/store/ressentisStore';
 import { MealBadge } from '@/components/MealBadge';
+import { RessentisSheet } from '@/components/RessentisSheet';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function ConfirmScreen() {
@@ -32,6 +34,7 @@ export default function ConfirmScreen() {
     reRecord,
   } = useRecordingStore();
 
+  const { openSheet: openRessentisSheet } = useRessentisStore();
   const [showOriginal, setShowOriginal] = useState(false);
 
   async function handleTakePhoto() {
@@ -67,12 +70,7 @@ export default function ConfirmScreen() {
 
   function handleDiscard() {
     discard();
-    router.back();
-  }
-
-  function handleReRecord() {
-    reRecord();
-    router.back();
+    router.replace('/');
   }
 
   return (
@@ -135,6 +133,14 @@ export default function ConfirmScreen() {
         )}
 
         <TouchableOpacity
+          testID="add-ressenti-confirm-btn"
+          onPress={openRessentisSheet}
+          style={styles.btnRessenti}
+        >
+          <Text style={styles.btnRessentiText}>💜 Ajouter un ressenti</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           testID="save-button"
           onPress={handleSave}
           style={[styles.btnPrimary, { backgroundColor: primary }]}
@@ -142,25 +148,17 @@ export default function ConfirmScreen() {
           <Text style={styles.btnPrimaryText}>✓ Sauvegarder</Text>
         </TouchableOpacity>
 
-        <View style={styles.secondaryRow}>
-          <TouchableOpacity
-            testID="re-record-button"
-            onPress={handleReRecord}
-            style={styles.btnSecondary}
-          >
-            <Text style={[styles.btnSecondaryText, { color: primary }]}>🎙 Réenregistrer</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            testID="discard-button"
-            onPress={handleDiscard}
-            style={styles.btnSecondary}
-          >
-            <Text style={[styles.btnSecondaryText, { color: primary }]}>✕ Annuler</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          testID="discard-button"
+          onPress={handleDiscard}
+          style={styles.btnSecondary}
+        >
+          <Text style={[styles.btnSecondaryText, { color: primary }]}>✕ Annuler</Text>
+        </TouchableOpacity>
 
         <Text style={styles.privacy}>🔒 Restera sur cet iPhone</Text>
       </ScrollView>
+      <RessentisSheet primaryColor={primary} />
     </SafeAreaView>
   );
 }
@@ -186,9 +184,17 @@ const styles = StyleSheet.create({
   originalBox: { backgroundColor: '#F5F0F0', borderRadius: 10, padding: 12 },
   originalText: { fontSize: 13, color: '#8A6050', fontStyle: 'italic' },
   reformuledBadge: { fontSize: 11, color: '#9070C0', textAlign: 'center' },
+  btnRessenti: {
+    borderRadius: 14,
+    padding: 12,
+    alignItems: 'center',
+    backgroundColor: '#F3EEFF',
+    borderWidth: 1.5,
+    borderColor: '#D8B4FE',
+  },
+  btnRessentiText: { color: '#8B5CF6', fontWeight: '700', fontSize: 15 },
   btnPrimary: { borderRadius: 14, padding: 14, alignItems: 'center' },
   btnPrimaryText: { color: 'white', fontWeight: '700', fontSize: 16 },
-  secondaryRow: { flexDirection: 'row', gap: 8 },
   btnSecondary: {
     flex: 1,
     borderRadius: 12,

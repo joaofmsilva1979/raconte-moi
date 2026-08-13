@@ -1,15 +1,19 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Entry, MealSlot, Ressenti } from '@/types';
+import { Entry, MealSlot, Ressenti, Activity, SleepLog } from '@/types';
 import { formatTime } from '@/utils/dateUtils';
 import { RESSENTI_LABELS, RESSENTI_ICONS, SUB_CATEGORY_LABELS } from '@/constants/ressentis';
+import { ACTIVITY_LABELS, ACTIVITY_ICONS } from '@/constants/activities';
 
 interface JournalTimelineProps {
   entries: Entry[];
   slots: MealSlot[];
   primaryColor: string;
   ressentis?: Ressenti[];
+  activities?: Activity[];
+  sleepLog?: SleepLog | null;
   onEditEntry?: (entry: Entry) => void;
+  onEditRessenti?: (ressenti: Ressenti) => void;
 }
 
 type TimelineItem = {
@@ -20,11 +24,7 @@ type TimelineItem = {
   sortKey: number;
 };
 
-function buildTimeline(
-  entries: Entry[],
-  ressentis: Ressenti[],
-  slots: MealSlot[]
-): TimelineItem[] {
+function buildTimeline(entries: Entry[], ressentis: Ressenti[], slots: MealSlot[]): TimelineItem[] {
   return slots
     .map((slot) => ({
       kind: 'meal' as const,
@@ -36,15 +36,65 @@ function buildTimeline(
     .sort((a, b) => a.sortKey - b.sortKey);
 }
 
-export function JournalTimeline({ entries, slots, primaryColor, ressentis = [], onEditEntry }: JournalTimelineProps) {
+const SLEEP_LABEL: Record<number, string> = { 1: 'Mal dormi 😣', 2: 'Sommeil moyen 😐', 3: 'Bien dormi 😊' };
+const SLEEP_COLOR: Record<number, string> = { 1: '#FEE2E2', 2: '#FEF9C3', 3: '#DCFCE7' };
+const SLEEP_BORDER: Record<number, string> = { 1: '#FCA5A5', 2: '#FDE047', 3: '#86EFAC' };
+const SLEEP_TEXT: Record<number, string>  = { 1: '#991B1B', 2: '#854D0E', 3: '#166534' };
+
+function RessentisCard({ ressenti, onEdit }: { ressenti: Ressenti; onEdit?: (r: Ressenti) => void }) {
+  const label = RESSENTI_LABELS[ressenti.category];
+  const icon = RESSENTI_ICONS[ressenti.category];
+  const subLabel = ressenti.sub_category
+    ? ` · ${SUB_CATEGORY_LABELS[ressenti.sub_category] ?? ressenti.sub_category}`
+    : '';
+  const delayLabel = ressenti.delay_minutes != null
+    ? ` · ~${ressenti.delay_minutes < 60 ? ressenti.delay_minutes + 'min' : Math.round(ressenti.delay_minutes / 60) + 'h'} après`
+    : '';
+
+  return (
+    <TouchableOpacity
+      style={styles.ressentisCard}
+      testID={`ressenti-card-${ressenti.id}`}
+      onPress={() => onEdit?.(ressenti)}
+      activeOpacity={onEdit ? 0.7 : 1}
+    >
+      <View style={styles.ressentiHeader}>
+        <Text style={styles.ressentisTime}>{formatTime(ressenti.recorded_at)}</Text>
+        {onEdit && <Text style={styles.editHintPurple}>✏️</Text>}
+      </View>
+      <Text style={styles.ressentisText}>{icon} {label}{subLabel}{delayLabel}</Text>
+      {ressenti.note ? <Text style={styles.ressentisNote}>"{ressenti.note}"</Text> : null}
+    </TouchableOpacity>
+  );
+}
+
+export function JournalTimeline({
+  entries, slots, primaryColor, ressentis = [], activities = [],
+  sleepLog, onEditEntry, onEditRessenti,
+}: JournalTimelineProps) {
   const timeline = buildTimeline(entries, ressentis, slots);
   const orphanRessentis = ressentis.filter(r => r.meal_type == null);
+  const hasActivities = activities.length > 0;
+  const isLastSection = orphanRessentis.length === 0 && !hasActivities;
 
   return (
     <View style={styles.container} testID="journal-timeline">
+
+      {/* Qualité de sommeil */}
+      {sleepLog && (
+        <View style={[styles.sleepBanner, {
+          backgroundColor: SLEEP_COLOR[sleepLog.quality],
+          borderColor: SLEEP_BORDER[sleepLog.quality],
+        }]}>
+          <Text style={[styles.sleepText, { color: SLEEP_TEXT[sleepLog.quality] }]}>
+            🌙 {SLEEP_LABEL[sleepLog.quality]}
+          </Text>
+        </View>
+      )}
+
       {timeline.map((item, idx) => {
         const { slot, slotEntries, slotRessentis } = item;
-        const isLast = idx === timeline.length - 1;
+        const isLast = idx === timeline.length - 1 && isLastSection;
 
         return (
           <View key={`meal-${slot.meal_type}`} style={styles.row} testID={`timeline-slot-${slot.meal_type}`}>
@@ -54,7 +104,6 @@ export function JournalTimeline({ entries, slots, primaryColor, ressentis = [], 
             </View>
             <View style={styles.content}>
               <Text style={styles.slotLabel}>{slot.icon} {slot.label}</Text>
-
               {slotEntries.length > 0 ? (
                 slotEntries.map((entry) => (
                   <TouchableOpacity
@@ -79,23 +128,9 @@ export function JournalTimeline({ entries, slots, primaryColor, ressentis = [], 
                   <Text style={styles.pendingText}>En attente…</Text>
                 </View>
               )}
-
-              {slotRessentis.map((ressenti) => {
-                const label = RESSENTI_LABELS[ressenti.category];
-                const icon = RESSENTI_ICONS[ressenti.category];
-                const subLabel = ressenti.sub_category ? ` · ${SUB_CATEGORY_LABELS[ressenti.sub_category]}` : '';
-                const delayLabel = ressenti.delay_minutes != null
-                  ? ` · ~${ressenti.delay_minutes < 60
-                      ? ressenti.delay_minutes + 'min'
-                      : Math.round(ressenti.delay_minutes / 60) + 'h'} après`
-                  : '';
-                return (
-                  <View key={ressenti.id} style={styles.ressentisCard} testID={`ressenti-card-${ressenti.id}`}>
-                    <Text style={styles.ressentisTime}>{formatTime(ressenti.recorded_at)}</Text>
-                    <Text style={styles.ressentisText}>{icon} {label}{subLabel}{delayLabel}</Text>
-                  </View>
-                );
-              })}
+              {slotRessentis.map((r) => (
+                <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
+              ))}
             </View>
           </View>
         );
@@ -105,23 +140,33 @@ export function JournalTimeline({ entries, slots, primaryColor, ressentis = [], 
         <View style={styles.row} testID="timeline-orphan-ressentis">
           <View style={styles.dotCol}>
             <View style={[styles.dot, { backgroundColor: '#8B5CF6' }]} />
+            {hasActivities && <View style={[styles.line, { backgroundColor: '#8B5CF640' }]} />}
           </View>
           <View style={styles.content}>
             <Text style={styles.slotLabel}>💜 Ressentis</Text>
-            {orphanRessentis.map((ressenti) => {
-              const label = RESSENTI_LABELS[ressenti.category];
-              const icon = RESSENTI_ICONS[ressenti.category];
-              const subLabel = ressenti.sub_category ? ` · ${SUB_CATEGORY_LABELS[ressenti.sub_category]}` : '';
-              const delayLabel = ressenti.delay_minutes != null
-                ? ` · ~${ressenti.delay_minutes < 60 ? ressenti.delay_minutes + 'min' : Math.round(ressenti.delay_minutes / 60) + 'h'} après`
-                : '';
-              return (
-                <View key={ressenti.id} style={styles.ressentisCard} testID={`ressenti-card-${ressenti.id}`}>
-                  <Text style={styles.ressentisTime}>{formatTime(ressenti.recorded_at)}</Text>
-                  <Text style={styles.ressentisText}>{icon} {label}{subLabel}{delayLabel}</Text>
-                </View>
-              );
-            })}
+            {orphanRessentis.map((r) => (
+              <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
+            ))}
+          </View>
+        </View>
+      )}
+
+      {hasActivities && (
+        <View style={styles.row} testID="timeline-activities">
+          <View style={styles.dotCol}>
+            <View style={[styles.dot, { backgroundColor: '#16A34A' }]} />
+          </View>
+          <View style={styles.content}>
+            <Text style={styles.slotLabel}>🏃 Activité physique</Text>
+            {activities.map((activity) => (
+              <View key={activity.id} style={styles.activityCard} testID={`activity-card-${activity.id}`}>
+                <Text style={styles.activityTime}>{formatTime(activity.recorded_at)}</Text>
+                <Text style={styles.activityText}>
+                  {ACTIVITY_ICONS[activity.activity_type]} {ACTIVITY_LABELS[activity.activity_type]} · {activity.duration_minutes}min
+                </Text>
+                {activity.note ? <Text style={styles.activityNote}>"{activity.note}"</Text> : null}
+              </View>
+            ))}
           </View>
         </View>
       )}
@@ -131,36 +176,34 @@ export function JournalTimeline({ entries, slots, primaryColor, ressentis = [], 
 
 const styles = StyleSheet.create({
   container: { paddingVertical: 8 },
+  sleepBanner: {
+    borderRadius: 10, borderWidth: 1,
+    paddingHorizontal: 12, paddingVertical: 8,
+    marginBottom: 12,
+  },
+  sleepText: { fontSize: 13, fontWeight: '700' },
   row: { flexDirection: 'row', marginBottom: 16 },
   dotCol: { width: 20, alignItems: 'center' },
   dot: { width: 10, height: 10, borderRadius: 5, marginTop: 4 },
   line: { flex: 1, width: 2, marginTop: 4 },
-  content: { flex: 1, paddingLeft: 8 },
+  content: { flex: 1, paddingLeft: 8, gap: 4 },
   slotLabel: { fontSize: 12, fontWeight: '700', color: '#5C3020', marginBottom: 4 },
-  entryCard: {
-    backgroundColor: '#FDEEE8',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 4,
-  },
+  entryCard: { backgroundColor: '#FDEEE8', borderRadius: 8, padding: 8 },
   entryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
   entryTime: { fontSize: 10, fontWeight: '700', color: '#5C3020' },
   editHint: { fontSize: 10, opacity: 0.5 },
+  editHintPurple: { fontSize: 10, opacity: 0.5 },
   entryText: { fontSize: 12, color: '#4A2F20', lineHeight: 16 },
   entryPhoto: { width: '100%', height: 120, borderRadius: 6, marginTop: 6 },
-  pendingCard: {
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#F0C0A0',
-    borderRadius: 8,
-    padding: 8,
-  },
+  pendingCard: { borderWidth: 1, borderStyle: 'dashed', borderColor: '#F0C0A0', borderRadius: 8, padding: 8 },
   pendingText: { fontSize: 11, color: '#C09070', fontStyle: 'italic' },
-  ressentisCard: {
-    backgroundColor: '#EDE9FE',
-    borderRadius: 8,
-    padding: 8,
-  },
-  ressentisTime: { fontSize: 10, fontWeight: '700', color: '#6D28D9', marginBottom: 2 },
+  ressentisCard: { backgroundColor: '#EDE9FE', borderRadius: 8, padding: 8 },
+  ressentiHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
+  ressentisTime: { fontSize: 10, fontWeight: '700', color: '#6D28D9' },
   ressentisText: { fontSize: 12, color: '#4C1D95', lineHeight: 16 },
+  ressentisNote: { fontSize: 11, color: '#6D28D9', fontStyle: 'italic', marginTop: 3 },
+  activityCard: { backgroundColor: '#DCFCE7', borderRadius: 8, padding: 8 },
+  activityTime: { fontSize: 10, fontWeight: '700', color: '#166534', marginBottom: 2 },
+  activityText: { fontSize: 12, color: '#14532D', fontWeight: '600', lineHeight: 16 },
+  activityNote: { fontSize: 11, color: '#16A34A', fontStyle: 'italic', marginTop: 3 },
 });

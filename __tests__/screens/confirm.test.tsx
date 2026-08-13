@@ -81,11 +81,11 @@ describe('ConfirmScreen', () => {
     expect(replace).toHaveBeenCalledWith('/');
   });
 
-  it('calls discard and back on cancel', async () => {
+  it('calls discard and navigates to / on cancel', async () => {
     const { getByTestId } = await render(<ConfirmScreen />);
     fireEvent.press(getByTestId('discard-button'));
     expect(discard).toHaveBeenCalled();
-    expect(back).toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledWith('/');
   });
 
   it('navigates to /meal-picker when meal badge is tapped', async () => {

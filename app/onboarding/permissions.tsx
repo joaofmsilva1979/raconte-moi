@@ -55,7 +55,7 @@ export default function PermissionsScreen() {
         onPress={handleStart}
         activeOpacity={0.85}
       >
-        <Text style={styles.buttonText}>C'est parti ! 🥔</Text>
+        <Text style={styles.buttonText}>Activer le microphone et les notifications</Text>
       </TouchableOpacity>
     </View>
   );
