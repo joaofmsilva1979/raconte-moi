@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
+  FlatList,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -23,6 +24,8 @@ import { getActivitiesForDateRange } from '@/db/activitiesRepository';
 import { getSleepForDateRange } from '@/db/sleepRepository';
 import { resetAllData } from '@/db/database';
 import * as FileSystem from 'expo-file-system/legacy';
+import { useMedicationStore } from '@/store/medicationStore';
+import { useComfortAidStore } from '@/store/comfortAidStore';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -33,9 +36,17 @@ export default function SettingsScreen() {
   } = useSettingsStore();
   const { primary } = useColorTheme();
 
+  const { medications, loadMedications, addNewMedication, removeMedication } = useMedicationStore();
+  const { aids, loadAids, addNewAid, removeAid } = useComfortAidStore();
+
   const [firstName, setFirstName] = useState(settings?.first_name ?? '');
   const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
   const [rawHours, setRawHours] = useState<Record<string, string>>({});
+  const [newMedName, setNewMedName] = useState('');
+  const [newMedDosage, setNewMedDosage] = useState('');
+  const [newAidName, setNewAidName] = useState('');
+
+  useEffect(() => { loadMedications(); loadAids(); }, []);
 
   function todayStr() {
     return new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -442,6 +453,94 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Section: Médicaments */}
+        <Text style={styles.sectionTitle}>MES MÉDICAMENTS</Text>
+        <View style={styles.card}>
+          <Text style={styles.rowSub}>Gérer la liste · les dosages sont optionnels</Text>
+          {medications.map(med => (
+            <View key={med.id} style={styles.listRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.listRowLabel}>{med.name}</Text>
+                {med.dosage ? <Text style={styles.listRowSub}>{med.dosage}</Text> : null}
+              </View>
+              <TouchableOpacity
+                onPress={() => Alert.alert('Supprimer ?', `Supprimer ${med.name} ?`, [
+                  { text: 'Annuler', style: 'cancel' },
+                  { text: 'Supprimer', style: 'destructive', onPress: () => removeMedication(med.id) },
+                ])}
+              >
+                <Text style={styles.deleteIcon}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          <View style={styles.addRow}>
+            <TextInput
+              style={[styles.addInput, { flex: 2, borderColor: primary }]}
+              placeholder="Nom du médicament"
+              placeholderTextColor="#C09070"
+              value={newMedName}
+              onChangeText={setNewMedName}
+            />
+            <TextInput
+              style={[styles.addInput, { flex: 1, borderColor: primary }]}
+              placeholder="Dosage"
+              placeholderTextColor="#C09070"
+              value={newMedDosage}
+              onChangeText={setNewMedDosage}
+            />
+            <TouchableOpacity
+              style={[styles.addBtnSmall, { backgroundColor: primary }]}
+              onPress={async () => {
+                const name = newMedName.trim();
+                if (!name) return;
+                await addNewMedication(name, newMedDosage.trim() || undefined);
+                setNewMedName(''); setNewMedDosage('');
+              }}
+            >
+              <Text style={styles.addBtnSmallText}>+</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Section: Accessoires aidants */}
+        <Text style={styles.sectionTitle}>ACCESSOIRES AIDANTS</Text>
+        <View style={styles.card}>
+          <Text style={styles.rowSub}>Bouillotte, position antalgique, massage…</Text>
+          {aids.map(aid => (
+            <View key={aid.id} style={styles.listRow}>
+              <Text style={[styles.listRowLabel, { flex: 1 }]}>{aid.name}</Text>
+              <TouchableOpacity
+                onPress={() => Alert.alert('Supprimer ?', `Supprimer ${aid.name} ?`, [
+                  { text: 'Annuler', style: 'cancel' },
+                  { text: 'Supprimer', style: 'destructive', onPress: () => removeAid(aid.id) },
+                ])}
+              >
+                <Text style={styles.deleteIcon}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          <View style={styles.addRow}>
+            <TextInput
+              style={[styles.addInput, { flex: 1, borderColor: primary }]}
+              placeholder="Nom de l'accessoire"
+              placeholderTextColor="#C09070"
+              value={newAidName}
+              onChangeText={setNewAidName}
+            />
+            <TouchableOpacity
+              style={[styles.addBtnSmall, { backgroundColor: '#0EA5E9' }]}
+              onPress={async () => {
+                const name = newAidName.trim();
+                if (!name) return;
+                await addNewAid(name);
+                setNewAidName('');
+              }}
+            >
+              <Text style={styles.addBtnSmallText}>+</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Section: Zone danger */}
         <Text style={styles.sectionTitle}>Zone danger</Text>
         <TouchableOpacity
@@ -604,4 +703,23 @@ const styles = StyleSheet.create({
     fontSize: 14, fontWeight: '600', color: '#2D1A0E',
     textAlign: 'center',
   },
+  listRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1, borderBottomColor: '#F0D0B8',
+  },
+  listRowLabel: { fontSize: 14, fontWeight: '600', color: '#2D1A0E' },
+  listRowSub: { fontSize: 11, color: '#C09070', marginTop: 1 },
+  deleteIcon: { fontSize: 14, color: '#FCA5A5', paddingHorizontal: 6 },
+  addRow: { flexDirection: 'row', gap: 8, marginTop: 12, alignItems: 'center' },
+  addInput: {
+    borderWidth: 1.5, borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 8,
+    fontSize: 13, color: '#2D1A0E', backgroundColor: 'white',
+  },
+  addBtnSmall: {
+    width: 36, height: 36, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  addBtnSmallText: { fontSize: 20, color: 'white', lineHeight: 24 },
 });

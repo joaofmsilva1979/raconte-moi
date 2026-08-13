@@ -62,6 +62,8 @@ export default function RootLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
       <Stack.Screen name="settings" />
+      <Stack.Screen name="pro-notes" options={{ headerShown: true, presentation: 'modal' }} />
+      <Stack.Screen name="pro-note-detail" options={{ headerShown: true }} />
     </Stack>
   );
 }

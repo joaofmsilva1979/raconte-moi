@@ -53,6 +53,8 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     ressentis,
     activities,
     sleepLog,
+    medicationLogs,
+    comfortAidLogs,
     viewedDate,
     closeSheet,
     goToPreviousDay,
@@ -211,6 +213,8 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
           ressentis={ressentis}
           activities={activities}
           sleepLog={sleepLog}
+          medicationLogs={medicationLogs}
+          comfortAidLogs={comfortAidLogs}
           onEditEntry={handleEditEntry}
           onEditRessenti={handleEditRessenti}
         />

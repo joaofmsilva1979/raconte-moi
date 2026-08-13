@@ -12,7 +12,11 @@ import { MealBadge } from '@/components/MealBadge';
 import { JournalSheet } from '@/components/JournalSheet';
 import { RessentisSheet } from '@/components/RessentisSheet';
 import { ActivitySheet } from '@/components/ActivitySheet';
+import { MedicationSheet } from '@/components/MedicationSheet';
+import { ComfortAidSheet } from '@/components/ComfortAidSheet';
 import { useActivityStore } from '@/store/activityStore';
+import { useMedicationStore } from '@/store/medicationStore';
+import { useComfortAidStore } from '@/store/comfortAidStore';
 import { DAILY_GOAL_MINUTES } from '@/constants/activities';
 
 export default function HomeScreen() {
@@ -30,10 +34,14 @@ export default function HomeScreen() {
   const { openSheet, closeSheet, refreshCurrentDay } = useJournalStore();
   const { openSheet: openRessentisSheet } = useRessentisStore();
   const { openSheet: openActivitySheet, todayTotalMinutes, loadTodayTotal } = useActivityStore();
+  const { openSheet: openMedicationSheet, loadMedications } = useMedicationStore();
+  const { openSheet: openComfortAidSheet, loadAids } = useComfortAidStore();
 
   useEffect(() => {
     loadSettings();
     loadTodayTotal();
+    loadMedications();
+    loadAids();
   }, []);
 
   useEffect(() => {
@@ -75,18 +83,26 @@ export default function HomeScreen() {
     >
       {/* Top bar: trends icon */}
       <View style={styles.topBar}>
-        <View style={{ width: 36 }} />
+        <View style={{ width: 80 }} />
         <View style={styles.greetingBlock}>
           <Text style={styles.greeting}>{greeting}</Text>
           <Text style={styles.greetingName}>{settings.first_name} ☀️</Text>
         </View>
-        <TouchableOpacity
-          testID="trends-btn"
-          onPress={() => router.push('/trends')}
-          style={styles.trendsBtn}
-        >
-          <Text style={styles.trendsBtnText}>📈</Text>
-        </TouchableOpacity>
+        <View style={styles.topBtns}>
+          <TouchableOpacity
+            onPress={() => router.push('/pro-notes')}
+            style={styles.topIconBtn}
+          >
+            <Text style={styles.topIconText}>📋</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="trends-btn"
+            onPress={() => router.push('/trends')}
+            style={styles.topIconBtn}
+          >
+            <Text style={styles.topIconText}>📈</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Meal badge — compact, centered */}
@@ -142,7 +158,7 @@ export default function HomeScreen() {
             style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]}
             activeOpacity={0.82}
           >
-            <Text style={styles.actionBtnText}>💜 Ressenti</Text>
+            <Text style={styles.actionBtnText}>💜 Ressentis</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="add-activity-btn"
@@ -150,7 +166,25 @@ export default function HomeScreen() {
             style={[styles.actionBtn, { backgroundColor: '#16A34A' }]}
             activeOpacity={0.82}
           >
-            <Text style={styles.actionBtnText}>🏃 Activité</Text>
+            <Text style={styles.actionBtnText}>🏃 Activités</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            testID="add-medication-btn"
+            onPress={openMedicationSheet}
+            style={[styles.actionBtn, { backgroundColor: '#0369A1' }]}
+            activeOpacity={0.82}
+          >
+            <Text style={styles.actionBtnText}>💊 Médicaments</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="add-comfort-aid-btn"
+            onPress={openComfortAidSheet}
+            style={[styles.actionBtn, { backgroundColor: '#0EA5E9' }]}
+            activeOpacity={0.82}
+          >
+            <Text style={styles.actionBtnText}>🩹 Accessoires</Text>
           </TouchableOpacity>
         </View>
         <TouchableOpacity
@@ -164,6 +198,8 @@ export default function HomeScreen() {
 
       <RessentisSheet primaryColor={primary} />
       <ActivitySheet primaryColor={primary} />
+      <MedicationSheet primaryColor={primary} />
+      <ComfortAidSheet primaryColor={primary} />
       <JournalSheet primaryColor={primary} onAddEntry={closeSheet} />
     </SafeAreaView>
   );
@@ -196,13 +232,13 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     marginTop: -4,
   },
-  trendsBtn: {
+  topBtns: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  topIconBtn: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: '#F5F0FF',
     alignItems: 'center', justifyContent: 'center',
-    marginTop: 4,
   },
-  trendsBtnText: { fontSize: 16 },
+  topIconText: { fontSize: 16 },
   mealRow: {
     alignItems: 'center',
     marginTop: 10,

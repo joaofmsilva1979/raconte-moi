@@ -119,6 +119,49 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
       );
     `);
   } catch {}
+
+  try {
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS medications (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        name       TEXT NOT NULL,
+        dosage     TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS medication_logs (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        medication_id INTEGER NOT NULL REFERENCES medications(id) ON DELETE CASCADE,
+        recorded_at   TEXT NOT NULL,
+        timing        TEXT NOT NULL,
+        meal_type     TEXT,
+        efficacy      INTEGER,
+        note          TEXT,
+        created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS comfort_aids (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        name       TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS comfort_aid_logs (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        comfort_aid_id  INTEGER NOT NULL REFERENCES comfort_aids(id) ON DELETE CASCADE,
+        recorded_at     TEXT NOT NULL,
+        note            TEXT,
+        created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS pro_notes (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        title      TEXT NOT NULL,
+        content    TEXT,
+        file_uri   TEXT,
+        file_name  TEXT,
+        file_type  TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+  } catch {}
 }
 
 export async function closeAndResetDatabase(): Promise<void> {

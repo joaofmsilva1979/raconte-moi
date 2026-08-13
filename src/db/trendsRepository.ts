@@ -7,6 +7,8 @@ export interface DayStats {
   fatigueCount: number;
   goodCount: number;
   activityMinutes: number;
+  medEfficacyGoodCount: number;  // médicaments avec effet ressenti = 3
+  aidCount: number;               // accessoires aidants utilisés
 }
 
 export async function getWeekStats(fromDate: string, toDate: string): Promise<DayStats[]> {
@@ -33,6 +35,22 @@ export async function getWeekStats(fromDate: string, toDate: string): Promise<Da
     [fromDate, toDate]
   );
 
+  const medEfficacyRows = await db.getAllAsync<{ day: string; cnt: number }>(
+    `SELECT date(recorded_at) as day, COUNT(*) as cnt
+     FROM medication_logs
+     WHERE date(recorded_at) >= ? AND date(recorded_at) <= ? AND efficacy = 3
+     GROUP BY day`,
+    [fromDate, toDate]
+  );
+
+  const aidRows = await db.getAllAsync<{ day: string; cnt: number }>(
+    `SELECT date(recorded_at) as day, COUNT(*) as cnt
+     FROM comfort_aid_logs
+     WHERE date(recorded_at) >= ? AND date(recorded_at) <= ?
+     GROUP BY day`,
+    [fromDate, toDate]
+  );
+
   const sleepMap: Record<string, number> = {};
   for (const r of sleepRows) sleepMap[r.log_date] = r.quality;
 
@@ -47,6 +65,12 @@ export async function getWeekStats(fromDate: string, toDate: string): Promise<Da
   const activityMap: Record<string, number> = {};
   for (const r of activityRows) activityMap[r.day] = r.total;
 
+  const medEfficacyMap: Record<string, number> = {};
+  for (const r of medEfficacyRows) medEfficacyMap[r.day] = r.cnt;
+
+  const aidMap: Record<string, number> = {};
+  for (const r of aidRows) aidMap[r.day] = r.cnt;
+
   const days: DayStats[] = [];
   const from = new Date(fromDate);
   const to = new Date(toDate);
@@ -60,6 +84,8 @@ export async function getWeekStats(fromDate: string, toDate: string): Promise<Da
       fatigueCount: r.fatigue,
       goodCount: r.good,
       activityMinutes: activityMap[key] ?? 0,
+      medEfficacyGoodCount: medEfficacyMap[key] ?? 0,
+      aidCount: aidMap[key] ?? 0,
     });
   }
 

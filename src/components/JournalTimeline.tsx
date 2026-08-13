@@ -1,9 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Entry, MealSlot, Ressenti, Activity, SleepLog } from '@/types';
+import { Entry, MealSlot, Ressenti, Activity, SleepLog, MedicationLog, ComfortAidLog } from '@/types';
 import { formatTime } from '@/utils/dateUtils';
 import { RESSENTI_LABELS, RESSENTI_ICONS, SUB_CATEGORY_LABELS } from '@/constants/ressentis';
 import { ACTIVITY_LABELS, ACTIVITY_ICONS } from '@/constants/activities';
+
+const TIMING_LABEL: Record<string, string> = {
+  before: 'avant le repas',
+  during: 'pendant',
+  after: 'après le repas',
+};
+
+const EFFICACY_ICON: Record<number, string> = { 1: '😞', 2: '😐', 3: '😊' };
 
 interface JournalTimelineProps {
   entries: Entry[];
@@ -12,29 +20,58 @@ interface JournalTimelineProps {
   ressentis?: Ressenti[];
   activities?: Activity[];
   sleepLog?: SleepLog | null;
+  medicationLogs?: MedicationLog[];
+  comfortAidLogs?: ComfortAidLog[];
   onEditEntry?: (entry: Entry) => void;
   onEditRessenti?: (ressenti: Ressenti) => void;
 }
 
 type TimelineItem =
-  | { kind: 'meal'; slot: MealSlot; slotEntries: Entry[]; slotRessentis: Ressenti[]; sortKey: number }
-  | { kind: 'feeling'; ressenti: Ressenti; sortKey: number };
+  | { kind: 'meal'; slot: MealSlot; slotEntries: Entry[]; slotRessentis: Ressenti[]; slotMeds: MedicationLog[]; slotAids: ComfortAidLog[]; sortKey: number }
+  | { kind: 'feeling'; ressenti: Ressenti; sortKey: number }
+  | { kind: 'med'; log: MedicationLog; sortKey: number }
+  | { kind: 'aid'; log: ComfortAidLog; sortKey: number };
 
-function buildTimeline(entries: Entry[], ressentis: Ressenti[], slots: MealSlot[], freeRessentis: Ressenti[]): TimelineItem[] {
+function toMinutes(iso: string): number {
+  const d = new Date(iso);
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+function buildTimeline(
+  entries: Entry[],
+  ressentis: Ressenti[],
+  slots: MealSlot[],
+  freeRessentis: Ressenti[],
+  medicationLogs: MedicationLog[],
+  comfortAidLogs: ComfortAidLog[],
+): TimelineItem[] {
+  const linkedMedTypes = new Set(medicationLogs.filter(m => m.meal_type).map(m => m.meal_type));
+  const linkedAidIds = new Set<number>(); // comfort aids don't link to meal slots — always standalone
+
   const mealItems: TimelineItem[] = slots.map((slot) => ({
     kind: 'meal' as const,
     slot,
     slotEntries: entries.filter((e) => e.meal_type === slot.meal_type),
     slotRessentis: ressentis.filter((r) => r.meal_type === slot.meal_type),
+    slotMeds: medicationLogs.filter((m) => m.meal_type === slot.meal_type),
+    slotAids: [],
     sortKey: slot.start_hour * 60,
   }));
 
-  const feelingItems: TimelineItem[] = freeRessentis.map((r) => {
-    const d = new Date(r.recorded_at);
-    return { kind: 'feeling' as const, ressenti: r, sortKey: d.getHours() * 60 + d.getMinutes() };
-  });
+  const feelingItems: TimelineItem[] = freeRessentis.map((r) => ({
+    kind: 'feeling' as const, ressenti: r, sortKey: toMinutes(r.recorded_at),
+  }));
 
-  return [...mealItems, ...feelingItems].sort((a, b) => a.sortKey - b.sortKey);
+  const freeMeds = medicationLogs.filter((m) => !m.meal_type);
+  const medItems: TimelineItem[] = freeMeds.map((m) => ({
+    kind: 'med' as const, log: m, sortKey: toMinutes(m.recorded_at),
+  }));
+
+  const aidItems: TimelineItem[] = comfortAidLogs.map((a) => ({
+    kind: 'aid' as const, log: a, sortKey: toMinutes(a.recorded_at),
+  }));
+
+  return [...mealItems, ...feelingItems, ...medItems, ...aidItems].sort((a, b) => a.sortKey - b.sortKey);
 }
 
 const SLEEP_LABEL: Record<number, string> = { 1: 'Mal dormi 😣', 2: 'Sommeil moyen 😐', 3: 'Bien dormi 😊' };
@@ -72,11 +109,11 @@ function RessentisCard({ ressenti, onEdit, standalone }: { ressenti: Ressenti; o
 
 export function JournalTimeline({
   entries, slots, primaryColor, ressentis = [], activities = [],
-  sleepLog, onEditEntry, onEditRessenti,
+  sleepLog, medicationLogs = [], comfortAidLogs = [], onEditEntry, onEditRessenti,
 }: JournalTimelineProps) {
   const morningRessentis = ressentis.filter(r => r.context === 'morning');
   const freeRessentis = ressentis.filter(r => r.meal_type == null && r.context !== 'morning');
-  const timeline = buildTimeline(entries, ressentis, slots, freeRessentis);
+  const timeline = buildTimeline(entries, ressentis, slots, freeRessentis, medicationLogs, comfortAidLogs);
 
   const hasActivities = activities.length > 0;
   const hasMorning = morningRessentis.length > 0;
@@ -114,7 +151,7 @@ export function JournalTimeline({
         </View>
       )}
 
-      {/* Timeline unifiée : repas + ressentis "feeling" triés chronologiquement */}
+      {/* Timeline unifiée : repas + ressentis + médocs + accessoires triés chronologiquement */}
       {timeline.map((item, idx) => {
         const isLast = getIsLast(idx);
 
@@ -132,7 +169,49 @@ export function JournalTimeline({
           );
         }
 
-        const { slot, slotEntries, slotRessentis } = item;
+        if (item.kind === 'med') {
+          const m = item.log;
+          return (
+            <View key={`med-${m.id}`} style={styles.row} testID={`timeline-med-${m.id}`}>
+              <View style={styles.dotCol}>
+                <View style={[styles.dot, { backgroundColor: '#0369A1' }]} />
+                {!isLast && <View style={[styles.line, { backgroundColor: '#0369A140' }]} />}
+              </View>
+              <View style={styles.content}>
+                <View style={styles.medCard}>
+                  <Text style={styles.medTime}>💊 {formatTime(m.recorded_at)}</Text>
+                  <Text style={styles.medName}>{m.medication_name ?? '—'}</Text>
+                  <Text style={styles.medSub}>
+                    {TIMING_LABEL[m.timing] ?? m.timing}
+                    {m.efficacy != null ? `  ·  effet ${EFFICACY_ICON[m.efficacy]}` : ''}
+                  </Text>
+                  {m.note ? <Text style={styles.medNote}>"{m.note}"</Text> : null}
+                </View>
+              </View>
+            </View>
+          );
+        }
+
+        if (item.kind === 'aid') {
+          const a = item.log;
+          return (
+            <View key={`aid-${a.id}`} style={styles.row} testID={`timeline-aid-${a.id}`}>
+              <View style={styles.dotCol}>
+                <View style={[styles.dot, { backgroundColor: '#0EA5E9' }]} />
+                {!isLast && <View style={[styles.line, { backgroundColor: '#0EA5E940' }]} />}
+              </View>
+              <View style={styles.content}>
+                <View style={styles.aidCard}>
+                  <Text style={styles.aidTime}>🩹 {formatTime(a.recorded_at)}</Text>
+                  <Text style={styles.aidName}>{a.comfort_aid_name ?? '—'}</Text>
+                  {a.note ? <Text style={styles.aidNote}>"{a.note}"</Text> : null}
+                </View>
+              </View>
+            </View>
+          );
+        }
+
+        const { slot, slotEntries, slotRessentis, slotMeds } = item;
         return (
           <View key={`meal-${slot.meal_type}`} style={styles.row} testID={`timeline-slot-${slot.meal_type}`}>
             <View style={styles.dotCol}>
@@ -141,6 +220,14 @@ export function JournalTimeline({
             </View>
             <View style={styles.content}>
               <Text style={styles.slotLabel}>{slot.icon} {slot.label}</Text>
+              {slotMeds.filter(m => m.timing === 'before').map(m => (
+                <View key={`med-before-${m.id}`} style={styles.medCard}>
+                  <Text style={styles.medTime}>💊 {formatTime(m.recorded_at)} · avant</Text>
+                  <Text style={styles.medName}>{m.medication_name ?? '—'}</Text>
+                  {m.efficacy != null && <Text style={styles.medSub}>effet {EFFICACY_ICON[m.efficacy]}</Text>}
+                  {m.note ? <Text style={styles.medNote}>"{m.note}"</Text> : null}
+                </View>
+              ))}
               {slotEntries.length > 0 ? (
                 slotEntries.map((entry) => (
                   <TouchableOpacity
@@ -165,6 +252,14 @@ export function JournalTimeline({
                   <Text style={styles.pendingText}>En attente…</Text>
                 </View>
               )}
+              {slotMeds.filter(m => m.timing !== 'before').map(m => (
+                <View key={`med-after-${m.id}`} style={styles.medCard}>
+                  <Text style={styles.medTime}>💊 {formatTime(m.recorded_at)} · {TIMING_LABEL[m.timing] ?? m.timing}</Text>
+                  <Text style={styles.medName}>{m.medication_name ?? '—'}</Text>
+                  {m.efficacy != null && <Text style={styles.medSub}>effet {EFFICACY_ICON[m.efficacy]}</Text>}
+                  {m.note ? <Text style={styles.medNote}>"{m.note}"</Text> : null}
+                </View>
+              ))}
               {slotRessentis.map((r) => (
                 <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
               ))}
@@ -245,4 +340,19 @@ const styles = StyleSheet.create({
   activityTime: { fontSize: 11, fontWeight: '700', color: '#16A34A', marginBottom: 2, letterSpacing: 0.1 },
   activityText: { fontSize: 13, color: '#14532D', fontWeight: '600', lineHeight: 18, letterSpacing: -0.1 },
   activityNote: { fontSize: 12, color: '#16A34A', fontStyle: 'italic', marginTop: 4 },
+  medCard: {
+    backgroundColor: '#EFF6FF', borderRadius: 12, padding: 10,
+    borderLeftWidth: 3, borderLeftColor: '#0369A1',
+  },
+  medTime: { fontSize: 11, fontWeight: '700', color: '#0369A1', marginBottom: 2, letterSpacing: 0.1 },
+  medName: { fontSize: 13, color: '#1E3A5F', fontWeight: '600', lineHeight: 18 },
+  medSub: { fontSize: 12, color: '#0369A1', marginTop: 2 },
+  medNote: { fontSize: 12, color: '#0369A1', fontStyle: 'italic', marginTop: 4 },
+  aidCard: {
+    backgroundColor: '#F0F9FF', borderRadius: 12, padding: 10,
+    borderLeftWidth: 3, borderLeftColor: '#0EA5E9',
+  },
+  aidTime: { fontSize: 11, fontWeight: '700', color: '#0EA5E9', marginBottom: 2, letterSpacing: 0.1 },
+  aidName: { fontSize: 13, color: '#0C4A6E', fontWeight: '600', lineHeight: 18 },
+  aidNote: { fontSize: 12, color: '#0EA5E9', fontStyle: 'italic', marginTop: 4 },
 });

@@ -8,11 +8,11 @@ export interface DayScore extends DayStats {
 export function computeDayScore(day: DayStats): number {
   let score = 0;
 
-  // Sommeil : 1→0, 2→2, 3→4
+  // Sommeil : 1→0, 2→2, 3→4, pas de log→2 (neutre)
   if (day.sleepQuality === 3) score += 4;
   else if (day.sleepQuality === 2) score += 2;
   else if (day.sleepQuality === 1) score += 0;
-  else score += 2; // pas de log = neutre
+  else score += 2;
 
   // Douleur : 0→3, 1→1, 2+→0
   if (day.painCount === 0) score += 3;
@@ -24,6 +24,12 @@ export function computeDayScore(day: DayStats): number {
 
   // Ressenti positif : +1
   if (day.goodCount > 0) score += 1;
+
+  // Médicament avec bon effet (efficacy=3) : +1 (traitement actif qui fonctionne)
+  if (day.medEfficacyGoodCount > 0) score += 1;
+
+  // Accessoire aidant utilisé : +1 (gestion active de la douleur)
+  if (day.aidCount > 0) score += 1;
 
   return Math.min(score, 10);
 }

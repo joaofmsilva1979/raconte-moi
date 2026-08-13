@@ -92,3 +92,50 @@ export interface ColorPalette {
   accent: string;
   background: string;
 }
+
+export type MedicationTiming = 'before' | 'during' | 'after';
+
+export interface Medication {
+  id: number;
+  name: string;
+  dosage: string | null;
+  created_at: string;
+}
+
+export interface MedicationLog {
+  id: number;
+  medication_id: number;
+  medication_name?: string;
+  recorded_at: string;
+  timing: MedicationTiming;
+  meal_type: MealType | null;
+  efficacy: 1 | 2 | 3 | null;
+  note: string | null;
+  created_at: string;
+}
+
+export interface ComfortAid {
+  id: number;
+  name: string;
+  created_at: string;
+}
+
+export interface ComfortAidLog {
+  id: number;
+  comfort_aid_id: number;
+  comfort_aid_name?: string;
+  recorded_at: string;
+  note: string | null;
+  created_at: string;
+}
+
+export interface ProNote {
+  id: number;
+  title: string;
+  content: string | null;
+  file_uri: string | null;
+  file_name: string | null;
+  file_type: 'pdf' | 'docx' | 'text' | null;
+  created_at: string;
+  updated_at: string;
+}

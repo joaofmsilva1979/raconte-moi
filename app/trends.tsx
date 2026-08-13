@@ -166,6 +166,14 @@ export default function TrendsScreen() {
               <Text style={styles.scoreRowEmoji}>😊</Text>
               <Text style={styles.scoreRowText}>Ressenti positif — 1 pt</Text>
             </View>
+            <View style={styles.scoreRow}>
+              <Text style={styles.scoreRowEmoji}>💊</Text>
+              <Text style={styles.scoreRowText}>Médicament efficace 😊 — 1 pt</Text>
+            </View>
+            <View style={styles.scoreRow}>
+              <Text style={styles.scoreRowEmoji}>🩹</Text>
+              <Text style={styles.scoreRowText}>Accessoire aidant utilisé — 1 pt</Text>
+            </View>
           </View>
         </View>
 

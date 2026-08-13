@@ -1,9 +1,11 @@
 import { create } from 'zustand';
-import { Entry, Ressenti, Activity, SleepLog } from '@/types';
+import { Entry, Ressenti, Activity, SleepLog, MedicationLog, ComfortAidLog } from '@/types';
 import { getEntriesForDay } from '@/db/entriesRepository';
 import { getRessentisForDay } from '@/db/ressentisRepository';
 import { getActivitiesForDay } from '@/db/activitiesRepository';
 import { getSleepForDay } from '@/db/sleepRepository';
+import { getMedicationLogsForDay } from '@/db/medicationsRepository';
+import { getComfortAidLogsForDay } from '@/db/comfortAidsRepository';
 import { formatDate, addDays } from '@/utils/dateUtils';
 
 interface JournalState {
@@ -12,6 +14,8 @@ interface JournalState {
   ressentis: Ressenti[];
   activities: Activity[];
   sleepLog: SleepLog | null;
+  medicationLogs: MedicationLog[];
+  comfortAidLogs: ComfortAidLog[];
   isLoading: boolean;
   isSheetOpen: boolean;
 }
@@ -31,6 +35,8 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
   ressentis: [],
   activities: [],
   sleepLog: null,
+  medicationLogs: [],
+  comfortAidLogs: [],
   isLoading: false,
   isSheetOpen: false,
 
@@ -43,15 +49,17 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
   closeSheet: () => set({ isSheetOpen: false }),
 
   loadDay: async (dateStr: string) => {
-    set({ isLoading: true, viewedDate: dateStr, entries: [], ressentis: [], activities: [], sleepLog: null });
+    set({ isLoading: true, viewedDate: dateStr, entries: [], ressentis: [], activities: [], sleepLog: null, medicationLogs: [], comfortAidLogs: [] });
     try {
-      const [entries, ressentis, activities, sleepLog] = await Promise.all([
+      const [entries, ressentis, activities, sleepLog, medicationLogs, comfortAidLogs] = await Promise.all([
         getEntriesForDay(dateStr),
         getRessentisForDay(dateStr),
         getActivitiesForDay(dateStr),
         getSleepForDay(dateStr),
+        getMedicationLogsForDay(dateStr),
+        getComfortAidLogsForDay(dateStr),
       ]);
-      set({ entries, ressentis, activities, sleepLog, isLoading: false });
+      set({ entries, ressentis, activities, sleepLog, medicationLogs, comfortAidLogs, isLoading: false });
     } catch {
       set({ isLoading: false });
     }
