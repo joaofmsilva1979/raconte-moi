@@ -214,10 +214,9 @@ const styles = StyleSheet.create({
     gap: 18,
   },
   bottomSection: {
-    alignItems: 'center',
+    alignItems: 'stretch',
     paddingBottom: 16,
     gap: 10,
-    width: '100%',
   },
   liveArea: {
     alignItems: 'center',
@@ -255,7 +254,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1.5,
     backgroundColor: 'rgba(255,255,255,0.7)',
-    alignSelf: 'stretch',
     alignItems: 'center',
   },
   journalOpenerText: {
@@ -266,7 +264,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
-    alignSelf: 'stretch',
   },
   actionBtn: {
     flex: 1,
@@ -288,6 +285,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 5,
     borderRadius: 12,
+    alignSelf: 'center',
   },
   activitySummaryDone: {
     color: '#166534',
