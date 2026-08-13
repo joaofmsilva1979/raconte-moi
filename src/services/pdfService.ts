@@ -30,9 +30,10 @@ function fmt(iso: string): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-function entryHtml(entry: Entry, primaryColor: string): string {
-  const photoHtml = entry.photo_uri
-    ? `<img src="${entry.photo_uri}" style="max-width:100%;border-radius:6px;margin-top:8px;display:block;">`
+function entryHtml(entry: Entry, primaryColor: string, photoMap: Record<string, string>): string {
+  const photoSrc = entry.photo_uri ? (photoMap[entry.photo_uri] ?? null) : null;
+  const photoHtml = photoSrc
+    ? `<img src="${photoSrc}" style="max-width:100%;border-radius:6px;margin-top:8px;display:block;">`
     : '';
   return `
     <div class="entry" style="border-left-color:${primaryColor}">
@@ -67,6 +68,7 @@ export function generateJournalHtml(
   primaryColor: string,
   activities: Activity[] = [],
   sleepLogs: SleepLog[] = [],
+  photoMap: Record<string, string> = {},
 ): string {
   const days = new Set<string>();
   for (const e of entries) days.add(e.recorded_at.slice(0, 10));
@@ -126,7 +128,7 @@ export function generateJournalHtml(
       return `
         <div class="section meal-section">
           <div class="section-label">${slot.icon} ${slot.label}</div>
-          ${slotEntries.map(e => entryHtml(e, primaryColor)).join('')}
+          ${slotEntries.map(e => entryHtml(e, primaryColor, photoMap)).join('')}
           ${slotRessentis.map(r => ressentiHtml(r)).join('')}
         </div>`;
     }).join('');
@@ -185,6 +187,23 @@ export function generateJournalHtml(
 </html>`;
 }
 
+async function buildPhotoMap(entries: Entry[]): Promise<Record<string, string>> {
+  const map: Record<string, string> = {};
+  for (const entry of entries) {
+    if (entry.photo_uri && !map[entry.photo_uri]) {
+      try {
+        const b64 = await FileSystem.readAsStringAsync(entry.photo_uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        map[entry.photo_uri] = `data:image/jpeg;base64,${b64}`;
+      } catch {
+        // photo inaccessible, skip silently
+      }
+    }
+  }
+  return map;
+}
+
 export async function exportJournalAsPdf(
   entries: Entry[],
   ressentis: Ressenti[],
@@ -196,7 +215,8 @@ export async function exportJournalAsPdf(
   activities: Activity[] = [],
   sleepLogs: SleepLog[] = [],
 ): Promise<void> {
-  const html = generateJournalHtml(entries, ressentis, firstName, periodLabel, primaryColor, activities, sleepLogs);
+  const photoMap = await buildPhotoMap(entries);
+  const html = generateJournalHtml(entries, ressentis, firstName, periodLabel, primaryColor, activities, sleepLogs, photoMap);
   const { uri: tempUri } = await Print.printToFileAsync({ html });
 
   const safeName = firstName
