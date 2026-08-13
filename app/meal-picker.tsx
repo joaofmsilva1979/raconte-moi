@@ -17,7 +17,8 @@ export default function MealPickerScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
       <Text style={styles.title}>Quel repas ?</Text>
       {DEFAULT_MEAL_SLOTS.map((slot) => {
         const selected = slot.meal_type === currentMeal;
@@ -37,12 +38,14 @@ export default function MealPickerScreen() {
           </TouchableOpacity>
         );
       })}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF8F5', paddingHorizontal: 24, paddingTop: 28, paddingBottom: 24 },
+  safe: { flex: 1, backgroundColor: '#FFF8F5' },
+  container: { flex: 1, paddingTop: 28, paddingBottom: 24, paddingHorizontal: 24 },
   title: { fontSize: 22, fontWeight: '800', color: '#1C0A00', marginBottom: 24, letterSpacing: -0.5 },
   option: {
     flexDirection: 'row',

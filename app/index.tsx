@@ -172,13 +172,13 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingTop: 6,
+    paddingHorizontal: 24,
   },
   greetingBlock: {
     alignItems: 'center',
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     gap: 18,
   },
   bottomSection: {
-    alignItems: 'stretch',
+    paddingHorizontal: 24,
     paddingBottom: 16,
     gap: 10,
   },
