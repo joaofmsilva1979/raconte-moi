@@ -33,7 +33,7 @@ function fmt(iso: string): string {
 function entryHtml(entry: Entry, primaryColor: string, photoMap: Record<string, string>): string {
   const photoSrc = entry.photo_uri ? (photoMap[entry.photo_uri] ?? null) : null;
   const photoHtml = photoSrc
-    ? `<img src="${photoSrc}" style="max-width:30%;height:auto;border-radius:6px;margin-top:8px;display:block;">`
+    ? `<img src="${photoSrc}" style="max-height:100px;width:auto;border-radius:6px;margin-top:8px;display:block;">`
     : '';
   return `
     <div class="entry" style="border-left-color:${primaryColor}">
@@ -163,7 +163,7 @@ export function generateJournalHtml(
     .section-label { font-weight: 700; font-size: 11px; color: #5C3020; text-transform: uppercase; margin-bottom: 6px; }
     .morning-section .section-label { color: #8B5CF6; }
     .activity-section .section-label { color: #166534; }
-    .entry { padding: 10px 12px; background: #FFF8F5; border-radius: 8px; border-left: 3px solid ${primaryColor}; margin-bottom: 6px; }
+    .entry { padding: 10px 12px; background: #FFF8F5; border-radius: 8px; border-left: 3px solid ${primaryColor}; margin-bottom: 6px; page-break-inside: avoid; }
     .entry-header { display: flex; gap: 8px; align-items: baseline; margin-bottom: 4px; }
     .entry-time { font-weight: 700; font-size: 11px; color: #5C3020; }
     .meal-label { font-size: 10px; color: #C09070; text-transform: uppercase; }
