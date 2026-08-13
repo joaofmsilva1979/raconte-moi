@@ -10,13 +10,12 @@ import {
   Alert,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import * as AuthSession from 'expo-auth-session';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { COLOR_PALETTES } from '@/constants/colors';
 import { scheduleReminders } from '@/services/notificationService';
 import { MealSlot, MealType } from '@/types';
-import { backupToIcloud, restoreFromIcloud, isBackupDue } from '@/services/icloudService';
+import { backupToIcloud, exportBackup, restoreFromIcloud } from '@/services/icloudService';
 import { exportJournalAsPdf } from '@/services/pdfService';
 import { getEntriesForDateRange } from '@/db/entriesRepository';
 import { getRessentisForDateRange } from '@/db/ressentisRepository';
@@ -24,16 +23,6 @@ import { getActivitiesForDateRange } from '@/db/activitiesRepository';
 import { getSleepForDateRange } from '@/db/sleepRepository';
 import { resetAllData } from '@/db/database';
 import * as FileSystem from 'expo-file-system/legacy';
-import {
-  GOOGLE_DISCOVERY,
-  GOOGLE_REDIRECT_URI,
-  GOOGLE_SCOPES,
-  exchangeCodeForTokens,
-  refreshAccessToken,
-  isTokenExpired,
-  backupToGoogleDrive,
-} from '@/services/googleDriveService';
-import { GOOGLE_CLIENT_ID } from '@/config/googleDrive';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -41,77 +30,12 @@ export default function SettingsScreen() {
     settings, mealSlots,
     saveFirstName, savePrimaryColor, saveMealSlot, saveNotificationSetting,
     saveIcloudBackup, saveBackupInterval, saveLastBackupAt,
-    saveGoogleTokens, saveGoogleLastBackupAt, clearGoogleAuth,
   } = useSettingsStore();
   const { primary } = useColorTheme();
 
   const [firstName, setFirstName] = useState(settings?.first_name ?? '');
   const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
   const [rawHours, setRawHours] = useState<Record<string, string>>({});
-  const [googleBusy, setGoogleBusy] = useState(false);
-
-  // Google OAuth request
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: GOOGLE_CLIENT_ID,
-      scopes: GOOGLE_SCOPES,
-      redirectUri: GOOGLE_REDIRECT_URI,
-      responseType: 'code',
-      usePKCE: true,
-    },
-    GOOGLE_DISCOVERY
-  );
-
-  // Handle OAuth response
-  useEffect(() => {
-    if (response?.type !== 'success') return;
-    const { code } = response.params;
-    const verifier = request?.codeVerifier;
-    if (!code || !verifier) return;
-
-    (async () => {
-      try {
-        setGoogleBusy(true);
-        const tokens = await exchangeCodeForTokens(code, verifier);
-        await saveGoogleTokens(tokens.accessToken, tokens.refreshToken, tokens.expiresAt, tokens.email);
-        Alert.alert('Connecté ✓', `Compte Google : ${tokens.email}`);
-      } catch (e: any) {
-        Alert.alert('Erreur', e.message ?? 'Connexion échouée');
-      } finally {
-        setGoogleBusy(false);
-      }
-    })();
-  }, [response]);
-
-  async function getValidGoogleToken(): Promise<string> {
-    if (!settings?.google_refresh_token) throw new Error('Non connecté à Google');
-    if (!isTokenExpired(settings.google_token_expiry)) {
-      return settings.google_access_token!;
-    }
-    const refreshed = await refreshAccessToken(settings.google_refresh_token);
-    await saveGoogleTokens(
-      refreshed.accessToken,
-      settings.google_refresh_token,
-      refreshed.expiresAt,
-      settings.google_user_email ?? ''
-    );
-    return refreshed.accessToken;
-  }
-
-  async function handleGoogleBackup() {
-    try {
-      setGoogleBusy(true);
-      const token = await getValidGoogleToken();
-      await backupToGoogleDrive(token);
-      const now = new Date().toISOString();
-      await saveGoogleLastBackupAt(now);
-      Alert.alert('Backup effectué ✓', 'La base de données est sauvegardée sur Google Drive.');
-    } catch (e: any) {
-      Alert.alert('Erreur', e.message ?? 'Backup échoué');
-    } finally {
-      setGoogleBusy(false);
-    }
-  }
 
   function todayStr() {
     return new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -351,26 +275,27 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        {/* Section: Backup iCloud */}
-        <Text style={styles.sectionTitle}>BACKUP ICLOUD</Text>
+        {/* Section: Sauvegarde */}
+        <Text style={styles.sectionTitle}>SAUVEGARDE</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Backup iCloud activé</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Backup automatique</Text>
+              <Text style={styles.rowSub}>
+                Sauvegarde locale, incluse dans la sauvegarde iCloud de l'iPhone
+              </Text>
+            </View>
             <Switch
               testID="toggle-icloud-backup"
               value={settings?.icloud_backup ?? false}
-              onValueChange={async (v) => {
-                await saveIcloudBackup(v);
-              }}
+              onValueChange={saveIcloudBackup}
               trackColor={{ true: primary }}
             />
           </View>
 
           {settings?.icloud_backup && (
             <>
-              <Text style={styles.rowSub}>
-                Fréquence
-              </Text>
+              <Text style={[styles.rowSub, { marginTop: 8 }]}>Fréquence automatique</Text>
               <View style={styles.intervalRow}>
                 {[1, 3, 7, 30].map(d => (
                   <TouchableOpacity
@@ -386,7 +311,7 @@ export default function SettingsScreen() {
                       styles.intervalText,
                       settings.backup_interval === d && { color: 'white' },
                     ]}>
-                      {d}j
+                      {d === 30 ? '1 mois' : `${d}j`}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -405,44 +330,57 @@ export default function SettingsScreen() {
                   try {
                     const date = await backupToIcloud();
                     await saveLastBackupAt(date);
-                    Alert.alert('Backup effectué ✓', 'Tes données sont sauvegardées sur iCloud.');
-                  } catch {
-                    Alert.alert('Erreur', 'Impossible de sauvegarder sur iCloud.');
+                    Alert.alert('Backup effectué ✓', 'Sauvegarde créée sur cet iPhone.');
+                  } catch (e: any) {
+                    Alert.alert('Erreur', e.message ?? 'Impossible de sauvegarder.');
                   }
                 }}
               >
-                <Text style={[styles.actionBtnText, { color: primary }]}>Backup maintenant</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                testID="restore-btn"
-                style={[styles.actionBtn, { borderColor: '#C09070' }]}
-                onPress={() => {
-                  Alert.alert(
-                    'Restaurer depuis iCloud',
-                    'Cela remplacera toutes tes données actuelles. Continuer ?',
-                    [
-                      { text: 'Annuler', style: 'cancel' },
-                      {
-                        text: 'Restaurer',
-                        style: 'destructive',
-                        onPress: async () => {
-                          try {
-                            await restoreFromIcloud();
-                            Alert.alert('Restauré ✓', 'Redémarre l\'app pour voir tes données.');
-                          } catch {
-                            Alert.alert('Erreur', 'Impossible de restaurer depuis iCloud.');
-                          }
-                        },
-                      },
-                    ]
-                  );
-                }}
-              >
-                <Text style={[styles.actionBtnText, { color: '#C09070' }]}>Restaurer depuis iCloud</Text>
+                <Text style={[styles.actionBtnText, { color: primary }]}>Sauvegarder maintenant</Text>
               </TouchableOpacity>
             </>
           )}
+
+          <TouchableOpacity
+            testID="export-backup-btn"
+            style={[styles.actionBtn, { borderColor: '#0EA5E9', marginTop: settings?.icloud_backup ? 0 : 8 }]}
+            onPress={async () => {
+              try {
+                await exportBackup();
+              } catch (e: any) {
+                Alert.alert('Erreur', e.message ?? 'Export impossible.');
+              }
+            }}
+          >
+            <Text style={[styles.actionBtnText, { color: '#0EA5E9' }]}>Exporter la sauvegarde…</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            testID="restore-btn"
+            style={[styles.actionBtn, { borderColor: '#C09070' }]}
+            onPress={() => {
+              Alert.alert(
+                'Restaurer depuis un fichier',
+                'Toutes les données actuelles seront remplacées. Tu devras redémarrer l\'app ensuite.',
+                [
+                  { text: 'Annuler', style: 'cancel' },
+                  {
+                    text: 'Choisir un fichier',
+                    onPress: async () => {
+                      try {
+                        await restoreFromIcloud();
+                        Alert.alert('Restauré ✓', 'Ferme et rouvre l\'app pour voir tes données.');
+                      } catch (e: any) {
+                        Alert.alert('Erreur', e.message ?? 'Restauration impossible.');
+                      }
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <Text style={[styles.actionBtnText, { color: '#C09070' }]}>Restaurer depuis un fichier…</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Section: Export PDF */}
@@ -502,55 +440,6 @@ export default function SettingsScreen() {
           >
             <Text style={[styles.actionBtnText, { color: primary }]}>📄 Exporter cette période</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* Section: Google Drive */}
-        <Text style={styles.sectionTitle}>Sauvegarde Google Drive</Text>
-        <View style={styles.card}>
-          {settings?.google_user_email ? (
-            <>
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>☁️ {settings.google_user_email}</Text>
-                <TouchableOpacity onPress={() => {
-                  Alert.alert('Se déconnecter ?', 'Les données locales ne seront pas supprimées.', [
-                    { text: 'Annuler', style: 'cancel' },
-                    { text: 'Déconnecter', style: 'destructive', onPress: clearGoogleAuth },
-                  ]);
-                }}>
-                  <Text style={styles.disconnectText}>Déconnecter</Text>
-                </TouchableOpacity>
-              </View>
-              {settings.google_last_backup_at && (
-                <Text style={styles.rowSub}>
-                  Dernier backup : {new Date(settings.google_last_backup_at).toLocaleString('fr-FR')}
-                </Text>
-              )}
-              <TouchableOpacity
-                style={[styles.actionBtn, { borderColor: '#4285F4', opacity: googleBusy ? 0.6 : 1 }]}
-                onPress={handleGoogleBackup}
-                disabled={googleBusy}
-              >
-                <Text style={[styles.actionBtnText, { color: '#4285F4' }]}>
-                  {googleBusy ? 'Sauvegarde en cours…' : '☁️ Sauvegarder maintenant'}
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              <Text style={styles.rowSub}>
-                Sauvegarde automatique de la base de données vers ton Google Drive.
-              </Text>
-              <TouchableOpacity
-                style={[styles.actionBtn, { borderColor: '#4285F4', opacity: (!request || googleBusy) ? 0.6 : 1 }]}
-                onPress={() => promptAsync()}
-                disabled={!request || googleBusy}
-              >
-                <Text style={[styles.actionBtnText, { color: '#4285F4' }]}>
-                  🔑 Se connecter à Google
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
         </View>
 
         {/* Section: Zone danger */}
@@ -681,7 +570,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   privacyText: { fontSize: 13, color: '#C09070', fontWeight: '600' },
-  disconnectText: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

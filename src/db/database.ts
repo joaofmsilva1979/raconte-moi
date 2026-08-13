@@ -121,6 +121,13 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
   } catch {}
 }
 
+export async function closeAndResetDatabase(): Promise<void> {
+  if (db) {
+    await db.closeAsync();
+    db = null;
+  }
+}
+
 export async function resetAllData(): Promise<void> {
   const database = await getDatabase();
   await database.execAsync(`
