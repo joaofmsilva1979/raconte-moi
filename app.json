@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "Notes patate",
-    "slug": "les-notes-de-patate",
+    "name": "Raconte-moi",
+    "slug": "raconte-moi",
     "version": "1.0.0",
     "icon": "./assets/icon.png",
     "orientation": "portrait",
-    "scheme": "lesnotesdepatate",
+    "scheme": "racontemoi",
     "platforms": ["ios"],
     "ios": {
-      "bundleIdentifier": "app.notespatate",
+      "bundleIdentifier": "app.racontemoi",
       "supportsTablet": false,
       "infoPlist": {
-        "CFBundleDisplayName": "Notes patate",
-        "CFBundleName": "Notes patate",
-        "NSSpeechRecognitionUsageDescription": "Notes patate utilise la reconnaissance vocale pour transcrire ce que tu as mangé."
+        "CFBundleDisplayName": "Raconte-moi",
+        "CFBundleName": "Raconte-moi",
+        "NSSpeechRecognitionUsageDescription": "Raconte-moi utilise la reconnaissance vocale pour transcrire ce que tu dis."
       }
     },
     "plugins": [
@@ -29,7 +29,7 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Les notes de patate a besoin de ton micro pour enregistrer ce que tu as mangé."
+          "microphonePermission": "Raconte-moi a besoin de ton micro pour enregistrer ce que tu dis."
         }
       ],
       "@react-native-voice/voice",

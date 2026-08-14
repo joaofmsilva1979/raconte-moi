@@ -26,7 +26,7 @@ export default function WelcomeScreen() {
 
       <View style={styles.content}>
         <Image source={require('@/assets/logo.png')} style={styles.logo} />
-        <Text style={styles.title}>Les notes de patate</Text>
+        <Text style={styles.title}>Raconte-moi</Text>
         <Text style={styles.subtitle}>
           Ton journal alimentaire vocal, privé et simple.
         </Text>

@@ -179,10 +179,10 @@ export function generateJournalHtml(
   </style>
 </head>
 <body>
-  <h1>🥔 Les notes de patate</h1>
+  <h1>Raconte-moi</h1>
   <p style="color:#C09070; font-size:13px;">${firstName} — Bilan : ${periodLabel}</p>
   ${groupedHtml}
-  <div class="footer">Généré le ${exportDate} — Les notes de patate (iOS) · Usage médical confidentiel</div>
+  <div class="footer">Généré le ${exportDate} — Raconte-moi (iOS) · Usage médical confidentiel</div>
 </body>
 </html>`;
 }
