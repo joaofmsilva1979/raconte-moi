@@ -69,3 +69,8 @@ export async function getComfortAidLogsForDay(dateStr: string): Promise<ComfortA
     [dateStr]
   );
 }
+
+export async function deleteComfortAidLog(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync('DELETE FROM comfort_aid_logs WHERE id = ?', [id]);
+}

@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useColorTheme } from '@/hooks/useColorTheme';
-import { useTrends, DayScore } from '@/hooks/useTrends';
+import { useTrends, DayScore, TrendsViewMode } from '@/hooks/useTrends';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const SLEEP_EMOJI: Record<number, string> = { 1: '😣', 2: '😐', 3: '😊' };
@@ -31,24 +31,47 @@ function formatDate(iso: string): string {
   return `${d}/${m}`;
 }
 
+const MONTH_NAMES = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
 function getDayLabel(iso: string): string {
   const d = new Date(iso + 'T12:00:00');
   return DAY_LABELS[d.getDay() === 0 ? 6 : d.getDay() - 1];
 }
 
-function DayBar({ day, isToday }: { day: DayScore; isToday: boolean }) {
-  const barHeight = Math.max(6, Math.round((day.score / 10) * BAR_MAX_HEIGHT));
+function getMonthLabel(from: string): string {
+  const [y, m] = from.split('-');
+  return `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
+}
+
+function DayBar({ day, isToday, compact = false }: { day: DayScore; isToday: boolean; compact?: boolean }) {
+  const maxH = compact ? 60 : BAR_MAX_HEIGHT;
+  const barHeight = Math.max(3, Math.round((day.score / 10) * maxH));
   const color = scoreColor(day.score);
   const hasData = day.sleepQuality !== null || day.painCount > 0 || day.activityMinutes > 0 || day.goodCount > 0;
 
+  if (compact) {
+    return (
+      <View style={styles.dayColCompact}>
+        <View style={[styles.barContainerCompact]}>
+          {hasData ? (
+            <View style={[styles.barCompact, { height: barHeight, backgroundColor: color }]}>
+              {day.painCount > 0 && <View style={styles.painDotCompact} />}
+            </View>
+          ) : (
+            <View style={[styles.barCompact, styles.barEmpty, { height: 3 }]} />
+          )}
+        </View>
+        {isToday && <View style={styles.todayDot} />}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.dayCol}>
-      {/* Emoji sommeil au-dessus */}
       <Text style={styles.sleepEmoji}>
         {day.sleepQuality ? SLEEP_EMOJI[day.sleepQuality] : ' '}
       </Text>
 
-      {/* Barre */}
       <View style={styles.barContainer}>
         {hasData ? (
           <View style={[styles.bar, { height: barHeight, backgroundColor: color }]}>
@@ -59,12 +82,10 @@ function DayBar({ day, isToday }: { day: DayScore; isToday: boolean }) {
         )}
       </View>
 
-      {/* Score */}
       <Text style={[styles.scoreLabel, { color: hasData ? color : '#D1D5DB' }]}>
         {hasData ? day.score : '—'}
       </Text>
 
-      {/* Libellé jour */}
       <View style={[styles.dayLabelBox, isToday && styles.dayLabelBoxToday]}>
         <Text style={[styles.dayLabel, isToday && styles.dayLabelToday]}>
           {getDayLabel(day.date)}
@@ -75,14 +96,21 @@ function DayBar({ day, isToday }: { day: DayScore; isToday: boolean }) {
   );
 }
 
+const MODE_OPTS: { id: TrendsViewMode; label: string }[] = [
+  { id: 'week', label: 'Semaine' },
+  { id: 'month', label: 'Mois' },
+];
+
 export default function TrendsScreen() {
   const router = useRouter();
   const { primary } = useColorTheme();
-  const { days, loading, from, to, goBack, goForward, isCurrentWeek, avgScore } = useTrends();
+  const { days, loading, from, to, goBack, goForward, isCurrentPeriod, avgScore, viewMode, switchMode } = useTrends();
 
   const today = new Date().toISOString().slice(0, 10);
   const fromFmt = formatDate(from);
   const toFmt = formatDate(to);
+  const periodLabel = viewMode === 'month' ? getMonthLabel(from) : `${fromFmt} → ${toFmt}`;
+  const currentLabel = viewMode === 'month' ? 'Ce mois' : 'Cette semaine';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -97,19 +125,35 @@ export default function TrendsScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-        {/* Navigation semaine */}
+        {/* Mode toggle */}
+        <View style={styles.modeToggle}>
+          {MODE_OPTS.map(opt => (
+            <TouchableOpacity
+              key={opt.id}
+              style={[styles.modeChip, viewMode === opt.id && styles.modeChipActive]}
+              onPress={() => switchMode(opt.id)}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.modeChipText, viewMode === opt.id && styles.modeChipTextActive]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Navigation période */}
         <View style={styles.weekNav}>
           <TouchableOpacity onPress={goBack} style={styles.navBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text style={styles.navArrow}>‹</Text>
           </TouchableOpacity>
           <View style={styles.weekLabelBox}>
-            <Text style={styles.weekLabel}>{fromFmt} → {toFmt}</Text>
-            {isCurrentWeek && <Text style={styles.weekSub}>Cette semaine</Text>}
+            <Text style={styles.weekLabel}>{periodLabel}</Text>
+            {isCurrentPeriod && <Text style={styles.weekSub}>{currentLabel}</Text>}
           </View>
           <TouchableOpacity
             onPress={goForward}
-            style={[styles.navBtn, isCurrentWeek && { opacity: 0.25 }]}
-            disabled={isCurrentWeek}
+            style={[styles.navBtn, isCurrentPeriod && { opacity: 0.25 }]}
+            disabled={isCurrentPeriod}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Text style={styles.navArrow}>›</Text>
@@ -129,6 +173,19 @@ export default function TrendsScreen() {
         {/* Graphique */}
         {loading ? (
           <ActivityIndicator style={{ marginTop: 48 }} color={primary} />
+        ) : viewMode === 'month' ? (
+          <View style={styles.chartCard}>
+            <View style={styles.chartMonth}>
+              {days.map(day => (
+                <DayBar key={day.date} day={day} isToday={day.date === today} compact />
+              ))}
+            </View>
+            <View style={styles.inlineLegend}>
+              <Text style={styles.legendChip}>🔴 douleur</Text>
+              <Text style={styles.legendSep}>·</Text>
+              <Text style={styles.legendChip}>• aujourd'hui</Text>
+            </View>
+          </View>
         ) : (
           <View style={styles.chartCard}>
             <View style={styles.chart}>
@@ -195,6 +252,17 @@ const styles = StyleSheet.create({
 
   content: { padding: 20, paddingBottom: 56, gap: 16 },
 
+  modeToggle: {
+    flexDirection: 'row', backgroundColor: '#F3EEF8',
+    borderRadius: 12, padding: 3, alignSelf: 'center',
+  },
+  modeChip: {
+    paddingHorizontal: 20, paddingVertical: 8, borderRadius: 10,
+  },
+  modeChipActive: { backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
+  modeChipText: { fontSize: 14, fontWeight: '600', color: '#9CA3AF' },
+  modeChipTextActive: { color: '#6D28D9' },
+
   weekNav: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
@@ -225,17 +293,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'flex-end',
     justifyContent: 'space-between', height: BAR_MAX_HEIGHT + 80,
   },
+  chartMonth: {
+    flexDirection: 'row', alignItems: 'flex-end',
+    justifyContent: 'space-between', height: 80,
+  },
 
   dayCol: { flex: 1, alignItems: 'center', gap: 4 },
+  dayColCompact: { flex: 1, alignItems: 'center', gap: 2 },
   sleepEmoji: { fontSize: 13, height: 18, textAlign: 'center' },
   barContainer: {
     flex: 1, justifyContent: 'flex-end', alignItems: 'center', width: '100%',
   },
+  barContainerCompact: {
+    height: 60, justifyContent: 'flex-end', alignItems: 'center', width: '100%',
+  },
   bar: { width: '65%', borderRadius: 6, overflow: 'hidden', alignItems: 'center' },
+  barCompact: { width: '70%', borderRadius: 3, overflow: 'hidden', alignItems: 'center' },
   barEmpty: { backgroundColor: '#F3F4F6' },
   painDot: {
     width: 5, height: 5, borderRadius: 3,
     backgroundColor: 'white', position: 'absolute', top: 5,
+  },
+  painDotCompact: {
+    width: 3, height: 3, borderRadius: 2,
+    backgroundColor: 'white', position: 'absolute', top: 3,
+  },
+  todayDot: {
+    width: 4, height: 4, borderRadius: 2,
+    backgroundColor: '#6D28D9', marginTop: 2,
   },
   scoreLabel: { fontSize: 12, fontWeight: '800', letterSpacing: -0.3 },
   dayLabelBox: {

@@ -56,3 +56,8 @@ export async function updateRessenti(
     [params.sub_category, params.note, id]
   );
 }
+
+export async function deleteRessenti(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync('DELETE FROM ressentis WHERE id = ?', [id]);
+}

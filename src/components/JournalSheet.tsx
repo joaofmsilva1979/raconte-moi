@@ -12,6 +12,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useJournalStore } from '@/store/journalStore';
@@ -60,6 +61,11 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     goToPreviousDay,
     goToNextDay,
     refreshCurrentDay,
+    deleteRessentiLog,
+    deleteActivityLog,
+    deleteMedLog,
+    deleteAidLog,
+    deleteSleep,
   } = useJournalStore();
 
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
@@ -118,6 +124,13 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     setEditingRessenti(ressenti);
     setEditRessentiNote(ressenti.note ?? '');
     setEditRessentiSub(ressenti.sub_category ?? null);
+  }
+
+  function confirmDelete(label: string, onConfirm: () => void) {
+    Alert.alert('Supprimer ?', `Supprimer ${label} définitivement ?`, [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Supprimer', style: 'destructive', onPress: onConfirm },
+    ]);
   }
 
   async function handleSaveRessentiEdit() {
@@ -217,6 +230,11 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
           comfortAidLogs={comfortAidLogs}
           onEditEntry={handleEditEntry}
           onEditRessenti={handleEditRessenti}
+          onDeleteRessenti={(id) => confirmDelete('ce ressenti', () => deleteRessentiLog(id))}
+          onDeleteActivity={(id) => confirmDelete('cette activité', () => deleteActivityLog(id))}
+          onDeleteMed={(id) => confirmDelete('ce médicament', () => deleteMedLog(id))}
+          onDeleteAid={(id) => confirmDelete('cet accessoire', () => deleteAidLog(id))}
+          onDeleteSleep={() => sleepLog && confirmDelete('le log de sommeil', () => deleteSleep(sleepLog.id))}
         />
       </ScrollView>
 

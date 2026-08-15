@@ -97,9 +97,9 @@ export const useMedicationStore = create<MedicationState & MedicationActions>((s
     await logMedication({
       medication_id: selectedMedicationId,
       timing,
-      meal_type: mealType,
-      efficacy,
-      note: note.trim() || null,
+      meal_type: mealType ?? undefined,
+      efficacy: efficacy ?? undefined,
+      note: note.trim() || undefined,
       recorded_at: recordedAt,
     });
     set({

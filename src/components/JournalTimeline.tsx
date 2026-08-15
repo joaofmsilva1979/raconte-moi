@@ -24,6 +24,11 @@ interface JournalTimelineProps {
   comfortAidLogs?: ComfortAidLog[];
   onEditEntry?: (entry: Entry) => void;
   onEditRessenti?: (ressenti: Ressenti) => void;
+  onDeleteRessenti?: (id: number) => void;
+  onDeleteActivity?: (id: number) => void;
+  onDeleteMed?: (id: number) => void;
+  onDeleteAid?: (id: number) => void;
+  onDeleteSleep?: () => void;
 }
 
 type TimelineItem =
@@ -78,7 +83,7 @@ const SLEEP_COLOR: Record<number, string> = { 1: '#FEE2E2', 2: '#FEF9C3', 3: '#D
 const SLEEP_BORDER: Record<number, string> = { 1: '#FCA5A5', 2: '#FDE047', 3: '#86EFAC' };
 const SLEEP_TEXT: Record<number, string>  = { 1: '#991B1B', 2: '#854D0E', 3: '#166534' };
 
-function RessentisCard({ ressenti, onEdit, standalone }: { ressenti: Ressenti; onEdit?: (r: Ressenti) => void; standalone?: boolean }) {
+function RessentisCard({ ressenti, onEdit, onDelete, standalone }: { ressenti: Ressenti; onEdit?: (r: Ressenti) => void; onDelete?: (id: number) => void; standalone?: boolean }) {
   const label = RESSENTI_LABELS[ressenti.category];
   const icon = RESSENTI_ICONS[ressenti.category];
   const subLabel = ressenti.sub_category
@@ -94,6 +99,8 @@ function RessentisCard({ ressenti, onEdit, standalone }: { ressenti: Ressenti; o
       style={styles.ressentisCard}
       testID={`ressenti-card-${ressenti.id}`}
       onPress={() => onEdit?.(ressenti)}
+      onLongPress={() => onDelete?.(ressenti.id)}
+      delayLongPress={600}
       activeOpacity={onEdit ? 0.7 : 1}
     >
       <View style={styles.ressentiHeader}>
@@ -109,6 +116,7 @@ function RessentisCard({ ressenti, onEdit, standalone }: { ressenti: Ressenti; o
 export function JournalTimeline({
   entries, slots, primaryColor, ressentis = [], activities = [],
   sleepLog, medicationLogs = [], comfortAidLogs = [], onEditEntry, onEditRessenti,
+  onDeleteRessenti, onDeleteActivity, onDeleteMed, onDeleteAid, onDeleteSleep,
 }: JournalTimelineProps) {
   const morningRessentis = ressentis.filter(r => r.context === 'morning');
   const morningAids = comfortAidLogs.filter(a => a.meal_type === 'morning');
@@ -125,14 +133,20 @@ export function JournalTimeline({
 
       {/* Qualité de sommeil */}
       {sleepLog && (
-        <View style={[styles.sleepBanner, {
-          backgroundColor: SLEEP_COLOR[sleepLog.quality],
-          borderColor: SLEEP_BORDER[sleepLog.quality],
-        }]}>
+        <TouchableOpacity
+          onLongPress={onDeleteSleep}
+          delayLongPress={600}
+          activeOpacity={0.85}
+          style={[styles.sleepBanner, {
+            backgroundColor: SLEEP_COLOR[sleepLog.quality],
+            borderColor: SLEEP_BORDER[sleepLog.quality],
+          }]}
+        >
           <Text style={[styles.sleepText, { color: SLEEP_TEXT[sleepLog.quality] }]}>
             🌙 {SLEEP_LABEL[sleepLog.quality]}
           </Text>
-        </View>
+          {onDeleteSleep && <Text style={styles.longPressHint}>maintenir pour supprimer</Text>}
+        </TouchableOpacity>
       )}
 
       {/* Ressentis + accessoires du réveil — toujours en haut, avant les repas */}
@@ -148,11 +162,11 @@ export function JournalTimeline({
               <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
             ))}
             {morningAids.map((a) => (
-              <View key={`morning-aid-${a.id}`} style={styles.aidCard}>
+              <TouchableOpacity key={`morning-aid-${a.id}`} style={styles.aidCard} onLongPress={() => onDeleteAid?.(a.id)} delayLongPress={600} activeOpacity={0.85}>
                 <Text style={styles.aidTime}>🩹 {formatTime(a.recorded_at)}</Text>
                 <Text style={styles.aidName}>{a.comfort_aid_name ?? '—'}</Text>
                 {a.note ? <Text style={styles.aidNote}>"{a.note}"</Text> : null}
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -170,7 +184,7 @@ export function JournalTimeline({
                 {!isLast && <View style={[styles.line, { backgroundColor: '#8B5CF640' }]} />}
               </View>
               <View style={styles.content}>
-                <RessentisCard ressenti={item.ressenti} onEdit={onEditRessenti} standalone />
+                <RessentisCard ressenti={item.ressenti} onEdit={onEditRessenti} onDelete={onDeleteRessenti} standalone />
               </View>
             </View>
           );
@@ -185,7 +199,12 @@ export function JournalTimeline({
                 {!isLast && <View style={[styles.line, { backgroundColor: '#0369A140' }]} />}
               </View>
               <View style={styles.content}>
-                <View style={styles.medCard}>
+                <TouchableOpacity
+                  style={styles.medCard}
+                  onLongPress={() => onDeleteMed?.(m.id)}
+                  delayLongPress={600}
+                  activeOpacity={0.85}
+                >
                   <Text style={styles.medTime}>💊 {formatTime(m.recorded_at)}</Text>
                   <Text style={styles.medName}>{m.medication_name ?? '—'}</Text>
                   <Text style={styles.medSub}>
@@ -193,7 +212,7 @@ export function JournalTimeline({
                     {m.efficacy != null ? `  ·  effet ${EFFICACY_ICON[m.efficacy]}` : ''}
                   </Text>
                   {m.note ? <Text style={styles.medNote}>"{m.note}"</Text> : null}
-                </View>
+                </TouchableOpacity>
               </View>
             </View>
           );
@@ -208,11 +227,16 @@ export function JournalTimeline({
                 {!isLast && <View style={[styles.line, { backgroundColor: '#0EA5E940' }]} />}
               </View>
               <View style={styles.content}>
-                <View style={styles.aidCard}>
+                <TouchableOpacity
+                  style={styles.aidCard}
+                  onLongPress={() => onDeleteAid?.(a.id)}
+                  delayLongPress={600}
+                  activeOpacity={0.85}
+                >
                   <Text style={styles.aidTime}>🩹 {formatTime(a.recorded_at)}</Text>
                   <Text style={styles.aidName}>{a.comfort_aid_name ?? '—'}</Text>
                   {a.note ? <Text style={styles.aidNote}>"{a.note}"</Text> : null}
-                </View>
+                </TouchableOpacity>
               </View>
             </View>
           );
@@ -228,12 +252,12 @@ export function JournalTimeline({
             <View style={styles.content}>
               <Text style={styles.slotLabel}>{slot.icon} {slot.label}</Text>
               {slotMeds.filter(m => m.timing === 'before').map(m => (
-                <View key={`med-before-${m.id}`} style={styles.medCard}>
+                <TouchableOpacity key={`med-before-${m.id}`} style={styles.medCard} onLongPress={() => onDeleteMed?.(m.id)} delayLongPress={600} activeOpacity={0.85}>
                   <Text style={styles.medTime}>💊 {formatTime(m.recorded_at)} · avant</Text>
                   <Text style={styles.medName}>{m.medication_name ?? '—'}</Text>
                   {m.efficacy != null && <Text style={styles.medSub}>effet {EFFICACY_ICON[m.efficacy]}</Text>}
                   {m.note ? <Text style={styles.medNote}>"{m.note}"</Text> : null}
-                </View>
+                </TouchableOpacity>
               ))}
               {slotEntries.length > 0 ? (
                 slotEntries.map((entry) => (
@@ -260,22 +284,22 @@ export function JournalTimeline({
                 </View>
               )}
               {slotMeds.filter(m => m.timing !== 'before').map(m => (
-                <View key={`med-after-${m.id}`} style={styles.medCard}>
+                <TouchableOpacity key={`med-after-${m.id}`} style={styles.medCard} onLongPress={() => onDeleteMed?.(m.id)} delayLongPress={600} activeOpacity={0.85}>
                   <Text style={styles.medTime}>💊 {formatTime(m.recorded_at)} · {TIMING_LABEL[m.timing] ?? m.timing}</Text>
                   <Text style={styles.medName}>{m.medication_name ?? '—'}</Text>
                   {m.efficacy != null && <Text style={styles.medSub}>effet {EFFICACY_ICON[m.efficacy]}</Text>}
                   {m.note ? <Text style={styles.medNote}>"{m.note}"</Text> : null}
-                </View>
+                </TouchableOpacity>
               ))}
               {slotRessentis.map((r) => (
-                <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} />
+                <RessentisCard key={r.id} ressenti={r} onEdit={onEditRessenti} onDelete={onDeleteRessenti} />
               ))}
               {slotAids.map((a) => (
-                <View key={`slot-aid-${a.id}`} style={styles.aidCard}>
+                <TouchableOpacity key={`slot-aid-${a.id}`} style={styles.aidCard} onLongPress={() => onDeleteAid?.(a.id)} delayLongPress={600} activeOpacity={0.85}>
                   <Text style={styles.aidTime}>🩹 {formatTime(a.recorded_at)}</Text>
                   <Text style={styles.aidName}>{a.comfort_aid_name ?? '—'}</Text>
                   {a.note ? <Text style={styles.aidNote}>"{a.note}"</Text> : null}
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
@@ -291,13 +315,13 @@ export function JournalTimeline({
           <View style={styles.content}>
             <Text style={styles.slotLabel}>🏃 Activité physique</Text>
             {activities.map((activity) => (
-              <View key={activity.id} style={styles.activityCard} testID={`activity-card-${activity.id}`}>
+              <TouchableOpacity key={activity.id} style={styles.activityCard} testID={`activity-card-${activity.id}`} onLongPress={() => onDeleteActivity?.(activity.id)} delayLongPress={600} activeOpacity={0.85}>
                 <Text style={styles.activityTime}>{formatTime(activity.recorded_at)}</Text>
                 <Text style={styles.activityText}>
                   {ACTIVITY_ICONS[activity.activity_type]} {ACTIVITY_LABELS[activity.activity_type]} · {activity.duration_minutes}min
                 </Text>
                 {activity.note ? <Text style={styles.activityNote}>"{activity.note}"</Text> : null}
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -369,4 +393,5 @@ const styles = StyleSheet.create({
   aidTime: { fontSize: 11, fontWeight: '700', color: '#0EA5E9', marginBottom: 2, letterSpacing: 0.1 },
   aidName: { fontSize: 13, color: '#0C4A6E', fontWeight: '600', lineHeight: 18 },
   aidNote: { fontSize: 12, color: '#0EA5E9', fontStyle: 'italic', marginTop: 4 },
+  longPressHint: { fontSize: 10, color: '#9CA3AF', marginTop: 2, fontStyle: 'italic' },
 });

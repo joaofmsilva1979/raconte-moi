@@ -103,7 +103,6 @@ export default function ProNoteDetailScreen() {
             onChangeText={v => { setEditTitle(v); setDirty(true); }}
             placeholder="Titre"
             placeholderTextColor="#C09070"
-            fontWeight="700"
           />
           <TextInput
             style={[styles.contentInput, { borderColor: primary }]}

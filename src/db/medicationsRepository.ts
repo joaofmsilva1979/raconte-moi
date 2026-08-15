@@ -91,3 +91,8 @@ export async function getMedicationLogsForDay(dateStr: string): Promise<Medicati
     [dateStr]
   );
 }
+
+export async function deleteMedicationLog(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync('DELETE FROM medication_logs WHERE id = ?', [id]);
+}

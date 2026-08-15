@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { Entry, Ressenti, Activity, SleepLog, MedicationLog, ComfortAidLog } from '@/types';
 import { getEntriesForDay } from '@/db/entriesRepository';
-import { getRessentisForDay } from '@/db/ressentisRepository';
-import { getActivitiesForDay } from '@/db/activitiesRepository';
-import { getSleepForDay } from '@/db/sleepRepository';
-import { getMedicationLogsForDay } from '@/db/medicationsRepository';
-import { getComfortAidLogsForDay } from '@/db/comfortAidsRepository';
+import { getRessentisForDay, deleteRessenti } from '@/db/ressentisRepository';
+import { getActivitiesForDay, deleteActivity } from '@/db/activitiesRepository';
+import { getSleepForDay, deleteSleepLog } from '@/db/sleepRepository';
+import { getMedicationLogsForDay, deleteMedicationLog } from '@/db/medicationsRepository';
+import { getComfortAidLogsForDay, deleteComfortAidLog } from '@/db/comfortAidsRepository';
 import { formatDate, addDays } from '@/utils/dateUtils';
 
 interface JournalState {
@@ -27,6 +27,11 @@ interface JournalActions {
   goToPreviousDay: () => Promise<void>;
   goToNextDay: () => Promise<void>;
   refreshCurrentDay: () => Promise<void>;
+  deleteRessentiLog: (id: number) => Promise<void>;
+  deleteActivityLog: (id: number) => Promise<void>;
+  deleteMedLog: (id: number) => Promise<void>;
+  deleteAidLog: (id: number) => Promise<void>;
+  deleteSleep: (id: number) => Promise<void>;
 }
 
 export const useJournalStore = create<JournalState & JournalActions>((set, get) => ({
@@ -80,5 +85,30 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
 
   refreshCurrentDay: async () => {
     await get().loadDay(get().viewedDate);
+  },
+
+  deleteRessentiLog: async (id) => {
+    await deleteRessenti(id);
+    await get().refreshCurrentDay();
+  },
+
+  deleteActivityLog: async (id) => {
+    await deleteActivity(id);
+    await get().refreshCurrentDay();
+  },
+
+  deleteMedLog: async (id) => {
+    await deleteMedicationLog(id);
+    await get().refreshCurrentDay();
+  },
+
+  deleteAidLog: async (id) => {
+    await deleteComfortAidLog(id);
+    await get().refreshCurrentDay();
+  },
+
+  deleteSleep: async (id) => {
+    await deleteSleepLog(id);
+    await get().refreshCurrentDay();
   },
 }));

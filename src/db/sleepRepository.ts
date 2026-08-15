@@ -29,3 +29,8 @@ export async function getSleepForDateRange(fromDate: string, toDate: string): Pr
     [fromDate, toDate]
   );
 }
+
+export async function deleteSleepLog(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync('DELETE FROM sleep_logs WHERE id = ?', [id]);
+}

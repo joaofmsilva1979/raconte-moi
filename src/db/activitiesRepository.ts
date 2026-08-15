@@ -45,3 +45,8 @@ export async function getTodayTotalMinutes(): Promise<number> {
   );
   return result?.total ?? 0;
 }
+
+export async function deleteActivity(id: number): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync('DELETE FROM activities WHERE id = ?', [id]);
+}
