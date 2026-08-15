@@ -21,6 +21,9 @@ export function MicButton({ primaryColor, isRecording, onPressIn, onPressOut }: 
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         testID="mic-button"
+        accessibilityLabel={isRecording ? "Relâcher pour terminer l'enregistrement" : "Maintenir pour enregistrer"}
+        accessibilityRole="button"
+        accessibilityHint={isRecording ? undefined : "Maintiens appuyé et parle"}
         style={[styles.button, { backgroundColor: activeColor, shadowColor: activeColor }]}
       >
         <Text style={styles.icon}>{isRecording ? '⏹' : '🎙'}</Text>

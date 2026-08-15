@@ -30,6 +30,7 @@ export default function HomeScreen() {
     recordedAt,
     startRecording,
     stopRecording,
+    error: recordingError,
   } = useRecordingStore();
   const { openSheet, closeSheet, refreshCurrentDay } = useJournalStore();
   const { openSheet: openRessentisSheet } = useRessentisStore();
@@ -83,12 +84,16 @@ export default function HomeScreen() {
     >
       {/* Top bar: trends icon */}
       <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={() => router.push('/settings')}
-          style={styles.topIconBtn}
-        >
-          <Text style={styles.topIconText}>⚙️</Text>
-        </TouchableOpacity>
+        <View style={styles.topLeft}>
+          <TouchableOpacity
+            onPress={() => router.push('/settings')}
+            style={[styles.topIconBtn, { backgroundColor: primary + '20' }]}
+            accessibilityLabel="Réglages"
+            accessibilityRole="button"
+          >
+            <Text style={styles.topIconText}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.greetingBlock}>
           <Text style={styles.greeting}>{greeting}</Text>
           <Text style={styles.greetingName}>{settings.first_name} ☀️</Text>
@@ -96,14 +101,18 @@ export default function HomeScreen() {
         <View style={styles.topBtns}>
           <TouchableOpacity
             onPress={() => router.push('/pro-notes')}
-            style={styles.topIconBtn}
+            style={[styles.topIconBtn, { backgroundColor: primary + '20' }]}
+            accessibilityLabel="Notes médicales"
+            accessibilityRole="button"
           >
             <Text style={styles.topIconText}>📋</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="trends-btn"
             onPress={() => router.push('/trends')}
-            style={styles.topIconBtn}
+            style={[styles.topIconBtn, { backgroundColor: primary + '20' }]}
+            accessibilityLabel="Tendances"
+            accessibilityRole="button"
           >
             <Text style={styles.topIconText}>📈</Text>
           </TouchableOpacity>
@@ -135,6 +144,10 @@ export default function HomeScreen() {
           <Text style={styles.processingText}>Reformulation en cours…</Text>
         )}
 
+        {recordingError && (
+          <Text style={styles.errorText}>⚠️ {recordingError}</Text>
+        )}
+
         <MicButton
           primaryColor={primary}
           isRecording={isRecording}
@@ -160,42 +173,52 @@ export default function HomeScreen() {
           <TouchableOpacity
             testID="add-ressenti-btn"
             onPress={openRessentisSheet}
-            style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]}
+            style={[styles.actionBtn, styles.actionBtnRessentis]}
             activeOpacity={0.82}
+            accessibilityLabel="Ajouter un ressenti"
+            accessibilityRole="button"
           >
-            <Text style={styles.actionBtnText}>💜 Ressentis</Text>
+            <Text style={[styles.actionBtnText, { color: '#7C3AED' }]}>💜 Ressentis</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="add-activity-btn"
             onPress={openActivitySheet}
-            style={[styles.actionBtn, { backgroundColor: '#16A34A' }]}
+            style={[styles.actionBtn, styles.actionBtnActivites]}
             activeOpacity={0.82}
+            accessibilityLabel="Ajouter une activité physique"
+            accessibilityRole="button"
           >
-            <Text style={styles.actionBtnText}>🏃 Activités</Text>
+            <Text style={[styles.actionBtnText, { color: '#16A34A' }]}>🏃 Activités</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.actionRow}>
           <TouchableOpacity
             testID="add-medication-btn"
             onPress={openMedicationSheet}
-            style={[styles.actionBtn, { backgroundColor: '#0369A1' }]}
+            style={[styles.actionBtn, styles.actionBtnMedicaments]}
             activeOpacity={0.82}
+            accessibilityLabel="Ajouter un médicament"
+            accessibilityRole="button"
           >
-            <Text style={styles.actionBtnText}>💊 Médicaments</Text>
+            <Text style={[styles.actionBtnText, { color: '#0369A1' }]}>💊 Médicaments</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="add-comfort-aid-btn"
             onPress={openComfortAidSheet}
-            style={[styles.actionBtn, { backgroundColor: '#0EA5E9' }]}
+            style={[styles.actionBtn, styles.actionBtnAccessoires]}
             activeOpacity={0.82}
+            accessibilityLabel="Ajouter un accessoire aidant"
+            accessibilityRole="button"
           >
-            <Text style={styles.actionBtnText}>🩹 Accessoires</Text>
+            <Text style={[styles.actionBtnText, { color: '#0284C7' }]}>🩹 Accessoires</Text>
           </TouchableOpacity>
         </View>
         <TouchableOpacity
           testID="open-journal-btn"
           onPress={openSheet}
-          style={[styles.journalOpener, { borderColor: primary + '60' }]}
+          style={[styles.journalOpener, { borderColor: primary + '40' }]}
+          accessibilityLabel="Ouvrir mon journal du jour"
+          accessibilityRole="button"
         >
           <Text style={[styles.journalOpenerText, { color: primary }]}>📖 Mon journal du jour</Text>
         </TouchableOpacity>
@@ -237,10 +260,10 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     marginTop: -4,
   },
-  topBtns: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  topLeft: { width: 80, alignItems: 'flex-start' },
+  topBtns: { flexDirection: 'row', gap: 8, marginTop: 4, width: 80, justifyContent: 'flex-end' },
   topIconBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#F5F0FF',
     alignItems: 'center', justifyContent: 'center',
   },
   topIconText: { fontSize: 16 },
@@ -282,6 +305,16 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     letterSpacing: 0.1,
   },
+  errorText: {
+    fontSize: 13,
+    color: '#DC2626',
+    textAlign: 'center',
+    backgroundColor: '#FEE2E2',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    width: '100%',
+  },
   hint: {
     fontSize: 15,
     color: '#9CA3AF',
@@ -290,15 +323,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   journalOpener: {
-    paddingVertical: 11,
+    paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 20,
     borderWidth: 1.5,
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
+    shadowColor: '#2D1A0E',
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
   },
   journalOpenerText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
   },
   actionRow: {
@@ -311,10 +348,14 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     borderRadius: 22,
     alignItems: 'center',
+    borderWidth: 1,
   },
+  actionBtnRessentis: { backgroundColor: '#F5F3FF', borderColor: '#DDD6FE' },
+  actionBtnActivites: { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' },
+  actionBtnMedicaments: { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' },
+  actionBtnAccessoires: { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' },
   actionBtnText: {
     fontSize: 15,
-    color: 'white',
     fontWeight: '700',
     letterSpacing: -0.2,
   },

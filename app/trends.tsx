@@ -134,7 +134,7 @@ export default function TrendsScreen() {
               onPress={() => switchMode(opt.id)}
               activeOpacity={0.75}
             >
-              <Text style={[styles.modeChipText, viewMode === opt.id && styles.modeChipTextActive]}>
+              <Text style={[styles.modeChipText, viewMode === opt.id && { color: primary }]}>
                 {opt.label}
               </Text>
             </TouchableOpacity>
@@ -143,8 +143,8 @@ export default function TrendsScreen() {
 
         {/* Navigation période */}
         <View style={styles.weekNav}>
-          <TouchableOpacity onPress={goBack} style={styles.navBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={styles.navArrow}>‹</Text>
+          <TouchableOpacity onPress={goBack} style={[styles.navBtn, { backgroundColor: primary + '18' }]} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={[styles.navArrow, { color: primary }]}>‹</Text>
           </TouchableOpacity>
           <View style={styles.weekLabelBox}>
             <Text style={styles.weekLabel}>{periodLabel}</Text>
@@ -152,11 +152,11 @@ export default function TrendsScreen() {
           </View>
           <TouchableOpacity
             onPress={goForward}
-            style={[styles.navBtn, isCurrentPeriod && { opacity: 0.25 }]}
+            style={[styles.navBtn, { backgroundColor: primary + '18' }, isCurrentPeriod && { opacity: 0.25 }]}
             disabled={isCurrentPeriod}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={styles.navArrow}>›</Text>
+            <Text style={[styles.navArrow, { color: primary }]}>›</Text>
           </TouchableOpacity>
         </View>
 
@@ -261,16 +261,15 @@ const styles = StyleSheet.create({
   },
   modeChipActive: { backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
   modeChipText: { fontSize: 14, fontWeight: '600', color: '#9CA3AF' },
-  modeChipTextActive: { color: '#6D28D9' },
 
   weekNav: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   navBtn: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: '#F5F0FF', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
-  navArrow: { fontSize: 24, color: '#6D28D9', fontWeight: '600', lineHeight: 28 },
+  navArrow: { fontSize: 24, fontWeight: '600', lineHeight: 28 },
   weekLabelBox: { alignItems: 'center', gap: 2 },
   weekLabel: { fontSize: 15, fontWeight: '700', color: '#1C0A00', letterSpacing: -0.3 },
   weekSub: { fontSize: 12, color: '#9CA3AF', fontWeight: '500' },

@@ -1,5 +1,19 @@
 {
   "enabledPlugins": {
     "expo@claude-plugins-official": true
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TIMESTAMP=$(date +\"%Y-%m-%d_%H%M\") && rsync -a --exclude='node_modules' --exclude='.expo' --exclude='ios/build' --exclude='ios/Pods' --exclude='.git' \"/Users/joao.silva/projects/les-notes-de-patate/\" \"/Users/joao.silva/Library/CloudStorage/GoogleDrive-davisthe8th@gmail.com/My Drive/CLAUDE_AI/APP_LESNOTESDEPATATE/backup_${TIMESTAMP}/\" 2>/dev/null || true",
+            "statusMessage": "Backup Raconte-moi → Google Drive...",
+            "async": true
+          }
+        ]
+      }
+    ]
   }
 }

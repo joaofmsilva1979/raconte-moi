@@ -38,6 +38,7 @@ export function MedicationSheet({ primaryColor }: Props) {
   const [newMedName, setNewMedName] = useState('');
   const [newMedDosage, setNewMedDosage] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [addError, setAddError] = useState(false);
 
   if (!isSheetOpen) return null;
 
@@ -45,7 +46,8 @@ export function MedicationSheet({ primaryColor }: Props) {
 
   async function handleAdd() {
     const name = newMedName.trim();
-    if (!name) return;
+    if (!name) { setAddError(true); return; }
+    setAddError(false);
     await addNewMedication(name, newMedDosage.trim() || undefined);
     setNewMedName('');
     setNewMedDosage('');
@@ -79,6 +81,9 @@ export function MedicationSheet({ primaryColor }: Props) {
 
             {/* Medication picker */}
             <Text style={styles.label}>Médicament pris</Text>
+            {medications.length === 0 && !showAdd && (
+              <Text style={styles.emptyHint}>Aucun médicament enregistré — ajoute-en un ci-dessous.</Text>
+            )}
             <View style={styles.chipRow}>
               {medications.map(med => {
                 const sel = selectedMedicationId === med.id;
@@ -105,12 +110,13 @@ export function MedicationSheet({ primaryColor }: Props) {
             {showAdd && (
               <View style={styles.addBox}>
                 <TextInput
-                  style={[styles.input, { borderColor: primaryColor }]}
+                  style={[styles.input, { borderColor: addError ? '#DC2626' : primaryColor }]}
                   placeholder="Nom du médicament"
                   placeholderTextColor="#C09070"
                   value={newMedName}
-                  onChangeText={setNewMedName}
+                  onChangeText={v => { setNewMedName(v); if (v.trim()) setAddError(false); }}
                 />
+                {addError && <Text style={styles.fieldError}>Le nom est obligatoire.</Text>}
                 <TextInput
                   style={[styles.input, { borderColor: primaryColor }]}
                   placeholder="Dosage (optionnel)"
@@ -244,6 +250,13 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, fontWeight: '600', color: '#5C3020' },
   chipTextSel: { color: 'white' },
   efficacyIcon: { fontSize: 22, marginBottom: 2 },
+  emptyHint: {
+    fontSize: 13, color: '#C09070', fontStyle: 'italic',
+    marginBottom: 10, lineHeight: 18,
+  },
+  fieldError: {
+    fontSize: 12, color: '#DC2626', marginTop: -4,
+  },
   addBox: { marginTop: 12, gap: 8 },
   input: {
     borderWidth: 1.5, borderRadius: 10,
