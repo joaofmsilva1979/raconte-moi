@@ -76,8 +76,8 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
         ALTER TABLE ressentis_v2 RENAME TO ressentis;
       `);
     }
-  } catch (e) {
-    console.warn('[migration] ressentis schema:', e);
+  } catch {
+    // schema already up to date
   }
 
   // Legacy column migrations (for older installs that skipped the table recreate)

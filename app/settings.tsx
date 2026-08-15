@@ -10,8 +10,9 @@ import {
   Alert,
   FlatList,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { COLOR_PALETTES } from '@/constants/colors';
@@ -29,7 +30,6 @@ import { useMedicationStore } from '@/store/medicationStore';
 import { useComfortAidStore } from '@/store/comfortAidStore';
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const {
     settings, mealSlots,
     saveFirstName, savePrimaryColor, saveMealSlot, saveNotificationSetting,
@@ -60,6 +60,8 @@ export default function SettingsScreen() {
 
   const [customFrom, setCustomFrom] = useState(() => daysAgoStr(7));
   const [customTo, setCustomTo] = useState(() => todayStr());
+  const [isExporting, setIsExporting] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   function parseFrDate(frDate: string): string | null {
     const parts = frDate.split('/');
@@ -73,20 +75,26 @@ export default function SettingsScreen() {
     const from = parseFrDate(fromFr);
     const to = parseFrDate(toFr);
     if (!from || !to) {
-      Alert.alert('Date invalide', 'Utilise le format JJ/MM/AAAA');
+      setDateError('Format invalide — utilise JJ/MM/AAAA');
       return;
     }
-    const [entries, ressentis, activities, sleepLogs] = await Promise.all([
-      getEntriesForDateRange(from, to),
-      getRessentisForDateRange(from, to),
-      getActivitiesForDateRange(from, to),
-      getSleepForDateRange(from, to),
-    ]);
-    if (entries.length === 0 && ressentis.length === 0 && activities.length === 0) {
-      Alert.alert('Aucune donnée', 'Pas de notes ou de ressentis sur cette période.');
-      return;
+    setDateError(null);
+    setIsExporting(true);
+    try {
+      const [entries, ressentis, activities, sleepLogs] = await Promise.all([
+        getEntriesForDateRange(from, to),
+        getRessentisForDateRange(from, to),
+        getActivitiesForDateRange(from, to),
+        getSleepForDateRange(from, to),
+      ]);
+      if (entries.length === 0 && ressentis.length === 0 && activities.length === 0) {
+        Alert.alert('Aucune donnée', 'Pas de notes ou de ressentis sur cette période.');
+        return;
+      }
+      await exportJournalAsPdf(entries, ressentis, settings?.first_name ?? '', label, primary, from, to, activities, sleepLogs);
+    } finally {
+      setIsExporting(false);
     }
-    await exportJournalAsPdf(entries, ressentis, settings?.first_name ?? '', label, primary, from, to, activities, sleepLogs);
   }
 
   function applyPreset(days: number) {
@@ -181,11 +189,6 @@ export default function SettingsScreen() {
           title: 'Réglages',
           headerShown: true,
           headerBackTitle: 'Accueil',
-          headerRight: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.closeButton}>Fermer</Text>
-            </TouchableOpacity>
-          ),
         }}
       />
       <ScrollView
@@ -343,8 +346,8 @@ export default function SettingsScreen() {
                     const date = await backupToIcloud();
                     await saveLastBackupAt(date);
                     Alert.alert('Backup effectué ✓', 'Sauvegarde créée sur cet iPhone.');
-                  } catch (e: any) {
-                    Alert.alert('Erreur', e.message ?? 'Impossible de sauvegarder.');
+                  } catch {
+                    Alert.alert('Erreur', 'Sauvegarde échouée. Réessaie plus tard.');
                   }
                 }}
               >
@@ -359,8 +362,8 @@ export default function SettingsScreen() {
             onPress={async () => {
               try {
                 await exportBackup();
-              } catch (e: any) {
-                Alert.alert('Erreur', e.message ?? 'Export impossible.');
+              } catch {
+                Alert.alert('Erreur', 'Export impossible. Réessaie plus tard.');
               }
             }}
           >
@@ -382,8 +385,8 @@ export default function SettingsScreen() {
                       try {
                         await restoreFromIcloud();
                         Alert.alert('Restauré ✓', 'Ferme et rouvre l\'app pour voir tes données.');
-                      } catch (e: any) {
-                        Alert.alert('Erreur', e.message ?? 'Restauration impossible.');
+                      } catch {
+                        Alert.alert('Erreur', 'Restauration impossible. Réessaie plus tard.');
                       }
                     },
                   },
@@ -418,9 +421,9 @@ export default function SettingsScreen() {
               <Text style={styles.dateLabel}>Du</Text>
               <TextInput
                 testID="export-from-input"
-                style={[styles.dateInput, { borderColor: primary }]}
+                style={[styles.dateInput, { borderColor: dateError ? '#DC2626' : primary }]}
                 value={customFrom}
-                onChangeText={setCustomFrom}
+                onChangeText={v => { setCustomFrom(v); if (dateError) setDateError(null); }}
                 placeholder="JJ/MM/AAAA"
                 placeholderTextColor="#C09070"
                 keyboardType="number-pad"
@@ -431,9 +434,9 @@ export default function SettingsScreen() {
               <Text style={styles.dateLabel}>Au</Text>
               <TextInput
                 testID="export-to-input"
-                style={[styles.dateInput, { borderColor: primary }]}
+                style={[styles.dateInput, { borderColor: dateError ? '#DC2626' : primary }]}
                 value={customTo}
-                onChangeText={setCustomTo}
+                onChangeText={v => { setCustomTo(v); if (dateError) setDateError(null); }}
                 placeholder="JJ/MM/AAAA"
                 placeholderTextColor="#C09070"
                 keyboardType="number-pad"
@@ -441,16 +444,22 @@ export default function SettingsScreen() {
               />
             </View>
           </View>
+          {dateError && <Text style={styles.fieldError}>{dateError}</Text>}
 
           <TouchableOpacity
             testID="export-range-btn"
-            style={[styles.actionBtn, { borderColor: primary }]}
+            style={[styles.actionBtn, { borderColor: primary, opacity: isExporting ? 0.6 : 1 }]}
+            disabled={isExporting}
             onPress={() => {
               const label = `${customFrom} → ${customTo}`;
               exportRange(customFrom, customTo, label);
             }}
           >
-            <Text style={[styles.actionBtnText, { color: primary }]}>📄 Exporter cette période</Text>
+            {isExporting ? (
+              <ActivityIndicator size="small" color={primary} />
+            ) : (
+              <Text style={[styles.actionBtnText, { color: primary }]}>📄 Exporter cette période</Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -546,7 +555,10 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>Participer</Text>
         <View style={styles.card}>
           <Text style={styles.participateText}>
-            Raconte-moi existe parce que quelqu'un, tout bas, a dit "ce serait cool". Si tu as des retours, des idées ou une expérience à partager — bienveillants et constructifs — je lis tout.
+            <Text style={styles.appName}>Raconte-moi</Text>
+            {" est née d'une phrase murmurée : « ce serait tellement bien de pouvoir dire à voix haute ce qu'on a mangé, comment on se sent après (faire le lien entre les aliments, la fatigue et les douleurs du quotidien). » Faute de trouver un outil simple, privé et en français, je l'ai créé.\n\nSi tu utilises "}
+            <Text style={styles.appName}>Raconte-moi</Text>
+            {" et que tu as des retours (une idée, quelque chose qui te manque, une expérience à partager) ; je lis tout. Tes retours m'aideront à adapter encore mieux l'app à tes besoins, tout en restant fidèle à la ligne conductrice du début."}
           </Text>
           <TouchableOpacity
             style={styles.participateBtn}
@@ -610,7 +622,8 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.divider} />
           <Text style={styles.disclaimerText}>
-            Raconte-moi n'est pas un dispositif médical et ne se substitue pas à un avis ou un suivi médical professionnel.
+            <Text style={styles.appNameSmall}>Raconte-moi</Text>
+            {" n'est pas un dispositif médical et ne se substitue pas à un avis ou un suivi médical professionnel."}
           </Text>
           <View style={styles.divider} />
           <TouchableOpacity
@@ -620,6 +633,11 @@ export default function SettingsScreen() {
             <Text style={styles.linkText}>Politique de confidentialité</Text>
             <Text style={styles.linkArrow}>›</Text>
           </TouchableOpacity>
+          <View style={styles.divider} />
+          <Text style={styles.versionText}>
+            <Text style={{ fontStyle: 'italic' }}>Raconte-moi</Text>
+            {' · v1.0.0'}
+          </Text>
         </View>
       </ScrollView>
     </>
@@ -629,24 +647,23 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: '#FFF8F5' },
   content: { padding: 24, paddingBottom: 48 },
-  closeButton: { fontSize: 15, color: '#E85520', fontWeight: '600' },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#C09070',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9B8A80',
     textTransform: 'uppercase',
-    marginTop: 24,
+    marginTop: 28,
     marginBottom: 8,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 16,
+    borderRadius: 16,
+    padding: 18,
     marginBottom: 4,
     shadowColor: '#2D1A0E',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
   textInput: {
@@ -713,8 +730,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10, paddingHorizontal: 4,
   },
   participateText: {
-    fontSize: 14, color: '#5C3020', lineHeight: 21, marginBottom: 14,
+    fontSize: 14, color: '#5C3020', lineHeight: 22, marginBottom: 14,
   },
+  appName: { fontStyle: 'italic', fontWeight: '700', color: '#5C3020' },
+  appNameSmall: { fontStyle: 'italic', color: '#C09070' },
   participateBtn: {
     backgroundColor: '#FFF0E8', borderWidth: 1.5, borderColor: '#F0C0A0',
     borderRadius: 12, padding: 14, alignItems: 'center',
@@ -726,6 +745,10 @@ const styles = StyleSheet.create({
   },
   linkText: { fontSize: 14, color: '#E85520', fontWeight: '600' },
   linkArrow: { fontSize: 18, color: '#E85520', fontWeight: '400' },
+  versionText: {
+    fontSize: 11, color: '#C09070', textAlign: 'center',
+    paddingVertical: 10, letterSpacing: 0.3,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -751,6 +774,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6, alignItems: 'center',
   },
   presetText: { fontSize: 13, fontWeight: '700' },
+  fieldError: { fontSize: 12, color: '#DC2626', marginTop: -8, marginBottom: 6 },
   dateRangeRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   dateField: { flex: 1, gap: 4 },
   dateLabel: { fontSize: 11, color: '#C09070', fontWeight: '600', textTransform: 'uppercase' },

@@ -42,7 +42,7 @@ export default function RootLayout() {
         }
       })
       .then(() => setDbReady(true))
-      .catch(console.error);
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

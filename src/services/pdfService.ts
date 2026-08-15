@@ -229,5 +229,6 @@ export async function exportJournalAsPdf(
 
   const destUri = (FileSystem.documentDirectory ?? '') + filename;
   await FileSystem.copyAsync({ from: tempUri, to: destUri });
+  await FileSystem.deleteAsync(tempUri, { idempotent: true }).catch(() => {});
   await Sharing.shareAsync(destUri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
 }
