@@ -542,6 +542,22 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Section: Participer */}
+        <Text style={styles.sectionTitle}>Participer</Text>
+        <View style={styles.card}>
+          <Text style={styles.participateText}>
+            Raconte-moi existe parce que quelqu'un, tout bas, a dit "ce serait cool". Si tu as des retours, des idées ou une expérience à partager — bienveillants et constructifs — je lis tout.
+          </Text>
+          <TouchableOpacity
+            style={styles.participateBtn}
+            onPress={() => Linking.openURL(
+              'mailto:joaofmsilva1979@gmail.com?subject=Raconte-moi%20%E2%80%94%20Retour%20utilisateur&body=Bonjour%2C%0A%0AMes%20retours%20sur%20Raconte-moi%20%3A%0A%0A'
+            )}
+          >
+            <Text style={styles.participateBtnText}>✉️ Envoyer un retour</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Section: Zone danger */}
         <Text style={styles.sectionTitle}>Zone danger</Text>
         <TouchableOpacity
@@ -683,6 +699,14 @@ const styles = StyleSheet.create({
     fontSize: 12, color: '#C09070', lineHeight: 18, textAlign: 'center',
     paddingVertical: 10, paddingHorizontal: 4,
   },
+  participateText: {
+    fontSize: 14, color: '#5C3020', lineHeight: 21, marginBottom: 14,
+  },
+  participateBtn: {
+    backgroundColor: '#FFF0E8', borderWidth: 1.5, borderColor: '#F0C0A0',
+    borderRadius: 12, padding: 14, alignItems: 'center',
+  },
+  participateBtnText: { fontSize: 14, fontWeight: '700', color: '#E85520' },
   linkRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingVertical: 12,

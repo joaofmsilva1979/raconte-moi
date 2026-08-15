@@ -83,7 +83,12 @@ export default function HomeScreen() {
     >
       {/* Top bar: trends icon */}
       <View style={styles.topBar}>
-        <View style={{ width: 80 }} />
+        <TouchableOpacity
+          onPress={() => router.push('/settings')}
+          style={styles.topIconBtn}
+        >
+          <Text style={styles.topIconText}>⚙️</Text>
+        </TouchableOpacity>
         <View style={styles.greetingBlock}>
           <Text style={styles.greeting}>{greeting}</Text>
           <Text style={styles.greetingName}>{settings.first_name} ☀️</Text>
