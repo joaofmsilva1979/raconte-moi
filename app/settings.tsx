@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
   FlatList,
+  Linking,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -572,9 +573,24 @@ export default function SettingsScreen() {
           <Text style={styles.resetBtnText}>🗑 Effacer toutes les données</Text>
         </TouchableOpacity>
 
-        {/* Section: Confidentialité */}
-        <View testID="privacy-badge" style={styles.privacyBadge}>
-          <Text style={styles.privacyText}>🔒 Aucune donnée ne quitte cet iPhone</Text>
+        {/* Section: À propos */}
+        <Text style={styles.sectionTitle}>À propos</Text>
+        <View style={styles.card}>
+          <View testID="privacy-badge" style={styles.privacyRow}>
+            <Text style={styles.privacyText}>🔒 Aucune donnée ne quitte cet iPhone</Text>
+          </View>
+          <View style={styles.divider} />
+          <Text style={styles.disclaimerText}>
+            Raconte-moi n'est pas un dispositif médical et ne se substitue pas à un avis ou un suivi médical professionnel.
+          </Text>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.linkRow}
+            onPress={() => Linking.openURL('https://joaofmsilva1979.github.io/raconte-moi/privacy-policy')}
+          >
+            <Text style={styles.linkText}>Politique de confidentialité</Text>
+            <Text style={styles.linkArrow}>›</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </>
@@ -660,15 +676,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   resetBtnText: { fontSize: 14, fontWeight: '700', color: '#DC2626' },
-  privacyBadge: {
-    marginTop: 32,
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#F0EAE4',
-    borderRadius: 12,
+  privacyRow: { paddingVertical: 10, alignItems: 'center' },
+  privacyText: { fontSize: 13, color: '#4A7030', fontWeight: '600' },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: '#F0D0B8', marginVertical: 2 },
+  disclaimerText: {
+    fontSize: 12, color: '#C09070', lineHeight: 18, textAlign: 'center',
+    paddingVertical: 10, paddingHorizontal: 4,
   },
-  privacyText: { fontSize: 13, color: '#C09070', fontWeight: '600' },
+  linkRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  linkText: { fontSize: 14, color: '#E85520', fontWeight: '600' },
+  linkArrow: { fontSize: 18, color: '#E85520', fontWeight: '400' },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

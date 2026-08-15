@@ -48,6 +48,10 @@ export default function PermissionsScreen() {
             🔒 Aucune donnée ne quitte cet iPhone
           </Text>
         </View>
+
+        <Text style={styles.disclaimer}>
+          Raconte-moi n'est pas un dispositif médical et ne se substitue pas à un suivi professionnel.
+        </Text>
       </View>
 
       <TouchableOpacity
@@ -81,8 +85,13 @@ const styles = StyleSheet.create({
   permSub: { fontSize: 12, color: '#C09070' },
   privacyBadge: {
     backgroundColor: '#F0F8EC', borderRadius: 10, padding: 12, alignItems: 'center',
+    marginBottom: 12,
   },
   privacyText: { fontSize: 13, color: '#4A7030', fontWeight: '500' },
+  disclaimer: {
+    fontSize: 11, color: '#C09070', textAlign: 'center', lineHeight: 16,
+    paddingHorizontal: 8,
+  },
   button: { borderRadius: 14, padding: 16, alignItems: 'center', marginBottom: 8 },
   buttonText: { color: 'white', fontWeight: '700', fontSize: 16 },
 });
