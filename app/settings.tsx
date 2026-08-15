@@ -565,21 +565,34 @@ export default function SettingsScreen() {
           style={styles.resetBtn}
           onPress={() => {
             Alert.alert(
-              'Effacer toutes les données ?',
-              'Toutes les notes, ressentis, activités et photos seront supprimés définitivement. Les réglages sont conservés.',
+              '⚠️ Effacer toutes les données ?',
+              'Toutes tes notes vocales, ressentis, douleurs, activités, médicaments et accessoires seront supprimés définitivement.\n\nCette action est irréversible. Tes réglages sont conservés.',
               [
                 { text: 'Annuler', style: 'cancel' },
                 {
-                  text: 'Effacer',
+                  text: 'Continuer →',
                   style: 'destructive',
-                  onPress: async () => {
-                    await resetAllData();
-                    const photosDir = (FileSystem.documentDirectory ?? '') + 'photos/';
-                    try {
-                      const files = await FileSystem.readDirectoryAsync(photosDir);
-                      await Promise.all(files.map(f => FileSystem.deleteAsync(photosDir + f, { idempotent: true })));
-                    } catch {}
-                    Alert.alert('Données effacées', 'L\'app est prête pour un nouveau départ.');
+                  onPress: () => {
+                    Alert.alert(
+                      'Dernière confirmation',
+                      'Es-tu vraiment sûr(e) ? Il n\'y a aucun moyen de récupérer tes données après cette action.',
+                      [
+                        { text: 'Non, garder mes données', style: 'cancel' },
+                        {
+                          text: 'Oui, tout effacer',
+                          style: 'destructive',
+                          onPress: async () => {
+                            await resetAllData();
+                            const photosDir = (FileSystem.documentDirectory ?? '') + 'photos/';
+                            try {
+                              const files = await FileSystem.readDirectoryAsync(photosDir);
+                              await Promise.all(files.map(f => FileSystem.deleteAsync(photosDir + f, { idempotent: true })));
+                            } catch {}
+                            Alert.alert('Données effacées', 'L\'app est prête pour un nouveau départ.');
+                          },
+                        },
+                      ]
+                    );
                   },
                 },
               ]
