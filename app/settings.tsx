@@ -586,7 +586,7 @@ export default function SettingsScreen() {
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.linkRow}
-            onPress={() => Linking.openURL('https://joaofmsilva1979.github.io/raconte-moi/privacy-policy')}
+            onPress={() => Linking.openURL('https://joaofmsilva1979.github.io/raconte-moi/privacy-policy.html')}
           >
             <Text style={styles.linkText}>Politique de confidentialité</Text>
             <Text style={styles.linkArrow}>›</Text>
