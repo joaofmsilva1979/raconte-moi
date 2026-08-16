@@ -1,3 +1,4 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import { create } from 'zustand';
 import { MealType } from '@/types';
 import { startListening, stopListening, destroyListener } from '@/services/transcriptionService';
@@ -5,6 +6,15 @@ import { reformulateText } from '@/services/reformulationService';
 import { createEntry } from '@/db/entriesRepository';
 import { detectMealType } from '@/services/mealDetection';
 import { getMealSlots } from '@/db/settingsRepository';
+
+async function persistPhoto(tempUri: string): Promise<string> {
+  const dir = (FileSystem.documentDirectory ?? '') + 'photos/';
+  const info = await FileSystem.getInfoAsync(dir);
+  if (!info.exists) await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+  const dest = dir + `photo_${Date.now()}.jpg`;
+  await FileSystem.moveAsync({ from: tempUri, to: dest });
+  return dest;
+}
 
 export type RecordingPhase = 'idle' | 'recording' | 'processing' | 'confirming' | 'saving';
 
@@ -100,12 +110,17 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
     const { editedText, rawText, wasReformulated, mealType, recordedAt, photoUri } = get();
     set({ phase: 'saving' });
 
+    let permanentPhotoUri = photoUri;
+    if (photoUri && !photoUri.includes('/photos/photo_')) {
+      permanentPhotoUri = await persistPhoto(photoUri).catch(() => photoUri);
+    }
+
     await createEntry({
       transcript: editedText,
       raw_text: wasReformulated ? rawText : null,
       meal_type: mealType,
       recorded_at: (recordedAt ?? new Date()).toISOString(),
-      photo_uri: photoUri,
+      photo_uri: permanentPhotoUri,
     });
 
     await destroyListener();
