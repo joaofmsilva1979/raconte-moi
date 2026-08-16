@@ -228,6 +228,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
           sleepLog={sleepLog}
           medicationLogs={medicationLogs}
           comfortAidLogs={comfortAidLogs}
+          isPastDay={viewedDate < today}
           onEditEntry={handleEditEntry}
           onEditRessenti={handleEditRessenti}
           onDeleteRessenti={(id) => confirmDelete('ce ressenti', () => deleteRessentiLog(id))}

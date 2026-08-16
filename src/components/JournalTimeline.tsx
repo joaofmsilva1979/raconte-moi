@@ -22,6 +22,7 @@ interface JournalTimelineProps {
   sleepLog?: SleepLog | null;
   medicationLogs?: MedicationLog[];
   comfortAidLogs?: ComfortAidLog[];
+  isPastDay?: boolean;
   onEditEntry?: (entry: Entry) => void;
   onEditRessenti?: (ressenti: Ressenti) => void;
   onDeleteRessenti?: (id: number) => void;
@@ -115,9 +116,11 @@ function RessentisCard({ ressenti, onEdit, onDelete, standalone }: { ressenti: R
 
 export function JournalTimeline({
   entries, slots, primaryColor, ressentis = [], activities = [],
-  sleepLog, medicationLogs = [], comfortAidLogs = [], onEditEntry, onEditRessenti,
+  sleepLog, medicationLogs = [], comfortAidLogs = [], isPastDay = false,
+  onEditEntry, onEditRessenti,
   onDeleteRessenti, onDeleteActivity, onDeleteMed, onDeleteAid, onDeleteSleep,
 }: JournalTimelineProps) {
+  const pastOpacity = isPastDay ? 0.72 : 1;
   const morningRessentis = ressentis.filter(r => r.context === 'morning');
   const morningAids = comfortAidLogs.filter(a => a.meal_type === 'morning');
   const freeRessentis = ressentis.filter(r => r.meal_type == null && r.context !== 'morning');
@@ -129,7 +132,7 @@ export function JournalTimeline({
   const getIsLast = (idx: number) => idx === timeline.length - 1 && !hasActivities;
 
   return (
-    <View style={styles.container} testID="journal-timeline">
+    <View style={[styles.container, { opacity: pastOpacity }]} testID="journal-timeline">
 
       {/* Qualité de sommeil */}
       {sleepLog && (

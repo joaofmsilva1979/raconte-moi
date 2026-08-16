@@ -99,20 +99,19 @@ export default function ConfirmScreen() {
         </View>
 
         {wasReformulated && (
-          <TouchableOpacity onPress={() => setShowOriginal((v) => !v)}>
-            <Text style={[styles.link, { color: primary }]}>Voir original</Text>
+          <TouchableOpacity onPress={() => setShowOriginal((v) => !v)} style={styles.toggleRow}>
+            <Text style={[styles.link, { color: primary }]}>
+              {showOriginal ? '✕ Masquer l\'original' : '✨ Voir l\'original'}
+            </Text>
           </TouchableOpacity>
         )}
 
-        {showOriginal && (
+        {showOriginal && rawText ? (
           <View style={styles.originalBox}>
+            <Text style={styles.originalLabel}>Ce que tu as dit :</Text>
             <Text style={styles.originalText}>"{rawText}"</Text>
           </View>
-        )}
-
-        {wasReformulated && (
-          <Text style={styles.reformuledBadge}>✨ reformulé</Text>
-        )}
+        ) : null}
 
         {photoUri ? (
           <View style={styles.photoSection}>
@@ -180,10 +179,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   hint: { fontSize: 11, color: '#C09070', fontStyle: 'italic', textAlign: 'center' },
+  toggleRow: { alignItems: 'center' },
   link: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
-  originalBox: { backgroundColor: '#F5F0F0', borderRadius: 10, padding: 12 },
-  originalText: { fontSize: 13, color: '#8A6050', fontStyle: 'italic' },
-  reformuledBadge: { fontSize: 11, color: '#9070C0', textAlign: 'center' },
+  originalBox: {
+    backgroundColor: '#F5F0EE', borderRadius: 10, padding: 12, gap: 4,
+    borderWidth: 1, borderColor: '#E8D0C0',
+  },
+  originalLabel: { fontSize: 10, fontWeight: '700', color: '#C09070', textTransform: 'uppercase', letterSpacing: 0.5 },
+  originalText: { fontSize: 13, color: '#8A6050', fontStyle: 'italic', lineHeight: 19 },
   btnRessenti: {
     borderRadius: 14,
     padding: 12,
