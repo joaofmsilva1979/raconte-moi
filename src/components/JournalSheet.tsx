@@ -74,14 +74,15 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     deleteSleep,
   } = useJournalStore();
 
+  const today = formatDate(new Date());
   const [activeDates, setActiveDates] = useState<Set<string>>(new Set());
+  const [stripAnchor, setStripAnchor] = useState(today);
 
   useEffect(() => {
     if (!isSheetOpen) return;
-    const today = formatDate(new Date());
-    const week = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
+    const week = Array.from({ length: 7 }, (_, i) => addDays(stripAnchor, i - 6));
     getActiveDates(week).then(dates => setActiveDates(new Set(dates)));
-  }, [isSheetOpen, entries.length]);
+  }, [isSheetOpen, stripAnchor, entries.length]);
 
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [editText, setEditText] = useState('');
@@ -171,7 +172,6 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
   }
 
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
-  const today = formatDate(new Date());
   const canGoNext = viewedDate < today;
 
   useEffect(() => {
@@ -209,7 +209,8 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
   if (!isSheetOpen) return null;
 
   const DAY_LETTERS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(stripAnchor, i - 6));
+  const canGoNextWeek = stripAnchor < today;
 
   return (
     <Animated.View
@@ -227,38 +228,60 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.weekStrip}>
-        {weekDays.map((date) => {
-          const isSelected = date === viewedDate;
-          const isToday = date === today;
-          const hasEntries = activeDates.has(date);
-          const dayNum = parseInt(date.slice(8), 10);
-          const dayOfWeek = new Date(date + 'T12:00:00').getDay();
-          return (
-            <TouchableOpacity
-              key={date}
-              testID={`day-chip-${date}`}
-              style={[
-                styles.dayChip,
-                isSelected && { backgroundColor: primaryColor },
-                isToday && !isSelected && { borderColor: primaryColor, borderWidth: 1.5 },
-              ]}
-              onPress={() => loadDay(date)}
-            >
-              <Text style={[styles.dayLetter, isSelected && styles.dayTextSelected]}>
-                {DAY_LETTERS[dayOfWeek]}
-              </Text>
-              <Text style={[styles.dayNumber, isSelected && styles.dayTextSelected]}>
-                {dayNum}
-              </Text>
-              {hasEntries ? (
-                <View style={[styles.dayDot, { backgroundColor: isSelected ? 'rgba(255,255,255,0.75)' : primaryColor }]} />
-              ) : (
-                <View style={styles.dayDotPlaceholder} />
-              )}
-            </TouchableOpacity>
-          );
-        })}
+      <View style={styles.weekStripRow}>
+        <TouchableOpacity
+          style={styles.weekNavBtn}
+          onPress={() => setStripAnchor(a => addDays(a, -7))}
+          testID="prev-week-btn"
+        >
+          <Text style={[styles.weekNavArrow, { color: primaryColor }]}>‹</Text>
+        </TouchableOpacity>
+
+        <View style={styles.weekStrip}>
+          {weekDays.map((date) => {
+            const isSelected = date === viewedDate;
+            const isToday = date === today;
+            const hasEntries = activeDates.has(date);
+            const dayNum = parseInt(date.slice(8), 10);
+            const dayOfWeek = new Date(date + 'T12:00:00').getDay();
+            return (
+              <TouchableOpacity
+                key={date}
+                testID={`day-chip-${date}`}
+                style={[
+                  styles.dayChip,
+                  isSelected && { backgroundColor: primaryColor },
+                  isToday && !isSelected && { borderColor: primaryColor, borderWidth: 1.5 },
+                ]}
+                onPress={() => loadDay(date)}
+              >
+                <Text style={[styles.dayLetter, isSelected && styles.dayTextSelected]}>
+                  {DAY_LETTERS[dayOfWeek]}
+                </Text>
+                <Text style={[styles.dayNumber, isSelected && styles.dayTextSelected]}>
+                  {dayNum}
+                </Text>
+                {hasEntries ? (
+                  <View style={[styles.dayDot, { backgroundColor: isSelected ? 'rgba(255,255,255,0.75)' : primaryColor }]} />
+                ) : (
+                  <View style={styles.dayDotPlaceholder} />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <TouchableOpacity
+          style={styles.weekNavBtn}
+          onPress={() => {
+            const next = addDays(stripAnchor, 7);
+            setStripAnchor(next > today ? today : next);
+          }}
+          disabled={!canGoNextWeek}
+          testID="next-week-btn"
+        >
+          <Text style={[styles.weekNavArrow, { color: canGoNextWeek ? primaryColor : '#D0C0B0' }]}>›</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
@@ -452,12 +475,18 @@ const styles = StyleSheet.create({
   settingsBtn: { padding: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
   settingsIcon: { fontSize: 15 },
   settingsLabel: { fontSize: 12, fontWeight: '600', color: '#9CA3AF', letterSpacing: 0.1 },
-  weekStrip: {
+  weekStripRow: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
+    alignItems: 'center',
     paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E8D5C4',
+  },
+  weekNavBtn: { paddingHorizontal: 6, paddingVertical: 4 },
+  weekNavArrow: { fontSize: 22, fontWeight: '500' },
+  weekStrip: {
+    flex: 1,
+    flexDirection: 'row',
     gap: 4,
   },
   dayChip: {
