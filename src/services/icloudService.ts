@@ -95,3 +95,18 @@ export function isBackupDue(lastBackupAt: string | null, intervalDays: number): 
   const elapsedDays = (Date.now() - new Date(lastBackupAt).getTime()) / (1000 * 60 * 60 * 24);
   return elapsedDays >= intervalDays;
 }
+
+export async function backupWithRetry(maxAttempts = 3): Promise<string> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await backupToIcloud();
+    } catch (e) {
+      lastError = e;
+      if (attempt < maxAttempts - 1) {
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
+}

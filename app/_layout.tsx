@@ -31,15 +31,13 @@ export default function RootLayout() {
         try {
           const { settings } = useSettingsStore.getState();
           if (settings?.icloud_backup) {
-            const { isBackupDue, backupToIcloud } = await import('@/services/icloudService');
+            const { isBackupDue, backupWithRetry } = await import('@/services/icloudService');
             if (isBackupDue(settings.last_backup_at, settings.backup_interval)) {
-              const date = await backupToIcloud();
+              const date = await backupWithRetry();
               await useSettingsStore.getState().saveLastBackupAt(date);
             }
           }
-        } catch (e) {
-          console.warn('[auto-backup] failed:', e);
-        }
+        } catch {}
       })
       .then(() => setDbReady(true))
       .catch(() => {});
