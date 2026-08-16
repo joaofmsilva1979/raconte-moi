@@ -1,3 +1,4 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import { getDatabase } from '@/db/database';
 import { Entry, MealType } from '@/types';
 
@@ -60,6 +61,17 @@ export async function getEntriesForDateRange(fromDate: string, toDate: string): 
      ORDER BY recorded_at ASC`,
     [fromDate, toDate]
   );
+}
+
+export async function deleteEntry(id: number): Promise<void> {
+  const db = await getDatabase();
+  const row = await db.getFirstAsync<{ photo_uri: string | null }>(
+    'SELECT photo_uri FROM entries WHERE id = ?', [id]
+  );
+  await db.runAsync('DELETE FROM entries WHERE id = ?', [id]);
+  if (row?.photo_uri) {
+    await FileSystem.deleteAsync(row.photo_uri, { idempotent: true }).catch(() => {});
+  }
 }
 
 export async function getLastEntryBefore(dateTimeStr: string): Promise<Entry | null> {

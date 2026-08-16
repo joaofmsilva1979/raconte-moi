@@ -19,7 +19,7 @@ import { useJournalStore } from '@/store/journalStore';
 import { JournalTimeline } from '@/components/JournalTimeline';
 import { formatDateLabel, formatDate } from '@/utils/dateUtils';
 import { DEFAULT_MEAL_SLOTS } from '@/constants/meals';
-import { updateEntryTranscript, updateEntryPhoto } from '@/db/entriesRepository';
+import { updateEntryTranscript, updateEntryPhoto, deleteEntry } from '@/db/entriesRepository';
 import { updateRessenti } from '@/db/ressentisRepository';
 import { Entry, Ressenti, RessentSubCategory } from '@/types';
 import { RESSENTI_LABELS, RESSENTI_ICONS, RESSENTI_SUB_CATEGORIES } from '@/constants/ressentis';
@@ -133,6 +133,18 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     setEditRessentiSub(ressenti.sub_category ?? null);
   }
 
+  function handleDeleteEntry(entry: Entry) {
+    Alert.alert('Supprimer ?', 'Supprimer cette note définitivement ?', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer', style: 'destructive', onPress: async () => {
+          await deleteEntry(entry.id);
+          await refreshCurrentDay();
+        }
+      },
+    ]);
+  }
+
   function confirmDelete(label: string, onConfirm: () => void) {
     Alert.alert('Supprimer ?', `Supprimer ${label} définitivement ?`, [
       { text: 'Annuler', style: 'cancel' },
@@ -237,6 +249,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
           comfortAidLogs={comfortAidLogs}
           isPastDay={viewedDate < today}
           onEditEntry={handleEditEntry}
+          onDeleteEntry={handleDeleteEntry}
           onEditRessenti={handleEditRessenti}
           onDeleteRessenti={(id) => confirmDelete('ce ressenti', () => deleteRessentiLog(id))}
           onDeleteActivity={(id) => confirmDelete('cette activité', () => deleteActivityLog(id))}

@@ -24,6 +24,7 @@ interface JournalTimelineProps {
   comfortAidLogs?: ComfortAidLog[];
   isPastDay?: boolean;
   onEditEntry?: (entry: Entry) => void;
+  onDeleteEntry?: (entry: Entry) => void;
   onEditRessenti?: (ressenti: Ressenti) => void;
   onDeleteRessenti?: (id: number) => void;
   onDeleteActivity?: (id: number) => void;
@@ -117,7 +118,7 @@ function RessentisCard({ ressenti, onEdit, onDelete, standalone }: { ressenti: R
 export function JournalTimeline({
   entries, slots, primaryColor, ressentis = [], activities = [],
   sleepLog, medicationLogs = [], comfortAidLogs = [], isPastDay = false,
-  onEditEntry, onEditRessenti,
+  onEditEntry, onDeleteEntry, onEditRessenti,
   onDeleteRessenti, onDeleteActivity, onDeleteMed, onDeleteAid, onDeleteSleep,
 }: JournalTimelineProps) {
   const pastOpacity = isPastDay ? 0.72 : 1;
@@ -269,6 +270,8 @@ export function JournalTimeline({
                     style={styles.entryCard}
                     testID={`entry-${entry.id}`}
                     onPress={() => onEditEntry?.(entry)}
+                    onLongPress={() => onDeleteEntry?.(entry)}
+                    delayLongPress={600}
                     activeOpacity={onEditEntry ? 0.7 : 1}
                   >
                     <View style={styles.entryHeader}>
