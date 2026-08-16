@@ -25,23 +25,15 @@ import { Entry, Ressenti, RessentSubCategory } from '@/types';
 import { RESSENTI_LABELS, RESSENTI_ICONS, RESSENTI_SUB_CATEGORIES } from '@/constants/ressentis';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import * as ImageManipulator from 'expo-image-manipulator';
 import { Image } from 'react-native';
 
 async function savePhotoToPermanentStorage(tempUri: string): Promise<string> {
   const dir = FileSystem.documentDirectory + 'photos/';
   const dirInfo = await FileSystem.getInfoAsync(dir);
   if (!dirInfo.exists) await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
-
-  const compressed = await ImageManipulator.manipulateAsync(
-    tempUri,
-    [{ resize: { width: 1200 } }],
-    { compress: 0.75, format: ImageManipulator.SaveFormat.JPEG }
-  );
-
   const filename = `photo_${Date.now()}.jpg`;
   const dest = dir + filename;
-  await FileSystem.moveAsync({ from: compressed.uri, to: dest });
+  await FileSystem.moveAsync({ from: tempUri, to: dest });
   return dest;
 }
 
