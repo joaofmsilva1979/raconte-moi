@@ -328,23 +328,22 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
               placeholderTextColor="#C09070"
             />
 
-            {editPhoto ? (
+            {editPhoto && (
               <View style={styles.photoPreviewRow}>
                 <Image source={{ uri: editPhoto }} style={styles.photoPreview} />
                 <TouchableOpacity onPress={() => setEditPhoto(null)} style={styles.removePhotoBtn}>
                   <Text style={styles.removePhotoText}>✕ Supprimer</Text>
                 </TouchableOpacity>
               </View>
-            ) : (
-              <View style={styles.photoPickerRow}>
-                <TouchableOpacity style={styles.photoBtn} onPress={handleTakePhoto}>
-                  <Text style={styles.photoBtnText}>📷 Prendre une photo</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.photoBtn} onPress={handlePickPhoto}>
-                  <Text style={styles.photoBtnText}>🖼 Galerie</Text>
-                </TouchableOpacity>
-              </View>
             )}
+            <View style={styles.photoPickerRow}>
+              <TouchableOpacity style={styles.photoBtn} onPress={handleTakePhoto}>
+                <Text style={styles.photoBtnText}>📷 {editPhoto ? 'Changer' : 'Prendre une photo'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.photoBtn} onPress={handlePickPhoto}>
+                <Text style={styles.photoBtnText}>🖼 {editPhoto ? 'Changer' : 'Galerie'}</Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.editModalActions}>
               <TouchableOpacity
