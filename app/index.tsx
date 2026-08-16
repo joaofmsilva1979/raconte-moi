@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, PanResponder } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, PanResponder, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, Redirect } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
@@ -30,8 +30,11 @@ export default function HomeScreen() {
     recordedAt,
     startRecording,
     stopRecording,
+    startManualEntry,
     error: recordingError,
   } = useRecordingStore();
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [manualText, setManualText] = useState('');
   const { openSheet, closeSheet, refreshCurrentDay } = useJournalStore();
   const { openSheet: openRessentisSheet } = useRessentisStore();
   const { openSheet: openActivitySheet, todayTotalMinutes, loadTodayTotal } = useActivityStore();
@@ -158,6 +161,12 @@ export default function HomeScreen() {
         <Text style={styles.hint}>
           {isRecording ? 'Relâche pour terminer' : 'Maintiens appuyé et parle'}
         </Text>
+
+        {!isRecording && !isProcessing && (
+          <TouchableOpacity onPress={() => { setManualText(''); setShowManualModal(true); }} accessibilityLabel="Saisir manuellement">
+            <Text style={[styles.manualLink, { color: primary }]}>✏️ Écrire</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Bottom: pills + activity chip + journal */}
@@ -223,6 +232,36 @@ export default function HomeScreen() {
           <Text style={[styles.journalOpenerText, { color: primary }]}>📖 Mon journal du jour</Text>
         </TouchableOpacity>
       </View>
+
+      <Modal visible={showManualModal} transparent animationType="fade" onRequestClose={() => setShowManualModal(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Ta note</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={manualText}
+              onChangeText={setManualText}
+              placeholder="Ce que tu as mangé, comment tu te sens…"
+              placeholderTextColor="#C09070"
+              multiline
+              autoFocus
+            />
+            <TouchableOpacity
+              style={[styles.modalBtn, { backgroundColor: primary }]}
+              onPress={() => {
+                if (!manualText.trim()) return;
+                setShowManualModal(false);
+                startManualEntry(manualText.trim());
+              }}
+            >
+              <Text style={styles.modalBtnText}>Continuer →</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowManualModal(false)} style={styles.modalCancel}>
+              <Text style={[styles.modalCancelText, { color: primary }]}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       <RessentisSheet primaryColor={primary} />
       <ActivitySheet primaryColor={primary} />
@@ -372,5 +411,58 @@ const styles = StyleSheet.create({
   activitySummaryDone: {
     color: '#166534',
     backgroundColor: '#DCFCE7',
+  },
+  manualLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.1,
+    opacity: 0.8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalBox: {
+    backgroundColor: '#FFF8F5',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    gap: 14,
+    paddingBottom: 36,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2D1A0E',
+  },
+  modalInput: {
+    borderWidth: 1.5,
+    borderColor: '#F0D0B8',
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+    color: '#2D1A0E',
+    minHeight: 90,
+    backgroundColor: 'white',
+    textAlignVertical: 'top',
+  },
+  modalBtn: {
+    borderRadius: 14,
+    padding: 14,
+    alignItems: 'center',
+  },
+  modalBtnText: {
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  modalCancel: {
+    alignItems: 'center',
+    padding: 4,
+  },
+  modalCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

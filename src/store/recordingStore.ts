@@ -24,6 +24,7 @@ interface RecordingState {
 interface RecordingActions {
   startRecording: () => void;
   stopRecording: (finalText: string) => Promise<void>;
+  startManualEntry: (text: string) => void;
   updateEditedText: (text: string) => void;
   setMealType: (mealType: MealType) => void;
   setPhotoUri: (uri: string | null) => void;
@@ -70,6 +71,23 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
 
     const { text, wasReformulated } = await reformulateText(finalText);
     set({ editedText: text, wasReformulated, phase: 'confirming' });
+  },
+
+  startManualEntry: (text: string) => {
+    const now = new Date();
+    const { mealTypeManuallySet } = get();
+    getMealSlots().then((slots) => {
+      const mealType = mealTypeManuallySet ? get().mealType : detectMealType(now, slots);
+      set({
+        phase: 'confirming',
+        rawText: text,
+        editedText: text,
+        wasReformulated: false,
+        recordedAt: now,
+        mealType,
+        error: null,
+      });
+    });
   },
 
   updateEditedText: (text: string) => set({ editedText: text }),
