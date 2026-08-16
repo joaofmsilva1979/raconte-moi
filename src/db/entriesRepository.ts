@@ -74,6 +74,17 @@ export async function deleteEntry(id: number): Promise<void> {
   }
 }
 
+export async function getActiveDates(dates: string[]): Promise<string[]> {
+  if (dates.length === 0) return [];
+  const db = await getDatabase();
+  const placeholders = dates.map(() => '?').join(',');
+  const rows = await db.getAllAsync<{ d: string }>(
+    `SELECT DISTINCT date(recorded_at) as d FROM entries WHERE date(recorded_at) IN (${placeholders})`,
+    dates
+  );
+  return rows.map(r => r.d);
+}
+
 export async function getLastEntryBefore(dateTimeStr: string): Promise<Entry | null> {
   const db = await getDatabase();
   return db.getFirstAsync<Entry>(

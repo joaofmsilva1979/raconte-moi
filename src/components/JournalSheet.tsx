@@ -17,9 +17,9 @@ import {
 import { router } from 'expo-router';
 import { useJournalStore } from '@/store/journalStore';
 import { JournalTimeline } from '@/components/JournalTimeline';
-import { formatDateLabel, formatDate } from '@/utils/dateUtils';
+import { formatDateLabel, formatDate, addDays } from '@/utils/dateUtils';
 import { DEFAULT_MEAL_SLOTS } from '@/constants/meals';
-import { updateEntryTranscript, updateEntryPhoto, deleteEntry } from '@/db/entriesRepository';
+import { updateEntryTranscript, updateEntryPhoto, deleteEntry, getActiveDates } from '@/db/entriesRepository';
 import { updateRessenti } from '@/db/ressentisRepository';
 import { Entry, Ressenti, RessentSubCategory } from '@/types';
 import { RESSENTI_LABELS, RESSENTI_ICONS, RESSENTI_SUB_CATEGORIES } from '@/constants/ressentis';
@@ -65,8 +65,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     comfortAidLogs,
     viewedDate,
     closeSheet,
-    goToPreviousDay,
-    goToNextDay,
+    loadDay,
     refreshCurrentDay,
     deleteRessentiLog,
     deleteActivityLog,
@@ -74,6 +73,15 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     deleteAidLog,
     deleteSleep,
   } = useJournalStore();
+
+  const [activeDates, setActiveDates] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!isSheetOpen) return;
+    const today = formatDate(new Date());
+    const week = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
+    getActiveDates(week).then(dates => setActiveDates(new Set(dates)));
+  }, [isSheetOpen, entries.length]);
 
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [editText, setEditText] = useState('');
@@ -200,7 +208,8 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
 
   if (!isSheetOpen) return null;
 
-  const dateLabel = formatDateLabel(viewedDate);
+  const DAY_LETTERS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
 
   return (
     <Animated.View
@@ -211,30 +220,45 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
         <View style={styles.handle} testID="sheet-handle" />
       </View>
 
-      <View style={styles.dateNav}>
+      <View style={styles.calendarHeader}>
         <TouchableOpacity testID="settings-btn" onPress={() => router.push('/settings')} style={styles.settingsBtn}>
           <Text style={styles.settingsIcon}>⚙️</Text>
           <Text style={styles.settingsLabel}>Réglages & Bilan</Text>
         </TouchableOpacity>
+      </View>
 
-        <TouchableOpacity
-          onPress={goToPreviousDay}
-          testID="prev-day-btn"
-          style={styles.navBtn}
-        >
-          <Text style={[styles.navArrow, { color: primaryColor }]}>‹</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.dateLabel}>{dateLabel}</Text>
-
-        <TouchableOpacity
-          onPress={goToNextDay}
-          testID="next-day-btn"
-          disabled={!canGoNext}
-          style={styles.navBtn}
-        >
-          <Text style={[styles.navArrow, { color: canGoNext ? primaryColor : '#D0C0B0' }]}>›</Text>
-        </TouchableOpacity>
+      <View style={styles.weekStrip}>
+        {weekDays.map((date) => {
+          const isSelected = date === viewedDate;
+          const isToday = date === today;
+          const hasEntries = activeDates.has(date);
+          const dayNum = parseInt(date.slice(8), 10);
+          const dayOfWeek = new Date(date + 'T12:00:00').getDay();
+          return (
+            <TouchableOpacity
+              key={date}
+              testID={`day-chip-${date}`}
+              style={[
+                styles.dayChip,
+                isSelected && { backgroundColor: primaryColor },
+                isToday && !isSelected && { borderColor: primaryColor, borderWidth: 1.5 },
+              ]}
+              onPress={() => loadDay(date)}
+            >
+              <Text style={[styles.dayLetter, isSelected && styles.dayTextSelected]}>
+                {DAY_LETTERS[dayOfWeek]}
+              </Text>
+              <Text style={[styles.dayNumber, isSelected && styles.dayTextSelected]}>
+                {dayNum}
+              </Text>
+              {hasEntries ? (
+                <View style={[styles.dayDot, { backgroundColor: isSelected ? 'rgba(255,255,255,0.75)' : primaryColor }]} />
+              ) : (
+                <View style={styles.dayDotPlaceholder} />
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
@@ -420,21 +444,34 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
   },
-  dateNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  calendarHeader: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingTop: 6,
+    paddingBottom: 2,
+  },
+  settingsBtn: { padding: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  settingsIcon: { fontSize: 15 },
+  settingsLabel: { fontSize: 12, fontWeight: '600', color: '#9CA3AF', letterSpacing: 0.1 },
+  weekStrip: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E8D5C4',
+    gap: 4,
   },
-  navBtn: { padding: 10 },
-  navArrow: { fontSize: 26, fontWeight: '500' },
-  dateLabel: { fontSize: 16, fontWeight: '700', color: '#1C0A00', letterSpacing: -0.4 },
-  settingsBtn: { padding: 8, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  settingsIcon: { fontSize: 16 },
-  settingsLabel: { fontSize: 12, fontWeight: '600', color: '#9CA3AF', letterSpacing: 0.1 },
+  dayChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 7,
+    borderRadius: 12,
+    gap: 2,
+  },
+  dayLetter: { fontSize: 10, fontWeight: '600', color: '#9CA3AF', letterSpacing: 0.5 },
+  dayNumber: { fontSize: 15, fontWeight: '700', color: '#2D1A0E' },
+  dayTextSelected: { color: 'white' },
+  dayDot: { width: 5, height: 5, borderRadius: 3 },
+  dayDotPlaceholder: { width: 5, height: 5 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingVertical: 12 },
   addBtn: {
