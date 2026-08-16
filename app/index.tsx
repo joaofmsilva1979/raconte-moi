@@ -99,7 +99,9 @@ export default function HomeScreen() {
         </View>
         <View style={styles.greetingBlock}>
           <Text style={styles.greeting}>{greeting}</Text>
-          <Text style={styles.greetingName}>{settings.first_name} ☀️</Text>
+          <Text style={styles.greetingName} adjustsFontSizeToFit numberOfLines={1} minimumFontScale={0.55}>
+            {settings.first_name} ☀️
+          </Text>
         </View>
         <View style={styles.topBtns}>
           <TouchableOpacity
@@ -284,7 +286,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   greetingBlock: {
+    flex: 1,
     alignItems: 'center',
+    overflow: 'hidden',
   },
   greeting: {
     fontSize: 17,
