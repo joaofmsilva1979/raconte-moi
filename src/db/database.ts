@@ -163,6 +163,20 @@ async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
       );
     `);
   } catch {}
+
+  // Performance indexes — CREATE INDEX IF NOT EXISTS is idempotent
+  try {
+    await database.execAsync(`
+      CREATE INDEX IF NOT EXISTS idx_entries_recorded_at        ON entries(recorded_at);
+      CREATE INDEX IF NOT EXISTS idx_entries_meal_type          ON entries(meal_type);
+      CREATE INDEX IF NOT EXISTS idx_ressentis_recorded_at      ON ressentis(recorded_at);
+      CREATE INDEX IF NOT EXISTS idx_ressentis_meal_date        ON ressentis(meal_date);
+      CREATE INDEX IF NOT EXISTS idx_activities_recorded_at     ON activities(recorded_at);
+      CREATE INDEX IF NOT EXISTS idx_sleep_logs_log_date        ON sleep_logs(log_date);
+      CREATE INDEX IF NOT EXISTS idx_medication_logs_recorded_at ON medication_logs(recorded_at);
+      CREATE INDEX IF NOT EXISTS idx_comfort_aid_logs_recorded_at ON comfort_aid_logs(recorded_at);
+    `);
+  } catch {}
 }
 
 export async function closeAndResetDatabase(): Promise<void> {
