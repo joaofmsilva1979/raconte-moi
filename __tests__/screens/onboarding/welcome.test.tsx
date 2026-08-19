@@ -27,7 +27,7 @@ describe('WelcomeScreen (Étape 1)', () => {
 
   it('affiche le logo, le titre, le champ et le bouton', async () => {
     const { getByText, getByPlaceholderText } = await render(<WelcomeScreen />);
-    expect(getByText('Les notes de patate')).toBeTruthy();
+    expect(getByText('Raconte-moi')).toBeTruthy();
     expect(getByText("Comment tu t'appelles ?")).toBeTruthy();
     expect(getByPlaceholderText('Ton prénom')).toBeTruthy();
     expect(getByText('Bonjour →')).toBeTruthy();

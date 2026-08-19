@@ -31,6 +31,7 @@ import * as entriesRepository from '@/db/entriesRepository';
 const mockReformulate = reformulationService.reformulateText as jest.Mock;
 const mockCreateEntry = entriesRepository.createEntry as jest.Mock;
 const mockStartListening = transcriptionService.startListening as jest.Mock;
+const mockStopListening = transcriptionService.stopListening as jest.Mock;
 
 const INITIAL_STATE = {
   phase: 'idle' as const,
@@ -39,7 +40,9 @@ const INITIAL_STATE = {
   editedText: '',
   wasReformulated: false,
   mealType: 'other' as const,
+  mealTypeManuallySet: false,
   recordedAt: null,
+  photoUri: null,
   error: null,
 };
 
@@ -103,13 +106,14 @@ describe('recordingStore', () => {
   describe('stopRecording', () => {
     it('transitions through processing to confirming with reformulated text', async () => {
       mockReformulate.mockResolvedValue({ text: 'Un café et des tartines.', wasReformulated: true });
+      mockStopListening.mockResolvedValueOnce('café et tartines');
 
       act(() => {
         useRecordingStore.getState().startRecording();
       });
 
       await act(async () => {
-        await useRecordingStore.getState().stopRecording('café et tartines');
+        await useRecordingStore.getState().stopRecording();
       });
 
       const state = useRecordingStore.getState();
@@ -121,12 +125,13 @@ describe('recordingStore', () => {
 
     it('uses raw text as editedText when reformulation is unavailable', async () => {
       mockReformulate.mockResolvedValue({ text: 'café au lait', wasReformulated: false });
+      mockStopListening.mockResolvedValueOnce('café au lait');
 
       act(() => {
         useRecordingStore.getState().startRecording();
       });
       await act(async () => {
-        await useRecordingStore.getState().stopRecording('café au lait');
+        await useRecordingStore.getState().stopRecording();
       });
 
       expect(useRecordingStore.getState().editedText).toBe('café au lait');

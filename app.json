@@ -6,7 +6,7 @@
     "icon": "./assets/icon.png",
     "orientation": "portrait",
     "scheme": "racontemoi",
-    "platforms": ["ios"],
+    "platforms": ["ios", "web"],
     "ios": {
       "bundleIdentifier": "app.racontemoi",
       "supportsTablet": false,
@@ -19,6 +19,13 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Raconte-moi accède à ta galerie pour joindre une photo à ta note.",
+          "cameraPermission": "Raconte-moi utilise la caméra pour prendre une photo de ton repas."
+        }
+      ],
       [
         "expo-notifications",
         {

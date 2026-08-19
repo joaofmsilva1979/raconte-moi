@@ -21,7 +21,7 @@ Stack : React Native 0.86.2 + Expo SDK 57 + TypeScript + SQLite local.
 
 ## UX & UI
 Invoquer dans cet ordre avant tout travail visuel :
-1. `/design-research` — inspiration Godly + pattern Mobbin + Refero Styles si dispo
+1. `/design-research` — inspiration Godly + Design Spells + pattern Mobbin + Refero Styles si dispo
 2. `/design-bear` — atmosphère principale (écriture, warm charcoal)
 3. `/design-things3` — patterns iOS, sérénité
 4. `/design-apple-wallet` — surfaces dark si besoin

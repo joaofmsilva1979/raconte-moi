@@ -7,6 +7,9 @@ jest.mock('expo-sharing', () => ({
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: 'file:///documents/',
   copyAsync: jest.fn().mockResolvedValue(undefined),
+  deleteAsync: jest.fn().mockResolvedValue(undefined),
+  readAsStringAsync: jest.fn().mockResolvedValue(''),
+  EncodingType: { Base64: 'base64' },
 }));
 
 import * as Print from 'expo-print';
@@ -66,7 +69,7 @@ describe('pdfService', () => {
     });
 
     it('contient le titre de l\'app', () => {
-      expect(html).toContain('Les notes de patate');
+      expect(html).toContain('Raconte-moi');
     });
   });
 

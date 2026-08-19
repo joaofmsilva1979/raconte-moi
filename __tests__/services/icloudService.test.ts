@@ -3,13 +3,28 @@ jest.mock('expo-file-system/legacy', () => ({
   getInfoAsync: jest.fn(),
   makeDirectoryAsync: jest.fn().mockResolvedValue(undefined),
   copyAsync: jest.fn().mockResolvedValue(undefined),
+  readDirectoryAsync: jest.fn().mockResolvedValue([]),
+  deleteAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('expo-document-picker', () => ({
+  getDocumentAsync: jest.fn().mockResolvedValue({ canceled: true }),
+}));
+
+jest.mock('@/db/database', () => ({
+  getDatabase: jest.fn().mockResolvedValue({
+    runAsync: jest.fn().mockResolvedValue(undefined),
+    execAsync: jest.fn().mockResolvedValue(undefined),
+    getAllAsync: jest.fn().mockResolvedValue([]),
+    getFirstAsync: jest.fn().mockResolvedValue(null),
+  }),
+  closeAndResetDatabase: jest.fn().mockResolvedValue(undefined),
 }));
 
 import * as FileSystem from 'expo-file-system/legacy';
+import * as DocumentPicker from 'expo-document-picker';
 import {
   getLocalDbPath,
-  getIcloudBackupPath,
-  icloudBackupExists,
   backupToIcloud,
   restoreFromIcloud,
   isBackupDue,
@@ -18,10 +33,13 @@ import {
 const mockGetInfoAsync = FileSystem.getInfoAsync as jest.MockedFunction<typeof FileSystem.getInfoAsync>;
 const mockMakeDirectoryAsync = FileSystem.makeDirectoryAsync as jest.MockedFunction<typeof FileSystem.makeDirectoryAsync>;
 const mockCopyAsync = FileSystem.copyAsync as jest.MockedFunction<typeof FileSystem.copyAsync>;
+const mockGetDocumentAsync = DocumentPicker.getDocumentAsync as jest.Mock;
 
 describe('icloudService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (FileSystem.readDirectoryAsync as jest.Mock).mockResolvedValue([]);
+    (FileSystem.deleteAsync as jest.Mock).mockResolvedValue(undefined);
   });
 
   describe('getLocalDbPath', () => {
@@ -29,14 +47,6 @@ describe('icloudService', () => {
       expect(getLocalDbPath()).toBe(
         'file:///var/mobile/Containers/Data/Application/ABC/Documents/SQLite/notesdepatate.db'
       );
-    });
-  });
-
-  describe('getIcloudBackupPath', () => {
-    it('retourne un chemin contenant com~apple~CloudDocs et Les notes de patate/backup.db', () => {
-      const path = getIcloudBackupPath();
-      expect(path).toContain('com~apple~CloudDocs');
-      expect(path).toContain('Les notes de patate/backup.db');
     });
   });
 
@@ -61,30 +71,7 @@ describe('icloudService', () => {
     });
   });
 
-  describe('icloudBackupExists', () => {
-    it('retourne true quand le fichier existe', async () => {
-      mockGetInfoAsync.mockResolvedValue({ exists: true, isDirectory: false, uri: '', size: 0, modificationTime: 0 });
-      await expect(icloudBackupExists()).resolves.toBe(true);
-    });
-
-    it('retourne false quand le fichier n\'existe pas', async () => {
-      mockGetInfoAsync.mockResolvedValue({ exists: false, isDirectory: false, uri: '' });
-      await expect(icloudBackupExists()).resolves.toBe(false);
-    });
-  });
-
   describe('backupToIcloud', () => {
-    it('appelle makeDirectoryAsync puis copyAsync quand le dossier n\'existe pas', async () => {
-      mockGetInfoAsync.mockResolvedValue({ exists: false, isDirectory: false, uri: '' });
-
-      const result = await backupToIcloud();
-
-      expect(mockMakeDirectoryAsync).toHaveBeenCalledTimes(1);
-      expect(mockCopyAsync).toHaveBeenCalledTimes(1);
-      expect(typeof result).toBe('string');
-      expect(() => new Date(result)).not.toThrow();
-    });
-
     it('retourne une string ISO date valide', async () => {
       mockGetInfoAsync.mockResolvedValue({ exists: true, isDirectory: true, uri: '' });
 
@@ -93,25 +80,44 @@ describe('icloudService', () => {
       expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
     });
 
-    it('n\'appelle pas makeDirectoryAsync quand le dossier existe déjà', async () => {
+    it('crée le répertoire de sauvegarde quand il n\'existe pas', async () => {
+      mockGetInfoAsync.mockResolvedValue({ exists: false, isDirectory: false, uri: '' });
+
+      await backupToIcloud();
+
+      expect(mockMakeDirectoryAsync).toHaveBeenCalledTimes(1);
+    });
+
+    it('ne crée pas le répertoire quand il existe déjà', async () => {
       mockGetInfoAsync.mockResolvedValue({ exists: true, isDirectory: true, uri: '' });
 
       await backupToIcloud();
 
       expect(mockMakeDirectoryAsync).not.toHaveBeenCalled();
-      expect(mockCopyAsync).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('restoreFromIcloud', () => {
-    it('appelle copyAsync avec le chemin iCloud comme source et le chemin local comme destination', async () => {
+    it('ne fait rien quand le sélecteur est annulé', async () => {
+      mockGetDocumentAsync.mockResolvedValue({ canceled: true });
+
       await restoreFromIcloud();
 
-      expect(mockCopyAsync).toHaveBeenCalledTimes(1);
-      const call = mockCopyAsync.mock.calls[0][0];
-      expect(call.from).toContain('com~apple~CloudDocs');
-      expect(call.from).toContain('Les notes de patate/backup.db');
-      expect(call.to).toContain('SQLite/notesdepatate.db');
+      expect(mockCopyAsync).not.toHaveBeenCalled();
+    });
+
+    it('appelle copyAsync avec le fichier sélectionné comme source', async () => {
+      mockGetDocumentAsync.mockResolvedValue({
+        canceled: false,
+        assets: [{ uri: 'file:///tmp/backup.db' }],
+      });
+
+      await restoreFromIcloud();
+
+      expect(mockCopyAsync).toHaveBeenCalledWith({
+        from: 'file:///tmp/backup.db',
+        to: expect.stringContaining('SQLite/notesdepatate.db'),
+      });
     });
   });
 });

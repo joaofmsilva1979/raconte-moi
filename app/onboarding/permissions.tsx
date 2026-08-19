@@ -1,7 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { router } from 'expo-router';
-import { requestRecordingPermissionsAsync } from 'expo-audio';
-import * as Notifications from 'expo-notifications';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { OnboardingProgress } from '@/components/OnboardingProgress';
@@ -11,8 +9,12 @@ export default function PermissionsScreen() {
   const { primary } = useColorTheme();
 
   const handleStart = async () => {
-    await requestRecordingPermissionsAsync();
-    await Notifications.requestPermissionsAsync();
+    if (Platform.OS !== 'web') {
+      const { requestRecordingPermissionsAsync } = await import('expo-audio');
+      await requestRecordingPermissionsAsync();
+      const Notifications = await import('expo-notifications');
+      await Notifications.requestPermissionsAsync();
+    }
     await completeOnboarding();
     router.replace('/');
   };
@@ -24,7 +26,9 @@ export default function PermissionsScreen() {
       <View style={styles.content}>
         <Text style={styles.title}>Dernière étape !</Text>
         <Text style={styles.subtitle}>
-          L'app a besoin de 2 permissions pour fonctionner.
+          {Platform.OS === 'web'
+            ? 'Version web — démo sans permissions requises.'
+            : "L'app a besoin de 2 permissions pour fonctionner."}
         </Text>
 
         <View style={[styles.permCard, { backgroundColor: '#FDEEE8' }]}>
@@ -59,7 +63,9 @@ export default function PermissionsScreen() {
         onPress={handleStart}
         activeOpacity={0.85}
       >
-        <Text style={styles.buttonText}>Activer le microphone et les notifications</Text>
+        <Text style={styles.buttonText}>
+          {Platform.OS === 'web' ? 'Commencer la démo' : 'Activer le microphone et les notifications'}
+        </Text>
       </TouchableOpacity>
     </View>
   );

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Raconte-moi — Flux utilisateur</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #FFF8F5; color: #2D1A0E; padding: 32px; }
+  h1 { font-size: 22px; font-weight: 800; color: #E85520; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #C09070; margin-bottom: 32px; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; font-size: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  .flow { display: flex; flex-direction: column; gap: 32px; }
+  .row { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+
+  .screen {
+    border-radius: 16px;
+    border: 2px solid #E85520;
+    background: white;
+    min-width: 220px;
+    max-width: 280px;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(232,85,32,0.1);
+  }
+  .screen-header {
+    background: #E85520;
+    color: white;
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .screen-body { padding: 12px 14px; }
+
+  .sheet {
+    border-radius: 16px;
+    border: 2px solid #8B5CF6;
+    background: white;
+    min-width: 220px;
+    max-width: 280px;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(139,92,246,0.1);
+  }
+  .sheet-header {
+    background: #8B5CF6;
+    color: white;
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .sheet-body { padding: 12px 14px; }
+
+  .action {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+  }
+  .action .icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+  .action .label { font-weight: 600; }
+  .action .dest { color: #6B7280; font-size: 11px; margin-top: 1px; }
+
+  .nav    { background: #FFF0E8; border: 1px solid #F0C0A0; }
+  .modal  { background: #F0F9FF; border: 1px solid #BAE6FD; }
+  .sheet-open { background: #F5F3FF; border: 1px solid #DDD6FE; }
+  .action-fn  { background: #F0FDF4; border: 1px solid #BBF7D0; }
+  .danger     { background: #FEF2F2; border: 1px solid #FECACA; }
+
+  .bug-box {
+    background: #FEF2F2;
+    border: 2px solid #F87171;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    max-width: 340px;
+  }
+  .bug-box h3 { color: #DC2626; font-size: 13px; margin-bottom: 8px; }
+  .bug-box li { margin-bottom: 4px; margin-left: 14px; }
+
+  .ux-box {
+    background: #FFFBEB;
+    border: 2px solid #FCD34D;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    max-width: 340px;
+  }
+  .ux-box h3 { color: #D97706; font-size: 13px; margin-bottom: 8px; }
+  .ux-box li { margin-bottom: 4px; margin-left: 14px; }
+
+  .arrow { font-size: 20px; color: #C09070; margin-top: 40px; padding: 0 4px; }
+  .arrow-down { text-align: center; color: #C09070; font-size: 20px; margin: -12px 0; }
+
+  .section-title { font-size: 14px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .section { margin-bottom: 32px; }
+
+  .issues { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+
+  hr { border: none; border-top: 1px solid #F0D0B8; margin: 24px 0; }
+</style>
+</head>
+<body>
+
+<h1>Raconte-moi — Flux utilisateur complet</h1>
+<p class="subtitle">Généré automatiquement depuis le code source · Août 2026</p>
+
+<!-- LÉGENDE -->
+<div class="legend">
+  <div class="legend-item"><div class="dot" style="background:#E85520"></div> Écran (screen)</div>
+  <div class="legend-item"><div class="dot" style="background:#8B5CF6"></div> Sheet / Modal overlay</div>
+  <div class="legend-item"><div class="dot" style="background:#FFF0E8;border:1px solid #F0C0A0"></div> Navigation vers écran</div>
+  <div class="legend-item"><div class="dot" style="background:#F5F3FF;border:1px solid #DDD6FE"></div> Ouvre une sheet</div>
+  <div class="legend-item"><div class="dot" style="background:#F0F9FF;border:1px solid #BAE6FD"></div> Ouvre une modal inline</div>
+  <div class="legend-item"><div class="dot" style="background:#F0FDF4;border:1px solid #BBF7D0"></div> Action (save/call)</div>
+  <div class="legend-item"><div class="dot" style="background:#FEF2F2;border:1px solid #FECACA"></div> Destructif / Danger</div>
+</div>
+
+<!-- PROBLÈMES IDENTIFIÉS -->
+<div class="section">
+  <div class="section-title">⚠️ Problèmes identifiés</div>
+  <div class="issues">
+    <div class="bug-box">
+      <h3>🔴 Bug : Micro → erreurs</h3>
+      <ul>
+        <li>L'app ne demande pas les permissions micro AVANT d'appeler <code>Voice.start()</code></li>
+        <li>iOS refuse → <code>onSpeechError</code> → message d'erreur</li>
+        <li>Cause probable : <code>NSMicrophoneUsageDescription</code> / <code>NSSpeechRecognitionUsageDescription</code> pas demandées au bon moment</li>
+        <li>→ Fix : ajouter <code>Voice.requestPermissionsAsync()</code> dans <code>startRecording()</code></li>
+      </ul>
+    </div>
+    <div class="ux-box">
+      <h3>🟡 UX : Bouton ✏️ Écrire confus</h3>
+      <ul>
+        <li>Affiche "Ta note" sans contexte repas/sommeil</li>
+        <li>Pas de photo dans cette modal — mais il y en a une sur l'écran suivant (Confirmer)</li>
+        <li>Utilisateur ne sait pas que "Continuer →" mène à un écran riche</li>
+        <li>→ Fix UX : meilleur titre, mention "Tu pourras ajouter une photo ensuite"</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- FLUX PRINCIPAL : SAISIE VOCALE -->
+<div class="section">
+  <div class="section-title">🎙 Flux principal — Saisie vocale</div>
+  <div class="row">
+
+    <div class="screen">
+      <div class="screen-header">🏠 Accueil (index)</div>
+      <div class="screen-body">
+        <div class="action nav">
+          <span class="icon">⚙️</span>
+          <div><div class="label">Réglages</div><div class="dest">→ /settings</div></div>
+        </div>
+        <div class="action nav">
+          <span class="icon">📋</span>
+          <div><div class="label">Notes médicales</div><div class="dest">→ /pro-notes</div></div>
+        </div>
+        <div class="action nav">
+          <span class="icon">📈</span>
+          <div><div class="label">Tendances</div><div class="dest">→ /trends</div></div>
+        </div>
+        <div class="action nav">
+          <span class="icon">🍽️</span>
+          <div><div class="label">Badge repas (tap)</div><div class="dest">→ /meal-picker</div></div>
+        </div>
+        <hr style="margin:8px 0">
+        <div class="action action-fn" style="border:2px solid #E85520">
+          <span class="icon">🎙</span>
+          <div><div class="label">Mic — pressIn</div><div class="dest">startRecording() ⚠️ pas de permission check</div></div>
+        </div>
+        <div class="action action-fn" style="border:2px solid #E85520">
+          <span class="icon">🎙</span>
+          <div><div class="label">Mic — pressOut</div><div class="dest">stopRecording() → si succès → /confirm</div></div>
+        </div>
+        <div class="action modal">
+          <span class="icon">✏️</span>
+          <div><div class="label">Écrire</div><div class="dest">Ouvre modal "Ta note" ⚠️ UX confus</div></div>
+        </div>
+        <hr style="margin:8px 0">
+        <div class="action sheet-open">
+          <span class="icon">💜</span>
+          <div><div class="label">Ressentis</div><div class="dest">Ouvre RessentisSheet</div></div>
+        </div>
+        <div class="action sheet-open">
+          <span class="icon">🏃</span>
+          <div><div class="label">Activités</div><div class="dest">Ouvre ActivitySheet</div></div>
+        </div>
+        <div class="action sheet-open">
+          <span class="icon">💊</span>
+          <div><div class="label">Médicaments</div><div class="dest">Ouvre MedicationSheet</div></div>
+        </div>
+        <div class="action sheet-open">
+          <span class="icon">🩹</span>
+          <div><div class="label">Accessoires</div><div class="dest">Ouvre ComfortAidSheet</div></div>
+        </div>
+        <div class="action sheet-open">
+          <span class="icon">📖</span>
+          <div><div class="label">Mon journal du jour</div><div class="dest">Ouvre JournalSheet</div></div>
+        </div>
+        <div class="action sheet-open">
+          <span class="icon">👆</span>
+          <div><div class="label">Swipe vers le haut</div><div class="dest">Ouvre JournalSheet</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <!-- MODAL TA NOTE -->
+    <div style="display:flex;flex-direction:column;gap:16px;align-items:center">
+      <div class="sheet" style="border-color:#0EA5E9">
+        <div class="sheet-header" style="background:#0EA5E9">💬 Modal "Ta note" (inline)</div>
+        <div class="sheet-body">
+          <div class="action action-fn">
+            <span class="icon">⌨️</span>
+            <div><div class="label">Saisir texte</div><div class="dest">placeholder: "Ce que tu as mangé…"</div></div>
+          </div>
+          <div class="action nav">
+            <span class="icon">→</span>
+            <div><div class="label">Continuer</div><div class="dest">startManualEntry() → /confirm</div></div>
+          </div>
+          <div class="action danger">
+            <span class="icon">✕</span>
+            <div><div class="label">Annuler</div><div class="dest">ferme la modal</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <!-- CONFIRM SCREEN -->
+    <div class="screen">
+      <div class="screen-header">✅ Confirmer (confirm)</div>
+      <div class="screen-body">
+        <div class="action nav">
+          <span class="icon">🍽️</span>
+          <div><div class="label">Badge repas (tap)</div><div class="dest">→ /meal-picker</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">✨</span>
+          <div><div class="label">Voir / Masquer original</div><div class="dest">toggle showOriginal</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">📷</span>
+          <div><div class="label">Photo du plat</div><div class="dest">Ouvre caméra</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">🖼</span>
+          <div><div class="label">Galerie</div><div class="dest">Ouvre galerie photos</div></div>
+        </div>
+        <div class="action sheet-open">
+          <span class="icon">💜</span>
+          <div><div class="label">Ajouter un ressenti</div><div class="dest">Ouvre RessentisSheet</div></div>
+        </div>
+        <div class="action action-fn" style="border:2px solid #E85520">
+          <span class="icon">✓</span>
+          <div><div class="label">Sauvegarder</div><div class="dest">saveEntry() → → accueil</div></div>
+        </div>
+        <div class="action danger">
+          <span class="icon">✕</span>
+          <div><div class="label">Annuler</div><div class="dest">discard() → accueil</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<hr>
+
+<!-- JOURNAL SHEET -->
+<div class="section">
+  <div class="section-title">📖 Journal Sheet (overlay depuis l'accueil)</div>
+  <div class="row">
+    <div class="sheet">
+      <div class="sheet-header">📖 JournalSheet</div>
+      <div class="sheet-body">
+        <div class="action nav">
+          <span class="icon">⚙️</span>
+          <div><div class="label">Réglages & Bilan</div><div class="dest">→ /settings</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">‹</span>
+          <div><div class="label">Semaine précédente</div><div class="dest">setStripAnchor(–7 jours)</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">📅</span>
+          <div><div class="label">Chip jour (tap)</div><div class="dest">loadDay(date)</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">›</span>
+          <div><div class="label">Semaine suivante</div><div class="dest">setStripAnchor(+7 jours) — désactivé si aujourd'hui</div></div>
+        </div>
+        <div class="action modal">
+          <span class="icon">✏️</span>
+          <div><div class="label">Modifier entrée (tap sur item)</div><div class="dest">Ouvre edit modal</div></div>
+        </div>
+        <div class="action danger">
+          <span class="icon">🗑</span>
+          <div><div class="label">Supprimer entrée/ressenti/activité…</div><div class="dest">Alert confirmation → delete</div></div>
+        </div>
+        <div class="action nav">
+          <span class="icon">🎙</span>
+          <div><div class="label">🎙 Ajouter</div><div class="dest">onAddEntry() → ferme sheet → retour accueil</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding-top:12px;color:#C09070;font-size:12px;max-width:200px">
+      <strong>Note :</strong> Le journal montre les entrées, ressentis, activités, médicaments, accessoires, sommeil du jour sélectionné. Chaque item est éditable et supprimable.
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- RESSENTIS SHEET -->
+<div class="section">
+  <div class="section-title">💜 Ressentis Sheet (depuis accueil OU écran confirmer)</div>
+  <div class="row">
+    <div class="sheet">
+      <div class="sheet-header">💜 RessentisSheet</div>
+      <div class="sheet-body">
+        <div class="action action-fn">
+          <span class="icon">😣</span>
+          <div><div class="label">Catégories (Ballonnement, Douleur, Bien…)</div><div class="dest">toggleCategory()</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">🫃</span>
+          <div><div class="label">Sous-catégories (Ventre, Tête…)</div><div class="dest">toggleSubCategory() — visible si "Douleur" sélectionné</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">⏰</span>
+          <div><div class="label">Slots (Au réveil, Petit-déj, Déjeuner…)</div><div class="dest">selectSlot() — optionnel</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">😴</span>
+          <div><div class="label">Qualité sommeil</div><div class="dest">setSleepQuality() — visible si "Au réveil" sélectionné</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">📅</span>
+          <div><div class="label">Aujourd'hui / Hier</div><div class="dest">setMealDay() — visible si slot repas sélectionné</div></div>
+        </div>
+        <div class="action action-fn" style="border:2px solid #8B5CF6">
+          <span class="icon">💜</span>
+          <div><div class="label">Enregistrer</div><div class="dest">saveRessenti() — visible si catégorie sélectionnée</div></div>
+        </div>
+        <div class="action danger">
+          <span class="icon">✕</span>
+          <div><div class="label">Annuler</div><div class="dest">closeSheet()</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- AUTRES ÉCRANS -->
+<div class="section">
+  <div class="section-title">📊 Autres écrans</div>
+  <div class="row">
+
+    <div class="screen" style="border-color:#6B7280">
+      <div class="screen-header" style="background:#6B7280">🍽️ Meal Picker</div>
+      <div class="screen-body">
+        <div class="action action-fn">
+          <span class="icon">🍽️</span>
+          <div><div class="label">Choisir repas (Petit-déj, Déjeuner, Collation, Dîner)</div><div class="dest">setMealType() → router.back()</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" style="border-color:#6B7280">
+      <div class="screen-header" style="background:#6B7280">📈 Tendances</div>
+      <div class="screen-body">
+        <div class="action action-fn">
+          <span class="icon">←</span>
+          <div><div class="label">Retour</div><div class="dest">router.back()</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">📅</span>
+          <div><div class="label">Semaine / Mois</div><div class="dest">switchMode()</div></div>
+        </div>
+        <div class="action action-fn">
+          <span class="icon">‹ ›</span>
+          <div><div class="label">Période précédente / suivante</div><div class="dest">goBack() / goForward()</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" style="border-color:#6B7280">
+      <div class="screen-header" style="background:#6B7280">📋 Notes Pro</div>
+      <div class="screen-body">
+        <div class="action modal">
+          <span class="icon">+</span>
+          <div><div class="label">Ajouter note</div><div class="dest">Ouvre modal (texte ou import fichier)</div></div>
+        </div>
+        <div class="action nav">
+          <span class="icon">📄</span>
+          <div><div class="label">Tap note</div><div class="dest">→ /pro-note-detail</div></div>
+        </div>
+        <div class="action danger">
+          <span class="icon">🗑</span>
+          <div><div class="label">Long press note</div><div class="dest">Alert confirmation → delete</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div style="margin-top:32px;font-size:11px;color:#C09070;text-align:center">
+  Généré depuis le code source · /Users/joao.silva/projects/les-notes-de-patate · Août 2026
+</div>
+
+</body>
+</html>

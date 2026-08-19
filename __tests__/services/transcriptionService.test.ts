@@ -1,3 +1,9 @@
+jest.mock('react-native', () => {
+  const rn = jest.requireActual('react-native');
+  rn.NativeModules.Voice = { name: 'Voice' }; // simule la présence du module natif
+  return rn;
+});
+
 jest.mock('@react-native-voice/voice', () => ({
   __esModule: true,
   default: {
@@ -51,9 +57,18 @@ describe('transcriptionService', () => {
       const onError = jest.fn();
       startListening(jest.fn(), onError);
 
+      (Voice.onSpeechError as any)({ error: { message: 'network error' } });
+      expect(onError).toHaveBeenCalledWith(expect.any(Error));
+      expect(onError.mock.calls[0][0].message).toBe('network error');
+    });
+
+    it('converts permission errors to a user-friendly French message', () => {
+      const onError = jest.fn();
+      startListening(jest.fn(), onError);
+
       (Voice.onSpeechError as any)({ error: { message: 'mic denied' } });
       expect(onError).toHaveBeenCalledWith(expect.any(Error));
-      expect(onError.mock.calls[0][0].message).toBe('mic denied');
+      expect(onError.mock.calls[0][0].message).toContain('Réglages');
     });
 
     it('returns empty string when value array is empty', () => {
@@ -66,9 +81,19 @@ describe('transcriptionService', () => {
   });
 
   describe('stopListening', () => {
-    it('calls Voice.stop', async () => {
-      await stopListening();
+    it('calls Voice.stop and resolves with the transcript from onSpeechResults', async () => {
+      const promise = stopListening();
+      (Voice.onSpeechResults as any)({ value: ['bonjour le monde'] });
+      const result = await promise;
       expect(Voice.stop).toHaveBeenCalled();
+      expect(result).toBe('bonjour le monde');
+    });
+
+    it('resolves with empty string when onSpeechResults returns no values', async () => {
+      const promise = stopListening();
+      (Voice.onSpeechResults as any)({ value: [] });
+      const result = await promise;
+      expect(result).toBe('');
     });
   });
 

@@ -1,10 +1,13 @@
 import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 let db: SQLite.SQLiteDatabase | null = null;
 
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (db) return db;
-  db = await SQLite.openDatabaseAsync('notesdepatate.db');
+  // Web: use in-memory SQLite to avoid OPFS/SharedArrayBuffer issues on Safari
+  const dbName = Platform.OS === 'web' ? ':memory:' : 'notesdepatate.db';
+  db = await SQLite.openDatabaseAsync(dbName);
   return db;
 }
 

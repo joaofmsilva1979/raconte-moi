@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { initDatabase } from '@/db/database';
 import { useSettingsStore } from '@/store/settingsStore';
 import { configureNotificationHandler, scheduleReminders, NotificationSettings } from '@/services/notificationService';
-import * as Notifications from 'expo-notifications';
 import { MealType } from '@/types';
 import { useRecordingStore } from '@/store/recordingStore';
 
@@ -40,17 +40,20 @@ export default function RootLayout() {
         } catch {}
       })
       .then(() => setDbReady(true))
-      .catch(() => {});
+      .catch(() => setDbReady(true)); // Ne jamais bloquer le render, même si la DB échoue
   }, []);
 
   useEffect(() => {
-    const sub = Notifications.addNotificationResponseReceivedListener(response => {
-      const mealType = response.notification.request.content.data?.meal_type as MealType | undefined;
-      if (mealType) {
-        useRecordingStore.getState().setMealType(mealType);
-      }
-    });
-    return () => sub.remove();
+    if (Platform.OS === 'web') return;
+    const run = async () => {
+      const Notifications = await import('expo-notifications');
+      const sub = Notifications.addNotificationResponseReceivedListener(response => {
+        const mealType = response.notification.request.content.data?.meal_type as MealType | undefined;
+        if (mealType) useRecordingStore.getState().setMealType(mealType);
+      });
+      return () => sub.remove();
+    };
+    run();
   }, []);
 
   if (!dbReady) return null;

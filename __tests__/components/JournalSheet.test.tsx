@@ -10,9 +10,25 @@ jest.mock('@/components/JournalTimeline', () => ({
   JournalTimeline: () => null,
 }));
 
+jest.mock('@/db/entriesRepository', () => ({
+  getActiveDates: jest.fn().mockResolvedValue([]),
+  updateEntryTranscript: jest.fn().mockResolvedValue(undefined),
+  updateEntryPhoto: jest.fn().mockResolvedValue(undefined),
+  deleteEntry: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/db/ressentisRepository', () => ({
+  updateRessenti: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock('@/utils/dateUtils', () => ({
-  formatDate: jest.fn((date: Date) => date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0')),
-  formatDateLabel: jest.fn((dateStr: string) => dateStr === '2026-08-08' ? "Aujourd'hui" : dateStr),
+  formatDate: jest.fn(() => '2026-08-19'),
+  formatDateLabel: jest.fn((dateStr: string) => dateStr === '2026-08-19' ? "Aujourd'hui" : dateStr),
+  addDays: jest.fn((dateStr: string, n: number) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d + n);
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+  }),
 }));
 
 jest.mock('@/constants/meals', () => ({
@@ -32,10 +48,20 @@ const mockUseJournalStore = useJournalStore as jest.MockedFunction<typeof useJou
 const baseState = {
   isSheetOpen: true,
   entries: [],
-  viewedDate: '2026-08-08',
+  ressentis: [],
+  activities: [],
+  sleepLog: null,
+  medicationLogs: [],
+  comfortAidLogs: [],
+  viewedDate: '2026-08-19',
   closeSheet: jest.fn(),
-  goToPreviousDay: jest.fn().mockResolvedValue(undefined),
-  goToNextDay: jest.fn().mockResolvedValue(undefined),
+  loadDay: jest.fn().mockResolvedValue(undefined),
+  refreshCurrentDay: jest.fn().mockResolvedValue(undefined),
+  deleteRessentiLog: jest.fn().mockResolvedValue(undefined),
+  deleteActivityLog: jest.fn().mockResolvedValue(undefined),
+  deleteMedLog: jest.fn().mockResolvedValue(undefined),
+  deleteAidLog: jest.fn().mockResolvedValue(undefined),
+  deleteSleep: jest.fn().mockResolvedValue(undefined),
 };
 
 describe('JournalSheet', () => {
@@ -61,31 +87,19 @@ describe('JournalSheet', () => {
     expect(getByTestId('journal-sheet')).toBeTruthy();
   });
 
-  it("shows the date label (Aujourd'hui)", async () => {
-    const { getByText } = await render(
-      <JournalSheet primaryColor="#E85520" onAddEntry={onAddEntry} />
-    );
-    expect(getByText("Aujourd'hui")).toBeTruthy();
-  });
-
-  it('calls goToPreviousDay when ‹ is pressed', async () => {
+  it('renders prev-week and next-week navigation buttons', async () => {
     const { getByTestId } = await render(
       <JournalSheet primaryColor="#E85520" onAddEntry={onAddEntry} />
     );
-    fireEvent.press(getByTestId('prev-day-btn'));
-    expect(baseState.goToPreviousDay).toHaveBeenCalled();
+    expect(getByTestId('prev-week-btn')).toBeTruthy();
+    expect(getByTestId('next-week-btn')).toBeTruthy();
   });
 
-  it('calls goToNextDay when › is pressed and not on today', async () => {
-    mockUseJournalStore.mockReturnValue({
-      ...baseState,
-      viewedDate: '2026-08-07',
-    } as any);
+  it('pressing prev-week-btn does not throw', async () => {
     const { getByTestId } = await render(
       <JournalSheet primaryColor="#E85520" onAddEntry={onAddEntry} />
     );
-    fireEvent.press(getByTestId('next-day-btn'));
-    expect(baseState.goToNextDay).toHaveBeenCalled();
+    expect(() => fireEvent.press(getByTestId('prev-week-btn'))).not.toThrow();
   });
 
   it('calls onAddEntry when the add button is pressed', async () => {

@@ -8,10 +8,22 @@ jest.mock('@/db/ressentisRepository', () => ({
 
 jest.mock('@/db/activitiesRepository', () => ({
   getActivitiesForDay: jest.fn().mockResolvedValue([]),
+  deleteActivity: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('@/db/sleepRepository', () => ({
   getSleepForDay: jest.fn().mockResolvedValue(null),
+  deleteSleepLog: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/db/medicationsRepository', () => ({
+  getMedicationLogsForDay: jest.fn().mockResolvedValue([]),
+  deleteMedicationLog: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/db/comfortAidsRepository', () => ({
+  getComfortAidLogsForDay: jest.fn().mockResolvedValue([]),
+  deleteComfortAidLog: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('@/utils/dateUtils', () => ({
@@ -102,7 +114,12 @@ describe('journalStore', () => {
       act(() => { useJournalStore.getState().loadDay(FAKE_TODAY); });
       expect(useJournalStore.getState().isLoading).toBe(true);
 
-      await act(async () => { resolve!([]); await Promise.resolve(); });
+      await act(async () => {
+        resolve!([]);
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
       expect(useJournalStore.getState().isLoading).toBe(false);
     });
 

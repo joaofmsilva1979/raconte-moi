@@ -33,7 +33,7 @@ interface RecordingState {
 
 interface RecordingActions {
   startRecording: () => void;
-  stopRecording: (finalText: string) => Promise<void>;
+  stopRecording: () => Promise<void>;
   startManualEntry: (text: string) => void;
   updateEditedText: (text: string) => void;
   setMealType: (mealType: MealType) => void;
@@ -75,8 +75,8 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
     );
   },
 
-  stopRecording: async (finalText: string) => {
-    await stopListening();
+  stopRecording: async () => {
+    const finalText = await stopListening();
     set({ phase: 'processing', rawText: finalText });
 
     const { text, wasReformulated } = await reformulateText(finalText);

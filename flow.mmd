@@ -1,0 +1,66 @@
+flowchart TD
+    OB["🚀 Onboarding\n(premier lancement)"]
+    OB -->|onboarding_done = true| HOME
+
+    HOME["🏠 HOME SCREEN\n────────────────\n⚙️  📋  📈  |  Badge repas\n─────────────────\n🎙️ Mic  ✏️ Écrire\n─────────────────\n💜 🏃 💊 🩹\n📖 Journal du jour"]
+
+    HOME -->|"⚙️ Réglages"| SETTINGS["⚙️ Réglages\n(couleur, prénom,\nobjectif, backup)"]
+    HOME -->|"📋 Pro Notes"| PRONOTES["📋 Notes médicales\n(lecture seule)"]
+    HOME -->|"📈 Tendances"| TRENDS["📈 Tendances\n(graphiques semaine)"]
+    HOME -->|"Badge repas"| MEALPICKER["🍽️ Meal Picker\n(breakfast / lunch /\ndineer / snack)"]
+
+    HOME -->|"🎙️ Maintiens appuyé"| REC["🔴 RECORDING\n(waveform + transcript\nen temps réel)"]
+    REC -->|"Relâche"| PROC["⏳ Processing\n(reformulation IA)"]
+
+    HOME -->|"✏️ Écrire à la place"| MODAL["✏️ Modal\n'Décris ton repas'\n(texte libre)"]
+    MODAL -->|"Continuer →"| PROC
+
+    PROC --> CONFIRM
+
+    CONFIRM["✅ CONFIRM SCREEN\n────────────────\n✨ Texte reformulé\n+ texte original (toggle)\n────────────────\n📷 Ajouter photo\n✅ Enregistrer\n✕ Annuler"]
+
+    CONFIRM -->|"✅ Enregistrer"| HOME
+    CONFIRM -->|"✕ Annuler"| HOME
+    CONFIRM -->|"📷 Photo"| PHOTO["📷 Photo Picker\n(caméra / galerie)"]
+    PHOTO --> CONFIRM
+
+    HOME -->|"💜 Ressentis"| RS["💜 RESSENTIS SHEET\n────────────────\nSlots : matin / petit-déj /\ndéj / snack / dîner\n────────────────\nCatégories : douleur,\nbloating, fatigue…\n+ note libre + intensité"]
+
+    HOME -->|"🏃 Activités"| AS["🏃 ACTIVITÉ SHEET\n────────────────\nType + durée\n(objectif quotidien 30min)"]
+
+    HOME -->|"💊 Médicaments"| MS["💊 MÉDICAMENT SHEET\n────────────────\nNom + dose + heure"]
+
+    HOME -->|"🩹 Accessoires"| CS["🩹 ACCESSOIRES SHEET\n────────────────\nbouillotte, ceinture,\ncoussin…"]
+
+    HOME -->|"📖 Journal\nou swipe ↑"| JS["📖 JOURNAL SHEET\n────────────────\nStrip semaine ← →\n────────────────\nRepas du jour\nRessentis\nActivités\nMédicaments\nAccessoires\nSommeil"]
+
+    JS -->|"← semaine précédente"| JS
+    JS -->|"Semaine suivante →\n(≤ aujourd'hui)"| JS
+    JS -->|"Supprimer entrée"| JS
+
+    SETTINGS -->|"Fermer"| HOME
+    TRENDS -->|"Retour"| HOME
+    PRONOTES -->|"Retour"| HOME
+    MEALPICKER -->|"Sélection"| HOME
+    RS -->|"Fermer"| HOME
+    AS -->|"Fermer"| HOME
+    MS -->|"Fermer"| HOME
+    CS -->|"Fermer"| HOME
+    JS -->|"Fermer"| HOME
+
+    style HOME fill:#FEF3C7,stroke:#F59E0B,color:#92400E
+    style CONFIRM fill:#DCFCE7,stroke:#22C55E,color:#166534
+    style OB fill:#FEE2E2,stroke:#EF4444,color:#991B1B
+    style REC fill:#FEE2E2,stroke:#EF4444,color:#991B1B
+    style PROC fill:#F5F3FF,stroke:#8B5CF6,color:#5B21B6
+    style MODAL fill:#FFF7ED,stroke:#F97316,color:#9A3412
+    style PHOTO fill:#F0F9FF,stroke:#0EA5E9,color:#0369A1
+    style JS fill:#FEF3C7,stroke:#F59E0B,color:#92400E
+    style RS fill:#F5F3FF,stroke:#8B5CF6,color:#5B21B6
+    style AS fill:#F0FDF4,stroke:#22C55E,color:#166534
+    style MS fill:#EFF6FF,stroke:#3B82F6,color:#1D4ED8
+    style CS fill:#F0F9FF,stroke:#0EA5E9,color:#0369A1
+    style SETTINGS fill:#F9FAFB,stroke:#6B7280,color:#374151
+    style TRENDS fill:#F9FAFB,stroke:#6B7280,color:#374151
+    style PRONOTES fill:#F9FAFB,stroke:#6B7280,color:#374151
+    style MEALPICKER fill:#FEF3C7,stroke:#F59E0B,color:#92400E

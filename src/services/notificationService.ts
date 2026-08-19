@@ -1,4 +1,4 @@
-import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { MealSlot, MealType } from '@/types';
 
 export interface NotificationSettings {
@@ -33,60 +33,53 @@ const NOTIFICATION_CONTENT: Partial<Record<MealType, NotificationContent>> = {
   },
 };
 
-// Configure le handler global (appeler 1 fois avant render)
 export function configureNotificationHandler(): void {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
+  if (Platform.OS === 'web') return;
+  import('expo-notifications').then(Notifications => {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
   });
 }
 
-// Retourne l'heure de rappel (milieu de la plage, jamais < 7 ni >= 22). Null si hors plage.
 export function getReminderHour(startHour: number, endHour: number): number | null {
   const mid = Math.round((startHour + endHour) / 2);
   if (mid < 7 || mid >= 22) return null;
   return mid;
 }
 
-// Annule tous les rappels planifiés
 export async function cancelAllReminders(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  const Notifications = await import('expo-notifications');
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
-// Planifie les rappels quotidiens. Annule d'abord tout, puis replanifie.
 export async function scheduleReminders(
   slots: MealSlot[],
   notifSettings: NotificationSettings
 ): Promise<void> {
+  if (Platform.OS === 'web') return;
   await cancelAllReminders();
-
   if (!notifSettings.enabled) return;
 
+  const Notifications = await import('expo-notifications');
   for (const slot of slots) {
     const toggleKey = slot.meal_type as keyof NotificationSettings;
     if (toggleKey === 'enabled') continue;
-
-    const isEnabled = notifSettings[toggleKey];
-    if (!isEnabled) continue;
-
+    if (!notifSettings[toggleKey]) continue;
     const reminderHour = getReminderHour(slot.start_hour, slot.end_hour);
     if (reminderHour === null) continue;
-
     const content = NOTIFICATION_CONTENT[slot.meal_type];
     if (!content) continue;
-
     await Notifications.scheduleNotificationAsync({
       identifier: 'reminder_' + slot.meal_type,
-      content: {
-        title: content.title,
-        body: content.body,
-        data: { meal_type: slot.meal_type },
-      },
+      content: { title: content.title, body: content.body, data: { meal_type: slot.meal_type } },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: reminderHour,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
   Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
@@ -42,6 +42,9 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
     saveCustomLocation, removeCustomLocation, saveRessenti, closeSheet,
   } = useRessentisStore();
 
+  const [showAddPain, setShowAddPain] = useState(false);
+  const [addPainText, setAddPainText] = useState('');
+
   if (!isSheetOpen) return null;
 
   const slot = currentSlot(mode, selected_meal, moment);
@@ -50,8 +53,13 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
   const isMealSlot = slot !== null && slot !== 'morning';
   const isMorning = slot === 'morning';
 
-  const showSaveCustom = sub_categories.includes('other') && subNote.trim().length > 2
-    && !customPainLocations.some(l => l.label.toLowerCase() === subNote.trim().toLowerCase());
+  function handleAddPain() {
+    const name = addPainText.trim();
+    if (name.length < 2) return;
+    saveCustomLocation(name);
+    setAddPainText('');
+    setShowAddPain(false);
+  }
 
   const canSave = categories.length > 0 || (isMorning && sleepQuality !== null);
 
@@ -132,7 +140,7 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
                 )}
 
                 <View style={styles.subRow}>
-                  {RESSENTI_SUB_CATEGORIES.map((item) => {
+                  {RESSENTI_SUB_CATEGORIES.filter(i => i.sub !== 'other').map((item) => {
                     const selected = sub_categories.includes(item.sub);
                     return (
                       <TouchableOpacity
@@ -148,32 +156,36 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
                       </TouchableOpacity>
                     );
                   })}
+                  <TouchableOpacity
+                    testID="subcategory-btn-other"
+                    onPress={() => setShowAddPain(v => !v)}
+                    style={[styles.subChip, { borderStyle: 'dashed' }]}
+                  >
+                    <Text style={[styles.subChipText, { color: '#7C3AED' }]}>✏️ Autre</Text>
+                  </TouchableOpacity>
                 </View>
 
-                {sub_categories.includes('other') && (
-                  <View style={styles.subNoteRow}>
+                {showAddPain && (
+                  <View style={styles.addPainBox}>
                     <TextInput
-                      style={styles.subNoteInput}
-                      placeholder="Précise où… (ex: genou)"
-                      placeholderTextColor="#C09070"
-                      value={subNote}
-                      onChangeText={setSubNote}
+                      style={styles.addPainInput}
+                      placeholder="Ex: genou, cheville, cou…"
+                      placeholderTextColor="#B090D0"
+                      value={addPainText}
+                      onChangeText={setAddPainText}
+                      autoFocus
                       returnKeyType="done"
-                      onSubmitEditing={Keyboard.dismiss}
+                      onSubmitEditing={handleAddPain}
                       blurOnSubmit
                     />
-                    {showSaveCustom && (
-                      <TouchableOpacity
-                        onPress={() => saveCustomLocation(subNote)}
-                        style={styles.saveCustomBtn}
-                      >
-                        <Text style={styles.saveCustomText}>💾</Text>
-                      </TouchableOpacity>
-                    )}
+                    <TouchableOpacity
+                      onPress={handleAddPain}
+                      style={[styles.addPainBtn, addPainText.trim().length < 2 && { opacity: 0.4 }]}
+                      disabled={addPainText.trim().length < 2}
+                    >
+                      <Text style={styles.addPainBtnText}>Ajouter</Text>
+                    </TouchableOpacity>
                   </View>
-                )}
-                {showSaveCustom && (
-                  <Text style={styles.saveCustomHint}>Appuie sur 💾 pour créer un raccourci</Text>
                 )}
               </View>
             )}
@@ -201,6 +213,7 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
                 return (
                   <TouchableOpacity
                     key={s.id}
+                    testID={`slot-btn-${s.id}`}
                     onPress={() => handleSlotPress(s.id)}
                     style={[styles.chip, sel && styles.chipSlotSelected]}
                   >
@@ -335,18 +348,17 @@ const styles = StyleSheet.create({
   customDelete: { marginLeft: -4, paddingHorizontal: 6, paddingVertical: 5 },
   customDeleteText: { fontSize: 10, color: '#9CA3AF' },
 
-  subNoteRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  subNoteInput: {
-    flex: 1, borderWidth: 1.5, borderColor: '#C4B5FD', borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 8,
+  addPainBox: { marginTop: 10, gap: 8 },
+  addPainInput: {
+    borderWidth: 1.5, borderColor: '#8B5CF6', borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 10,
     fontSize: 14, color: '#2D1A0E', backgroundColor: 'white',
   },
-  saveCustomBtn: {
-    width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
-    borderRadius: 10, backgroundColor: '#EDE9FE', borderWidth: 1.5, borderColor: '#8B5CF6',
+  addPainBtn: {
+    backgroundColor: '#8B5CF6', borderRadius: 10,
+    paddingVertical: 10, alignItems: 'center',
   },
-  saveCustomText: { fontSize: 18 },
-  saveCustomHint: { fontSize: 10, color: '#9370C0', fontStyle: 'italic' },
+  addPainBtnText: { color: 'white', fontWeight: '700', fontSize: 14 },
 
   noteInput: {
     marginTop: 10, borderWidth: 1.5, borderColor: '#E9D5FF',

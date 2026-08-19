@@ -123,7 +123,7 @@ describe('HomeScreen', () => {
     expect(baseRecordingState.startRecording).toHaveBeenCalled();
   });
 
-  it('calls stopRecording with partialTranscript on mic pressOut', async () => {
+  it('calls stopRecording on mic pressOut', async () => {
     mockRecording.mockReturnValue({
       ...baseRecordingState,
       phase: 'recording' as const,
@@ -134,7 +134,7 @@ describe('HomeScreen', () => {
     await act(async () => {
       fireEvent(getByTestId('mic-button'), 'pressOut');
     });
-    expect(baseRecordingState.stopRecording).toHaveBeenCalledWith('café au lait');
+    expect(baseRecordingState.stopRecording).toHaveBeenCalled();
   });
 
   it('shows WaveformView when recording', async () => {

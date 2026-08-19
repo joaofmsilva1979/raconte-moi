@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, PanResponder, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, PanResponder, Modal, TextInput, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { useRouter, Redirect } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
@@ -8,7 +8,6 @@ import { useJournalStore } from '@/store/journalStore';
 import { useRessentisStore } from '@/store/ressentisStore';
 import { MicButton } from '@/components/MicButton';
 import { WaveformView } from '@/components/WaveformView';
-import { MealBadge } from '@/components/MealBadge';
 import { JournalSheet } from '@/components/JournalSheet';
 import { RessentisSheet } from '@/components/RessentisSheet';
 import { ActivitySheet } from '@/components/ActivitySheet';
@@ -26,8 +25,6 @@ export default function HomeScreen() {
   const {
     phase,
     partialTranscript,
-    mealType,
-    recordedAt,
     startRecording,
     stopRecording,
     startManualEntry,
@@ -124,16 +121,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Meal badge — compact, centered */}
-      <View style={styles.mealRow}>
-        <MealBadge
-          mealType={mealType}
-          time={recordedAt ?? new Date()}
-          onPress={() => router.push('/meal-picker')}
-          primaryColor={primary}
-        />
-      </View>
-
       {/* Center: mic hero */}
       <View style={styles.centerSection}>
         {isRecording && (
@@ -150,14 +137,21 @@ export default function HomeScreen() {
         )}
 
         {recordingError && (
-          <Text style={styles.errorText}>⚠️ {recordingError}</Text>
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>⚠️ {recordingError}</Text>
+            {recordingError.includes('Réglages') && (
+              <TouchableOpacity onPress={() => Linking.openSettings()}>
+                <Text style={styles.errorLink}>→ Ouvrir les Réglages</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         )}
 
         <MicButton
           primaryColor={primary}
           isRecording={isRecording}
           onPressIn={startRecording}
-          onPressOut={() => stopRecording(partialTranscript)}
+          onPressOut={stopRecording}
         />
 
         <Text style={styles.hint}>
@@ -166,7 +160,7 @@ export default function HomeScreen() {
 
         {!isRecording && !isProcessing && (
           <TouchableOpacity onPress={() => { setManualText(''); setShowManualModal(true); }} accessibilityLabel="Saisir manuellement">
-            <Text style={[styles.manualLink, { color: primary }]}>✏️ Écrire</Text>
+            <Text style={[styles.manualLink, { color: primary }]}>✏️ Écrire à la place</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -238,12 +232,13 @@ export default function HomeScreen() {
       <Modal visible={showManualModal} transparent animationType="fade" onRequestClose={() => setShowManualModal(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Ta note</Text>
+            <Text style={styles.modalTitle}>Décris ton repas</Text>
+            <Text style={styles.modalSubtitle}>Ce que tu as mangé, bu, ressenti — tu pourras ajouter une 📷 photo juste après.</Text>
             <TextInput
               style={styles.modalInput}
               value={manualText}
               onChangeText={setManualText}
-              placeholder="Ce que tu as mangé, comment tu te sens…"
+              placeholder="Ex : soupe de légumes, une douleur après…"
               placeholderTextColor="#C09070"
               multiline
               autoFocus
@@ -310,10 +305,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   topIconText: { fontSize: 16 },
-  mealRow: {
-    alignItems: 'center',
-    marginTop: 10,
-  },
   centerSection: {
     flex: 1,
     alignItems: 'center',
@@ -348,6 +339,11 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     letterSpacing: 0.1,
   },
+  errorBox: {
+    alignItems: 'center',
+    width: '100%',
+    gap: 6,
+  },
   errorText: {
     fontSize: 13,
     color: '#DC2626',
@@ -357,6 +353,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     width: '100%',
+  },
+  errorLink: {
+    fontSize: 13,
+    color: '#DC2626',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   hint: {
     fontSize: 15,
@@ -439,6 +441,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#2D1A0E',
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    lineHeight: 18,
   },
   modalInput: {
     borderWidth: 1.5,

@@ -15,7 +15,11 @@ import { useRecordingStore } from '@/store/recordingStore';
 import { useRessentisStore } from '@/store/ressentisStore';
 import { MealBadge } from '@/components/MealBadge';
 import { RessentisSheet } from '@/components/RessentisSheet';
-import * as ImagePicker from 'expo-image-picker';
+// expo-image-picker instancie un NativeEventEmitter au chargement — même stratégie
+// que @react-native-voice/voice : require() uniquement à l'appel, jamais au top-level.
+function getImagePicker() {
+  return require('expo-image-picker') as typeof import('expo-image-picker');
+}
 
 export default function ConfirmScreen() {
   const router = useRouter();
@@ -38,6 +42,7 @@ export default function ConfirmScreen() {
   const [showOriginal, setShowOriginal] = useState(false);
 
   async function handleTakePhoto() {
+    const ImagePicker = getImagePicker();
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') return;
     const result = await ImagePicker.launchCameraAsync({
@@ -52,6 +57,7 @@ export default function ConfirmScreen() {
   }
 
   async function handlePickPhoto() {
+    const ImagePicker = getImagePicker();
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.7,
@@ -87,7 +93,7 @@ export default function ConfirmScreen() {
 
         <View style={styles.textSection}>
           {wasReformulated && (
-            <Text style={styles.reformulatedLabel}>✨ Reformulé :</Text>
+            <Text style={styles.reformulatedLabel}>✨ reformulé :</Text>
           )}
           <TextInput
             style={styles.textInput}
@@ -101,7 +107,7 @@ export default function ConfirmScreen() {
         {wasReformulated && (
           <TouchableOpacity onPress={() => setShowOriginal((v) => !v)} style={styles.toggleRow}>
             <Text style={[styles.link, { color: primary }]}>
-              {showOriginal ? '✕ Masquer l\'original' : '✨ Voir l\'original'}
+              {showOriginal ? 'Masquer l\'original' : 'Voir original'}
             </Text>
           </TouchableOpacity>
         )}
