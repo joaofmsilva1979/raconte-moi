@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 import { MealType } from '@/types';
 import { startListening, stopListening, destroyListener } from '@/services/transcriptionService';
@@ -8,6 +8,8 @@ import { detectMealType } from '@/services/mealDetection';
 import { getMealSlots } from '@/db/settingsRepository';
 
 async function persistPhoto(tempUri: string): Promise<string> {
+  if (Platform.OS === 'web') return tempUri;
+  const FileSystem = await import('expo-file-system/legacy');
   const dir = (FileSystem.documentDirectory ?? '') + 'photos/';
   const info = await FileSystem.getInfoAsync(dir);
   if (!info.exists) await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
@@ -28,6 +30,7 @@ interface RecordingState {
   mealTypeManuallySet: boolean;
   recordedAt: Date | null;
   photoUri: string | null;
+  isPhotoTemporary: boolean;
   error: string | null;
 }
 
@@ -53,6 +56,7 @@ const initialState: RecordingState = {
   mealTypeManuallySet: false,
   recordedAt: null,
   photoUri: null,
+  isPhotoTemporary: false,
   error: null,
 };
 
@@ -76,11 +80,16 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
   },
 
   stopRecording: async () => {
-    const finalText = await stopListening();
-    set({ phase: 'processing', rawText: finalText });
+    try {
+      const finalText = await stopListening();
+      set({ phase: 'processing', rawText: finalText });
 
-    const { text, wasReformulated } = await reformulateText(finalText);
-    set({ editedText: text, wasReformulated, phase: 'confirming' });
+      const { text, wasReformulated } = await reformulateText(finalText);
+      set({ editedText: text, wasReformulated, phase: 'confirming' });
+    } catch (e) {
+      console.error('[RecordingStore] stopRecording failed:', e);
+      set({ phase: 'idle', error: (e instanceof Error ? e.message : null) ?? 'Erreur lors de l\'enregistrement' });
+    }
   },
 
   startManualEntry: (text: string) => {
@@ -104,27 +113,33 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
 
   setMealType: (mealType: MealType) => set({ mealType, mealTypeManuallySet: true }),
 
-  setPhotoUri: (photoUri: string | null) => set({ photoUri }),
+  setPhotoUri: (photoUri: string | null) => set({ photoUri, isPhotoTemporary: photoUri !== null }),
 
   saveEntry: async () => {
-    const { editedText, rawText, wasReformulated, mealType, recordedAt, photoUri } = get();
+    const { editedText, rawText, wasReformulated, mealType, recordedAt, photoUri, isPhotoTemporary } = get();
     set({ phase: 'saving' });
 
-    let permanentPhotoUri = photoUri;
-    if (photoUri && !photoUri.includes('/photos/photo_')) {
-      permanentPhotoUri = await persistPhoto(photoUri).catch(() => photoUri);
+    try {
+      let permanentPhotoUri = photoUri;
+      if (photoUri && isPhotoTemporary) {
+        permanentPhotoUri = await persistPhoto(photoUri).catch(() => photoUri);
+      }
+
+      await createEntry({
+        transcript: editedText,
+        raw_text: wasReformulated ? rawText : null,
+        meal_type: mealType,
+        recorded_at: (recordedAt ?? new Date()).toISOString(),
+        photo_uri: permanentPhotoUri,
+      });
+
+      await destroyListener();
+      set(initialState);
+    } catch (e) {
+      console.error('[RecordingStore] saveEntry failed:', e);
+      // Revenir à confirming pour que l'utilisateur puisse réessayer
+      set({ phase: 'confirming', error: 'Impossible de sauvegarder — réessaie' });
     }
-
-    await createEntry({
-      transcript: editedText,
-      raw_text: wasReformulated ? rawText : null,
-      meal_type: mealType,
-      recorded_at: (recordedAt ?? new Date()).toISOString(),
-      photo_uri: permanentPhotoUri,
-    });
-
-    await destroyListener();
-    set(initialState);
   },
 
   reRecord: () => {

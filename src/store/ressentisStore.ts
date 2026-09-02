@@ -61,6 +61,51 @@ const INITIAL: RessentisState = {
   feeling_recorded_at: new Date().toISOString(),
 };
 
+async function saveRessentisRows(state: RessentisState, now: Date): Promise<void> {
+  const { categories, sub_categories, selected_meal, meal_day, notes, subNote, mode, feeling_recorded_at } = state;
+
+  const recordedAt = mode === 'feeling' ? feeling_recorded_at : now.toISOString();
+  const mealDate = new Date();
+  if (meal_day === 'yesterday') mealDate.setDate(mealDate.getDate() - 1);
+  const meal_date = mealDate.toISOString().slice(0, 10);
+
+  const { entry_id, delay_minutes } = await linkToLastEntry(now);
+  const rows: Promise<number>[] = [];
+
+  for (const category of categories) {
+    const context = mode === 'morning' ? 'morning' : mode === 'feeling' ? 'feeling' : null;
+    if (category === 'pain' && sub_categories.length > 0) {
+      for (const sub of sub_categories) {
+        rows.push(createRessenti({
+          recorded_at: recordedAt,
+          category,
+          sub_category: sub,
+          note: sub === 'other' ? (subNote || null) : null,
+          entry_id,
+          meal_type: selected_meal,
+          meal_date,
+          delay_minutes,
+          context,
+        }));
+      }
+    } else {
+      rows.push(createRessenti({
+        recorded_at: recordedAt,
+        category,
+        sub_category: null,
+        note: category === 'other' ? (notes['other'] || null) : null,
+        entry_id,
+        meal_type: selected_meal,
+        meal_date,
+        delay_minutes,
+        context,
+      }));
+    }
+  }
+
+  await Promise.all(rows);
+}
+
 export const useRessentisStore = create<RessentisState & RessentisActions>((set, get) => ({
   ...INITIAL,
 
@@ -146,57 +191,21 @@ export const useRessentisStore = create<RessentisState & RessentisActions>((set,
   },
 
   saveRessenti: async () => {
-    const { categories, sub_categories, selected_meal, meal_day, notes, subNote, sleepQuality, mode, feeling_recorded_at } = get();
+    const { categories, sleepQuality, mode } = get();
     if (categories.length === 0 && sleepQuality === null) return;
 
     const now = new Date();
-    const recordedAt = mode === 'feeling' ? feeling_recorded_at : now.toISOString();
-    const mealDate = new Date();
-    if (meal_day === 'yesterday') mealDate.setDate(mealDate.getDate() - 1);
-    const meal_date = mealDate.toISOString().slice(0, 10);
-
-    if (mode === 'morning' && sleepQuality !== null) {
-      await createSleepLog(sleepQuality);
-    }
-
-    if (categories.length > 0) {
-      const { entry_id, delay_minutes } = await linkToLastEntry(now);
-      const rows: Promise<number>[] = [];
-
-      for (const category of categories) {
-        const context = mode === 'morning' ? 'morning' : mode === 'feeling' ? 'feeling' : null;
-        if (category === 'pain' && sub_categories.length > 0) {
-          for (const sub of sub_categories) {
-            rows.push(createRessenti({
-              recorded_at: recordedAt,
-              category,
-              sub_category: sub,
-              note: sub === 'other' ? (subNote || null) : null,
-              entry_id,
-              meal_type: selected_meal,
-              meal_date,
-              delay_minutes,
-              context,
-            }));
-          }
-        } else {
-          rows.push(createRessenti({
-            recorded_at: recordedAt,
-            category,
-            sub_category: null,
-            note: category === 'other' ? (notes['other'] || null) : null,
-            entry_id,
-            meal_type: selected_meal,
-            meal_date,
-            delay_minutes,
-            context,
-          }));
-        }
+    try {
+      if (mode === 'morning' && sleepQuality !== null) {
+        await createSleepLog(sleepQuality);
       }
-
-      await Promise.all(rows);
+      if (categories.length > 0) {
+        await saveRessentisRows(get(), now);
+      }
+      set(INITIAL);
+    } catch (e) {
+      console.error('[RessentisStore] saveRessenti failed:', e);
+      // Pas de reset — le formulaire reste ouvert pour réessayer
     }
-
-    set(INITIAL);
   },
 }));

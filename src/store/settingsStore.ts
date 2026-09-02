@@ -41,70 +41,69 @@ interface SettingsState {
   saveLastBackupAt: (isoDate: string) => Promise<void>;
 }
 
-export const useSettingsStore = create<SettingsState>((set, get) => ({
-  settings: null,
-  mealSlots: [],
-  isLoaded: false,
-
-  loadSettings: async () => {
-    const [settings, mealSlots] = await Promise.all([getAppSettings(), getMealSlots()]);
-    set({ settings, mealSlots, isLoaded: true });
-  },
-
-  saveFirstName: async (name: string) => {
-    await setSetting('first_name', name);
+export const useSettingsStore = create<SettingsState>((set, get) => {
+  const patchSettings = (patch: Partial<AppSettings>) => {
     const s = get().settings ?? { ...DEFAULT_SETTINGS };
-    set({ settings: { ...s, first_name: name } });
-  },
+    set({ settings: { ...s, ...patch } });
+  };
 
-  saveGoal: async (goal: GoalType) => {
-    await setSetting('goal', goal);
-    const s = get().settings ?? { ...DEFAULT_SETTINGS };
-    set({ settings: { ...s, goal } });
-  },
+  return {
+    settings: null,
+    mealSlots: [],
+    isLoaded: false,
 
-  savePrimaryColor: async (color: string) => {
-    await setSetting('primary_color', color);
-    const s = get().settings ?? { ...DEFAULT_SETTINGS };
-    set({ settings: { ...s, primary_color: color } });
-  },
+    loadSettings: async () => {
+      const [settings, mealSlots] = await Promise.all([getAppSettings(), getMealSlots()]);
+      set({ settings, mealSlots, isLoaded: true });
+    },
 
-  saveMealSlot: async (meal_type: MealType, start_hour: number, end_hour: number) => {
-    await updateMealSlot(meal_type, start_hour, end_hour);
-    set(state => ({
-      mealSlots: state.mealSlots.map(s =>
-        s.meal_type === meal_type ? { ...s, start_hour, end_hour } : s
-      ),
-    }));
-  },
+    saveFirstName: async (name) => {
+      await setSetting('first_name', name);
+      patchSettings({ first_name: name });
+    },
 
-  completeOnboarding: async () => {
-    await setSetting('onboarding_done', 'true');
-    const s = get().settings ?? { ...DEFAULT_SETTINGS };
-    set({ settings: { ...s, onboarding_done: true } });
-  },
+    saveGoal: async (goal) => {
+      await setSetting('goal', goal);
+      patchSettings({ goal });
+    },
 
-  saveNotificationSetting: async (key, value) => {
-    await setSetting(key, value ? 'true' : 'false');
-    const s = get().settings ?? { ...DEFAULT_SETTINGS };
-    set({ settings: { ...s, [key]: value } });
-  },
+    savePrimaryColor: async (color) => {
+      await setSetting('primary_color', color);
+      patchSettings({ primary_color: color });
+    },
 
-  saveIcloudBackup: async (enabled) => {
-    await setSetting('icloud_backup', enabled ? 'true' : 'false');
-    const s = get().settings ?? { ...DEFAULT_SETTINGS };
-    set({ settings: { ...s, icloud_backup: enabled } });
-  },
+    saveMealSlot: async (meal_type, start_hour, end_hour) => {
+      await updateMealSlot(meal_type, start_hour, end_hour);
+      set(state => ({
+        mealSlots: state.mealSlots.map(s =>
+          s.meal_type === meal_type ? { ...s, start_hour, end_hour } : s
+        ),
+      }));
+    },
 
-  saveBackupInterval: async (days) => {
-    await setSetting('backup_interval', String(days));
-    const s = get().settings ?? { ...DEFAULT_SETTINGS };
-    set({ settings: { ...s, backup_interval: days } });
-  },
+    completeOnboarding: async () => {
+      await setSetting('onboarding_done', 'true');
+      patchSettings({ onboarding_done: true });
+    },
 
-  saveLastBackupAt: async (isoDate) => {
-    await setSetting('last_backup_at', isoDate);
-    const s = get().settings ?? { ...DEFAULT_SETTINGS };
-    set({ settings: { ...s, last_backup_at: isoDate } });
-  },
-}));
+    saveNotificationSetting: async (key, value) => {
+      await setSetting(key, value ? 'true' : 'false');
+      patchSettings({ [key]: value });
+    },
+
+    saveIcloudBackup: async (enabled) => {
+      await setSetting('icloud_backup', enabled ? 'true' : 'false');
+      patchSettings({ icloud_backup: enabled });
+    },
+
+    saveBackupInterval: async (days) => {
+      await setSetting('backup_interval', String(days));
+      patchSettings({ backup_interval: days });
+    },
+
+    saveLastBackupAt: async (isoDate) => {
+      await setSetting('last_backup_at', isoDate);
+      patchSettings({ last_backup_at: isoDate });
+    },
+  };
+});

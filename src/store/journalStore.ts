@@ -17,6 +17,7 @@ interface JournalState {
   medicationLogs: MedicationLog[];
   comfortAidLogs: ComfortAidLog[];
   isLoading: boolean;
+  loadError: string | null;
   isSheetOpen: boolean;
 }
 
@@ -43,6 +44,7 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
   medicationLogs: [],
   comfortAidLogs: [],
   isLoading: false,
+  loadError: null,
   isSheetOpen: false,
 
   openSheet: async () => {
@@ -54,7 +56,7 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
   closeSheet: () => set({ isSheetOpen: false }),
 
   loadDay: async (dateStr: string) => {
-    set({ isLoading: true, viewedDate: dateStr, entries: [], ressentis: [], activities: [], sleepLog: null, medicationLogs: [], comfortAidLogs: [] });
+    set({ isLoading: true, loadError: null, viewedDate: dateStr, entries: [], ressentis: [], activities: [], sleepLog: null, medicationLogs: [], comfortAidLogs: [] });
     try {
       const [entries, ressentis, activities, sleepLog, medicationLogs, comfortAidLogs] = await Promise.all([
         getEntriesForDay(dateStr),
@@ -65,8 +67,9 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
         getComfortAidLogsForDay(dateStr),
       ]);
       set({ entries, ressentis, activities, sleepLog, medicationLogs, comfortAidLogs, isLoading: false });
-    } catch {
-      set({ isLoading: false });
+    } catch (e) {
+      console.error('[JournalStore] loadDay failed:', e);
+      set({ isLoading: false, loadError: 'Impossible de charger le journal' });
     }
   },
 

@@ -3,184 +3,33 @@ import {
   View,
   Text,
   TextInput,
-  Switch,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
   Alert,
-  FlatList,
+  Platform,
   Linking,
-  ActivityIndicator,
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { COLOR_PALETTES } from '@/constants/colors';
-import { scheduleReminders } from '@/services/notificationService';
-import { MealSlot, MealType } from '@/types';
-import { backupToIcloud, exportBackup, restoreFromIcloud } from '@/services/icloudService';
-import { exportJournalAsPdf } from '@/services/pdfService';
-import { getEntriesForDateRange } from '@/db/entriesRepository';
-import { getRessentisForDateRange } from '@/db/ressentisRepository';
-import { getActivitiesForDateRange } from '@/db/activitiesRepository';
-import { getSleepForDateRange } from '@/db/sleepRepository';
 import { resetAllData } from '@/db/database';
-import * as FileSystem from 'expo-file-system/legacy';
-import { useMedicationStore } from '@/store/medicationStore';
-import { useComfortAidStore } from '@/store/comfortAidStore';
+import { MealSlotsSection } from '@/components/settings/MealSlotsSection';
+import { NotificationsSection } from '@/components/settings/NotificationsSection';
+import { BackupSection } from '@/components/settings/BackupSection';
+import { PdfExportSection } from '@/components/settings/PdfExportSection';
+import { MedicationsSection } from '@/components/settings/MedicationsSection';
+import { ComfortAidsSection } from '@/components/settings/ComfortAidsSection';
 
 export default function SettingsScreen() {
-  const {
-    settings, mealSlots,
-    saveFirstName, savePrimaryColor, saveMealSlot, saveNotificationSetting,
-    saveIcloudBackup, saveBackupInterval, saveLastBackupAt,
-  } = useSettingsStore();
+  const { settings, saveFirstName, savePrimaryColor } = useSettingsStore();
   const { primary } = useColorTheme();
-
-  const { medications, loadMedications, addNewMedication, removeMedication } = useMedicationStore();
-  const { aids, loadAids, addNewAid, removeAid } = useComfortAidStore();
-
   const [firstName, setFirstName] = useState(settings?.first_name ?? '');
-  const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
-  const [rawHours, setRawHours] = useState<Record<string, string>>({});
-  const [newMedName, setNewMedName] = useState('');
-  const [newMedDosage, setNewMedDosage] = useState('');
-  const [newAidName, setNewAidName] = useState('');
-
-  useEffect(() => { loadMedications(); loadAids(); }, []);
-
-  function todayStr() {
-    return new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
-  function daysAgoStr(n: number) {
-    const d = new Date();
-    d.setDate(d.getDate() - n);
-    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
-
-  const [customFrom, setCustomFrom] = useState(() => daysAgoStr(7));
-  const [customTo, setCustomTo] = useState(() => todayStr());
-  const [isExporting, setIsExporting] = useState(false);
-  const [dateError, setDateError] = useState<string | null>(null);
-
-  function parseFrDate(frDate: string): string | null {
-    const parts = frDate.split('/');
-    if (parts.length !== 3) return null;
-    const [d, m, y] = parts;
-    if (!d || !m || !y || y.length !== 4) return null;
-    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-  }
-
-  async function exportRange(fromFr: string, toFr: string, label: string) {
-    const from = parseFrDate(fromFr);
-    const to = parseFrDate(toFr);
-    if (!from || !to) {
-      setDateError('Format invalide — utilise JJ/MM/AAAA');
-      return;
-    }
-    setDateError(null);
-    setIsExporting(true);
-    try {
-      const [entries, ressentis, activities, sleepLogs] = await Promise.all([
-        getEntriesForDateRange(from, to),
-        getRessentisForDateRange(from, to),
-        getActivitiesForDateRange(from, to),
-        getSleepForDateRange(from, to),
-      ]);
-      if (entries.length === 0 && ressentis.length === 0 && activities.length === 0) {
-        Alert.alert('Aucune donnée', 'Pas de notes ou de ressentis sur cette période.');
-        return;
-      }
-      await exportJournalAsPdf(entries, ressentis, settings?.first_name ?? '', label, primary, from, to, activities, sleepLogs);
-    } finally {
-      setIsExporting(false);
-    }
-  }
-
-  function applyPreset(days: number) {
-    setCustomFrom(daysAgoStr(days));
-    setCustomTo(todayStr());
-  }
 
   useEffect(() => {
     setFirstName(settings?.first_name ?? '');
   }, [settings?.first_name]);
-
-  useEffect(() => {
-    if (mealSlots.length > 0) setLocalSlots(mealSlots);
-  }, [mealSlots]);
-
-  const updateHour = (meal_type: MealType, field: 'start_hour' | 'end_hour', raw: string) => {
-    setRawHours(prev => ({ ...prev, [`${meal_type}_${field}`]: raw }));
-  };
-
-  const handleSlotBlur = async (meal_type: MealType) => {
-    const slot = localSlots.find(s => s.meal_type === meal_type);
-    if (!slot) return;
-
-    const startRaw = rawHours[`${meal_type}_start_hour`];
-    const endRaw = rawHours[`${meal_type}_end_hour`];
-    const startVal = startRaw !== undefined ? parseInt(startRaw, 10) : slot.start_hour;
-    const endVal = endRaw !== undefined ? parseInt(endRaw, 10) : slot.end_hour;
-
-    const start = isNaN(startVal) ? slot.start_hour : Math.min(23, Math.max(0, startVal));
-    const end = isNaN(endVal) ? slot.end_hour : Math.min(23, Math.max(0, endVal));
-
-    const validStart = start < end ? start : slot.start_hour;
-    const validEnd = end > start ? end : slot.end_hour;
-
-    setLocalSlots(prev => prev.map(s =>
-      s.meal_type === meal_type ? { ...s, start_hour: validStart, end_hour: validEnd } : s
-    ));
-    setRawHours(prev => {
-      const next = { ...prev };
-      delete next[`${meal_type}_start_hour`];
-      delete next[`${meal_type}_end_hour`];
-      return next;
-    });
-
-    await saveMealSlot(meal_type, validStart, validEnd);
-    if (settings) {
-      await scheduleReminders(localSlots, {
-        enabled: settings.notifications_enabled,
-        breakfast: settings.notifications_breakfast,
-        lunch: settings.notifications_lunch,
-        snack: settings.notifications_snack,
-        dinner: settings.notifications_dinner,
-      });
-    }
-  };
-
-  const handleNotificationToggle = async (
-    key: 'notifications_enabled' | 'notifications_breakfast' | 'notifications_lunch' | 'notifications_snack' | 'notifications_dinner',
-    value: boolean
-  ) => {
-    await saveNotificationSetting(key, value);
-    if (settings) {
-      const updated = { ...settings, [key]: value };
-      await scheduleReminders(localSlots, {
-        enabled: updated.notifications_enabled,
-        breakfast: updated.notifications_breakfast,
-        lunch: updated.notifications_lunch,
-        snack: updated.notifications_snack,
-        dinner: updated.notifications_dinner,
-      });
-    }
-  };
-
-  const notifEnabled = settings?.notifications_enabled ?? false;
-
-  const mealNotifRows: Array<{
-    key: 'notifications_breakfast' | 'notifications_lunch' | 'notifications_snack' | 'notifications_dinner';
-    testID: string;
-    label: string;
-    icon: string;
-  }> = [
-    { key: 'notifications_breakfast', testID: 'toggle-notifications-breakfast', label: 'Petit-déjeuner', icon: '☀️' },
-    { key: 'notifications_lunch', testID: 'toggle-notifications-lunch', label: 'Déjeuner', icon: '🌞' },
-    { key: 'notifications_snack', testID: 'toggle-notifications-snack', label: 'Collation', icon: '🌤' },
-    { key: 'notifications_dinner', testID: 'toggle-notifications-dinner', label: 'Dîner', icon: '🌙' },
-  ];
 
   return (
     <>
@@ -197,7 +46,7 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Section: Profil */}
+        {/* Profil */}
         <Text style={styles.sectionTitle}>Mon profil</Text>
         <View style={styles.card}>
           <TextInput
@@ -211,7 +60,7 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* Section: Apparence */}
+        {/* Couleur */}
         <Text style={styles.sectionTitle}>Couleur</Text>
         <View style={styles.card}>
           <View style={styles.swatchGrid}>
@@ -231,327 +80,31 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Section: Plages horaires */}
+        {/* Horaires */}
         <Text style={styles.sectionTitle}>Mes horaires</Text>
-        <View style={styles.card}>
-          {localSlots.map(slot => (
-            <View key={slot.meal_type} style={styles.slotRow}>
-              <Text style={styles.slotLabel}>{slot.icon} {slot.label}</Text>
-              <View style={styles.slotControls}>
-                <TextInput
-                  testID={`slot-start-${slot.meal_type}`}
-                  style={[styles.hourInput, { borderColor: primary, color: primary }]}
-                  value={rawHours[`${slot.meal_type}_start_hour`] ?? String(slot.start_hour)}
-                  onChangeText={v => updateHour(slot.meal_type, 'start_hour', v)}
-                  onBlur={() => handleSlotBlur(slot.meal_type)}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  selectTextOnFocus
-                />
-                <Text style={[styles.slotSep, { color: primary }]}>h — </Text>
-                <TextInput
-                  testID={`slot-end-${slot.meal_type}`}
-                  style={[styles.hourInput, { borderColor: primary, color: primary }]}
-                  value={rawHours[`${slot.meal_type}_end_hour`] ?? String(slot.end_hour)}
-                  onChangeText={v => updateHour(slot.meal_type, 'end_hour', v)}
-                  onBlur={() => handleSlotBlur(slot.meal_type)}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  selectTextOnFocus
-                />
-                <Text style={[styles.slotSep, { color: primary }]}>h</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+        <MealSlotsSection />
 
-        {/* Section: Rappels */}
+        {/* Rappels */}
         <Text style={styles.sectionTitle}>Rappels repas</Text>
-        <View style={styles.card}>
-          <View style={styles.switchRow}>
-            <Text style={styles.switchLabel}>Rappels activés</Text>
-            <Switch
-              testID="toggle-notifications-enabled"
-              value={notifEnabled}
-              onValueChange={value => handleNotificationToggle('notifications_enabled', value)}
-              trackColor={{ true: primary }}
-            />
-          </View>
-          {notifEnabled && mealNotifRows.map(row => (
-            <View key={row.key} style={styles.switchRow}>
-              <Text style={styles.switchLabel}>{row.icon} {row.label}</Text>
-              <Switch
-                testID={row.testID}
-                value={settings?.[row.key] ?? false}
-                onValueChange={value => handleNotificationToggle(row.key, value)}
-                trackColor={{ true: primary }}
-              />
-            </View>
-          ))}
-        </View>
+        <NotificationsSection />
 
-        {/* Section: Sauvegarde */}
+        {/* Sauvegarde */}
         <Text style={styles.sectionTitle}>SAUVEGARDE</Text>
-        <View style={styles.card}>
-          <View style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Backup automatique</Text>
-              <Text style={styles.rowSub}>
-                Sauvegarde locale, incluse dans la sauvegarde iCloud de l'iPhone
-              </Text>
-            </View>
-            <Switch
-              testID="toggle-icloud-backup"
-              value={settings?.icloud_backup ?? false}
-              onValueChange={saveIcloudBackup}
-              trackColor={{ true: primary }}
-            />
-          </View>
+        <BackupSection />
 
-          {settings?.icloud_backup && (
-            <>
-              <Text style={[styles.rowSub, { marginTop: 8 }]}>Fréquence automatique</Text>
-              <View style={styles.intervalRow}>
-                {[1, 3, 7, 30].map(d => (
-                  <TouchableOpacity
-                    key={d}
-                    testID={`interval-${d}`}
-                    style={[
-                      styles.intervalBtn,
-                      settings.backup_interval === d && { backgroundColor: primary, borderColor: primary },
-                    ]}
-                    onPress={() => saveBackupInterval(d)}
-                  >
-                    <Text style={[
-                      styles.intervalText,
-                      settings.backup_interval === d && { color: 'white' },
-                    ]}>
-                      {d === 30 ? '1 mois' : `${d}j`}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.rowSub}>
-                Dernier backup : {settings.last_backup_at
-                  ? new Date(settings.last_backup_at).toLocaleString('fr-FR')
-                  : 'Jamais'}
-              </Text>
-
-              <TouchableOpacity
-                testID="backup-now-btn"
-                style={[styles.actionBtn, { borderColor: primary }]}
-                onPress={async () => {
-                  try {
-                    const date = await backupToIcloud();
-                    await saveLastBackupAt(date);
-                    Alert.alert('Backup effectué ✓', 'Sauvegarde créée sur cet iPhone.');
-                  } catch {
-                    Alert.alert('Erreur', 'Sauvegarde échouée. Réessaie plus tard.');
-                  }
-                }}
-              >
-                <Text style={[styles.actionBtnText, { color: primary }]}>Sauvegarder maintenant</Text>
-              </TouchableOpacity>
-            </>
-          )}
-
-          <TouchableOpacity
-            testID="export-backup-btn"
-            style={[styles.actionBtn, { borderColor: '#0EA5E9', marginTop: settings?.icloud_backup ? 0 : 8 }]}
-            onPress={async () => {
-              try {
-                await exportBackup();
-              } catch {
-                Alert.alert('Erreur', 'Export impossible. Réessaie plus tard.');
-              }
-            }}
-          >
-            <Text style={[styles.actionBtnText, { color: '#0EA5E9' }]}>Exporter la sauvegarde…</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            testID="restore-btn"
-            style={[styles.actionBtn, { borderColor: '#C09070' }]}
-            onPress={() => {
-              Alert.alert(
-                'Restaurer depuis un fichier',
-                'Toutes les données actuelles seront remplacées. Tu devras redémarrer l\'app ensuite.',
-                [
-                  { text: 'Annuler', style: 'cancel' },
-                  {
-                    text: 'Choisir un fichier',
-                    onPress: async () => {
-                      try {
-                        await restoreFromIcloud();
-                        Alert.alert('Restauré ✓', 'Ferme et rouvre l\'app pour voir tes données.');
-                      } catch {
-                        Alert.alert('Erreur', 'Restauration impossible. Réessaie plus tard.');
-                      }
-                    },
-                  },
-                ]
-              );
-            }}
-          >
-            <Text style={[styles.actionBtnText, { color: '#C09070' }]}>Restaurer depuis un fichier…</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Section: Export PDF */}
+        {/* Bilan médical PDF */}
         <Text style={styles.sectionTitle}>BILAN MÉDICAL</Text>
-        <View style={styles.card}>
-          <Text style={styles.rowSub}>Période rapide</Text>
-          <View style={styles.presetRow}>
-            {([7, 14, 30, 90] as const).map(days => (
-              <TouchableOpacity
-                key={days}
-                style={[styles.presetBtn, { borderColor: primary }]}
-                onPress={() => applyPreset(days)}
-              >
-                <Text style={[styles.presetText, { color: primary }]}>
-                  {days < 30 ? `${days}j` : days === 30 ? '1 mois' : '3 mois'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+        <PdfExportSection />
 
-          <View style={styles.dateRangeRow}>
-            <View style={styles.dateField}>
-              <Text style={styles.dateLabel}>Du</Text>
-              <TextInput
-                testID="export-from-input"
-                style={[styles.dateInput, { borderColor: dateError ? '#DC2626' : primary }]}
-                value={customFrom}
-                onChangeText={v => { setCustomFrom(v); if (dateError) setDateError(null); }}
-                placeholder="JJ/MM/AAAA"
-                placeholderTextColor="#C09070"
-                keyboardType="number-pad"
-                maxLength={10}
-              />
-            </View>
-            <View style={styles.dateField}>
-              <Text style={styles.dateLabel}>Au</Text>
-              <TextInput
-                testID="export-to-input"
-                style={[styles.dateInput, { borderColor: dateError ? '#DC2626' : primary }]}
-                value={customTo}
-                onChangeText={v => { setCustomTo(v); if (dateError) setDateError(null); }}
-                placeholder="JJ/MM/AAAA"
-                placeholderTextColor="#C09070"
-                keyboardType="number-pad"
-                maxLength={10}
-              />
-            </View>
-          </View>
-          {dateError && <Text style={styles.fieldError}>{dateError}</Text>}
-
-          <TouchableOpacity
-            testID="export-range-btn"
-            style={[styles.actionBtn, { borderColor: primary, opacity: isExporting ? 0.6 : 1 }]}
-            disabled={isExporting}
-            onPress={() => {
-              const label = `${customFrom} → ${customTo}`;
-              exportRange(customFrom, customTo, label);
-            }}
-          >
-            {isExporting ? (
-              <ActivityIndicator size="small" color={primary} />
-            ) : (
-              <Text style={[styles.actionBtnText, { color: primary }]}>📄 Exporter cette période</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Section: Médicaments */}
+        {/* Médicaments */}
         <Text style={styles.sectionTitle}>MES MÉDICAMENTS</Text>
-        <View style={styles.card}>
-          <Text style={styles.rowSub}>Gérer la liste · les dosages sont optionnels</Text>
-          {medications.map(med => (
-            <View key={med.id} style={styles.listRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.listRowLabel}>{med.name}</Text>
-                {med.dosage ? <Text style={styles.listRowSub}>{med.dosage}</Text> : null}
-              </View>
-              <TouchableOpacity
-                onPress={() => Alert.alert('Supprimer ?', `Supprimer ${med.name} ?`, [
-                  { text: 'Annuler', style: 'cancel' },
-                  { text: 'Supprimer', style: 'destructive', onPress: () => removeMedication(med.id) },
-                ])}
-              >
-                <Text style={styles.deleteIcon}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-          <View style={styles.addRow}>
-            <TextInput
-              style={[styles.addInput, { flex: 2, borderColor: primary }]}
-              placeholder="Nom du médicament"
-              placeholderTextColor="#C09070"
-              value={newMedName}
-              onChangeText={setNewMedName}
-            />
-            <TextInput
-              style={[styles.addInput, { flex: 1, borderColor: primary }]}
-              placeholder="Dosage"
-              placeholderTextColor="#C09070"
-              value={newMedDosage}
-              onChangeText={setNewMedDosage}
-            />
-            <TouchableOpacity
-              style={[styles.addBtnSmall, { backgroundColor: primary }]}
-              onPress={async () => {
-                const name = newMedName.trim();
-                if (!name) return;
-                await addNewMedication(name, newMedDosage.trim() || undefined);
-                setNewMedName(''); setNewMedDosage('');
-              }}
-            >
-              <Text style={styles.addBtnSmallText}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <MedicationsSection />
 
-        {/* Section: Accessoires aidants */}
+        {/* Accessoires aidants */}
         <Text style={styles.sectionTitle}>ACCESSOIRES AIDANTS</Text>
-        <View style={styles.card}>
-          <Text style={styles.rowSub}>Bouillotte, position antalgique, massage…</Text>
-          {aids.map(aid => (
-            <View key={aid.id} style={styles.listRow}>
-              <Text style={[styles.listRowLabel, { flex: 1 }]}>{aid.name}</Text>
-              <TouchableOpacity
-                onPress={() => Alert.alert('Supprimer ?', `Supprimer ${aid.name} ?`, [
-                  { text: 'Annuler', style: 'cancel' },
-                  { text: 'Supprimer', style: 'destructive', onPress: () => removeAid(aid.id) },
-                ])}
-              >
-                <Text style={styles.deleteIcon}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-          <View style={styles.addRow}>
-            <TextInput
-              style={[styles.addInput, { flex: 1, borderColor: primary }]}
-              placeholder="Nom de l'accessoire"
-              placeholderTextColor="#C09070"
-              value={newAidName}
-              onChangeText={setNewAidName}
-            />
-            <TouchableOpacity
-              style={[styles.addBtnSmall, { backgroundColor: '#0EA5E9' }]}
-              onPress={async () => {
-                const name = newAidName.trim();
-                if (!name) return;
-                await addNewAid(name);
-                setNewAidName('');
-              }}
-            >
-              <Text style={styles.addBtnSmallText}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <ComfortAidsSection />
 
-        {/* Section: Participer */}
+        {/* Participer */}
         <Text style={styles.sectionTitle}>Participer</Text>
         <View style={styles.card}>
           <Text style={styles.participateText}>
@@ -570,7 +123,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Section: Zone danger */}
+        {/* Zone danger */}
         <Text style={styles.sectionTitle}>Zone danger</Text>
         <TouchableOpacity
           testID="reset-data-btn"
@@ -587,7 +140,7 @@ export default function SettingsScreen() {
                   onPress: () => {
                     Alert.alert(
                       'Dernière confirmation',
-                      'Es-tu vraiment sûr(e) ? Il n\'y a aucun moyen de récupérer tes données après cette action.',
+                      "Es-tu vraiment sûr(e) ? Il n'y a aucun moyen de récupérer tes données après cette action.",
                       [
                         { text: 'Non, garder mes données', style: 'cancel' },
                         {
@@ -595,12 +148,15 @@ export default function SettingsScreen() {
                           style: 'destructive',
                           onPress: async () => {
                             await resetAllData();
-                            const photosDir = (FileSystem.documentDirectory ?? '') + 'photos/';
-                            try {
-                              const files = await FileSystem.readDirectoryAsync(photosDir);
-                              await Promise.all(files.map(f => FileSystem.deleteAsync(photosDir + f, { idempotent: true })));
-                            } catch {}
-                            Alert.alert('Données effacées', 'L\'app est prête pour un nouveau départ.');
+                            if (Platform.OS !== 'web') {
+                              const FileSystem = await import('expo-file-system/legacy');
+                              const photosDir = (FileSystem.documentDirectory ?? '') + 'photos/';
+                              try {
+                                const files = await FileSystem.readDirectoryAsync(photosDir);
+                                await Promise.all(files.map(f => FileSystem.deleteAsync(photosDir + f, { idempotent: true })));
+                              } catch {}
+                            }
+                            Alert.alert('Données effacées', "L'app est prête pour un nouveau départ.");
                           },
                         },
                       ]
@@ -614,7 +170,7 @@ export default function SettingsScreen() {
           <Text style={styles.resetBtnText}>🗑 Effacer toutes les données</Text>
         </TouchableOpacity>
 
-        {/* Section: À propos */}
+        {/* À propos */}
         <Text style={styles.sectionTitle}>À propos</Text>
         <View style={styles.card}>
           <View testID="privacy-badge" style={styles.privacyRow}>
@@ -682,36 +238,6 @@ const styles = StyleSheet.create({
   },
   swatch: { width: 44, height: 44, borderRadius: 22 },
   swatchSelected: { borderWidth: 3, borderColor: '#2D1A0E' },
-  slotRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0D0B8',
-  },
-  slotLabel: { fontSize: 15, fontWeight: '600', color: '#5C3020' },
-  slotControls: { flexDirection: 'row', alignItems: 'center' },
-  hourInput: {
-    borderWidth: 1.5,
-    borderRadius: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    fontSize: 14,
-    fontWeight: '700',
-    textAlign: 'center',
-    width: 48,
-  },
-  slotSep: { fontSize: 14, fontWeight: '600', marginHorizontal: 2 },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0D0B8',
-  },
-  switchLabel: { fontSize: 15, color: '#2D1A0E', fontWeight: '500' },
   resetBtn: {
     backgroundColor: '#FEE2E2',
     borderWidth: 1.5,
@@ -729,9 +255,7 @@ const styles = StyleSheet.create({
     fontSize: 12, color: '#C09070', lineHeight: 18, textAlign: 'center',
     paddingVertical: 10, paddingHorizontal: 4,
   },
-  participateText: {
-    fontSize: 14, color: '#5C3020', lineHeight: 22, marginBottom: 14,
-  },
+  participateText: { fontSize: 14, color: '#5C3020', lineHeight: 22, marginBottom: 14 },
   appName: { fontStyle: 'italic', fontWeight: '700', color: '#5C3020' },
   appNameSmall: { fontStyle: 'italic', color: '#C09070' },
   participateBtn: {
@@ -749,58 +273,4 @@ const styles = StyleSheet.create({
     fontSize: 11, color: '#C09070', textAlign: 'center',
     paddingVertical: 10, letterSpacing: 0.3,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  rowLabel: { fontSize: 15, color: '#2D1A0E', fontWeight: '500' },
-  intervalRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  intervalBtn: {
-    borderWidth: 1.5, borderColor: '#F0D0B8', borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 6,
-  },
-  intervalText: { fontSize: 13, fontWeight: '600', color: '#5C3020' },
-  actionBtn: {
-    borderWidth: 1.5, borderRadius: 10, padding: 12,
-    alignItems: 'center', marginBottom: 8,
-  },
-  actionBtnText: { fontSize: 14, fontWeight: '600' },
-  rowSub: { fontSize: 12, color: '#C09070', marginBottom: 6 },
-  presetRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  presetBtn: {
-    flex: 1, borderWidth: 1.5, borderRadius: 8,
-    paddingVertical: 6, alignItems: 'center',
-  },
-  presetText: { fontSize: 13, fontWeight: '700' },
-  fieldError: { fontSize: 12, color: '#DC2626', marginTop: -8, marginBottom: 6 },
-  dateRangeRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
-  dateField: { flex: 1, gap: 4 },
-  dateLabel: { fontSize: 11, color: '#C09070', fontWeight: '600', textTransform: 'uppercase' },
-  dateInput: {
-    borderWidth: 1.5, borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 8,
-    fontSize: 14, fontWeight: '600', color: '#2D1A0E',
-    textAlign: 'center',
-  },
-  listRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1, borderBottomColor: '#F0D0B8',
-  },
-  listRowLabel: { fontSize: 14, fontWeight: '600', color: '#2D1A0E' },
-  listRowSub: { fontSize: 11, color: '#C09070', marginTop: 1 },
-  deleteIcon: { fontSize: 14, color: '#FCA5A5', paddingHorizontal: 6 },
-  addRow: { flexDirection: 'row', gap: 8, marginTop: 12, alignItems: 'center' },
-  addInput: {
-    borderWidth: 1.5, borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 8,
-    fontSize: 13, color: '#2D1A0E', backgroundColor: 'white',
-  },
-  addBtnSmall: {
-    width: 36, height: 36, borderRadius: 10,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  addBtnSmallText: { fontSize: 20, color: 'white', lineHeight: 24 },
 });

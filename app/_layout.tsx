@@ -37,10 +37,16 @@ export default function RootLayout() {
               await useSettingsStore.getState().saveLastBackupAt(date);
             }
           }
-        } catch {}
+        } catch (e) {
+          console.error('[Layout] iCloud backup failed:', e);
+        }
       })
       .then(() => setDbReady(true))
-      .catch(() => setDbReady(true)); // Ne jamais bloquer le render, même si la DB échoue
+      .catch((e) => {
+        // Ne jamais bloquer le render, mais une DB cassée = données non sauvegardées
+        console.error('[Layout] DB init failed — app may not persist data:', e);
+        setDbReady(true);
+      });
   }, []);
 
   useEffect(() => {
