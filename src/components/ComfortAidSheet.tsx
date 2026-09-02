@@ -152,7 +152,7 @@ export function ComfortAidSheet({ primaryColor }: Props) {
               ]}
               disabled={!canSave}
             >
-              <Text style={styles.saveBtnText}>Enregistrer</Text>
+              <Text style={[styles.saveBtnText, !canSave && styles.saveBtnTextDisabled]}>Enregistrer</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={closeSheet} style={styles.cancelBtn}>
@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
   },
   saveBtn: { marginTop: 24, borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
   saveBtnText: { color: 'white', fontWeight: '800', fontSize: 16 },
+  saveBtnTextDisabled: { color: '#075985' },
   cancelBtn: { marginTop: 12, alignItems: 'center', paddingVertical: 10 },
   cancelText: { fontSize: 14, color: '#9CA3AF', fontWeight: '600' },
 });
