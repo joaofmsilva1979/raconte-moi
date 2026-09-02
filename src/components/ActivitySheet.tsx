@@ -169,7 +169,7 @@ export function ActivitySheet({ primaryColor }: ActivitySheetProps) {
               disabled={!canSave}
               style={[styles.saveBtn, canSave ? styles.saveBtnActive : styles.saveBtnDisabled]}
             >
-              <Text style={styles.saveBtnText}>
+              <Text style={[styles.saveBtnText, !canSave && styles.saveBtnTextDisabled]}>
                 {canSave
                   ? `✓ Enregistrer${durationMinutes ? ` · ${durationMinutes}min` : ''}`
                   : 'Choisis une activité et une durée'}
@@ -267,6 +267,7 @@ const styles = StyleSheet.create({
   saveBtnActive: { backgroundColor: '#16A34A' },
   saveBtnDisabled: { backgroundColor: '#D1FAE5' },
   saveBtnText: { color: 'white', fontWeight: '700', fontSize: 15 },
+  saveBtnTextDisabled: { color: '#166534' },
   cancelBtn: { alignItems: 'center', padding: 8 },
   cancelText: { fontSize: 13, color: '#9CA3AF' },
 });
