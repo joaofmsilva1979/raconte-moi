@@ -60,6 +60,7 @@ export function stopListening(): Promise<string> {
   const Voice = getVoice();
   return new Promise<string>((resolve) => {
     const timer = setTimeout(() => resolve(''), 5000);
+    Voice.onSpeechError = () => {}; // couper les erreurs post-stop (ex: iOS "recognition cancelled")
     Voice.onSpeechResults = (e: any) => {
       clearTimeout(timer);
       resolve(e.value?.[0] ?? '');
