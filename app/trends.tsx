@@ -206,30 +206,57 @@ export default function TrendsScreen() {
         {/* Détail du score */}
         <View style={styles.scoreDetail}>
           <Text style={styles.scoreDetailTitle}>Comment est calculé le score ?</Text>
+          <Text style={styles.scoreDetailSub}>Score sur 10 — calculé uniquement à partir de ce que tu enregistres</Text>
+
+          <View style={styles.scoreNote}>
+            <Text style={styles.scoreNoteText}>
+              Chaque critère ci-dessous correspond à un type d'entrée dans l'app. Si tu n'as rien enregistré pour un critère ce jour-là, une valeur neutre est appliquée — le score reflète alors une journée "moyenne", pas ta réalité.{'\n'}
+              Plus tu loggues, plus le score est fidèle.
+            </Text>
+          </View>
+
           <View style={styles.scoreRows}>
             <View style={styles.scoreRow}>
               <Text style={styles.scoreRowEmoji}>🌙</Text>
-              <Text style={styles.scoreRowText}>Sommeil — jusqu'à 4 pts</Text>
+              <View style={styles.scoreRowBody}>
+                <Text style={styles.scoreRowLabel}>Sommeil — max 4 pts</Text>
+                <Text style={styles.scoreRowDetail}>😊 Bon = 4 pts · 😐 Moyen = 2 pts · 😣 Mauvais = 0 pt · Pas de log = 2 pts</Text>
+              </View>
             </View>
             <View style={styles.scoreRow}>
               <Text style={styles.scoreRowEmoji}>💜</Text>
-              <Text style={styles.scoreRowText}>Absence de douleur — jusqu'à 3 pts</Text>
+              <View style={styles.scoreRowBody}>
+                <Text style={styles.scoreRowLabel}>Absence de douleur — max 3 pts</Text>
+                <Text style={styles.scoreRowDetail}>0 douleur = 3 pts · 1 douleur = 1 pt · 2+ douleurs = 0 pt</Text>
+              </View>
             </View>
             <View style={styles.scoreRow}>
               <Text style={styles.scoreRowEmoji}>🏃</Text>
-              <Text style={styles.scoreRowText}>Activité physique — jusqu'à 2 pts</Text>
+              <View style={styles.scoreRowBody}>
+                <Text style={styles.scoreRowLabel}>Activité physique — max 2 pts</Text>
+                <Text style={styles.scoreRowDetail}>≥ 30 min = 2 pts · 15-29 min = 1 pt · moins = 0 pt</Text>
+              </View>
             </View>
             <View style={styles.scoreRow}>
               <Text style={styles.scoreRowEmoji}>😊</Text>
-              <Text style={styles.scoreRowText}>Ressenti positif — 1 pt</Text>
+              <View style={styles.scoreRowBody}>
+                <Text style={styles.scoreRowLabel}>Ressenti positif — 1 pt</Text>
+                <Text style={styles.scoreRowDetail}>Au moins un ressenti 😊 dans la journée</Text>
+              </View>
             </View>
             <View style={styles.scoreRow}>
               <Text style={styles.scoreRowEmoji}>💊</Text>
-              <Text style={styles.scoreRowText}>Médicament efficace 😊 — 1 pt</Text>
+              <View style={styles.scoreRowBody}>
+                <Text style={styles.scoreRowLabel}>Médicament efficace — 1 pt</Text>
+                <Text style={styles.scoreRowDetail}>Au moins un médicament noté 😊 Efficace</Text>
+              </View>
             </View>
             <View style={styles.scoreRow}>
               <Text style={styles.scoreRowEmoji}>🩹</Text>
-              <Text style={styles.scoreRowText}>Accessoire aidant utilisé — 1 pt</Text>
+              <View style={styles.scoreRowBody}>
+                <Text style={styles.scoreRowLabel}>Accessoire aidant — 1 pt</Text>
+                <Text style={styles.scoreRowDetail}>Bouillotte, position antalgique, massage…</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -339,11 +366,18 @@ const styles = StyleSheet.create({
   scoreDetail: {
     backgroundColor: 'white', borderRadius: 16, padding: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 6, elevation: 2, gap: 12,
+    shadowOpacity: 0.04, shadowRadius: 6, elevation: 2, gap: 8,
   },
   scoreDetailTitle: { fontSize: 13, fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.4 },
-  scoreRows: { gap: 10 },
-  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  scoreRowEmoji: { fontSize: 18, width: 26 },
-  scoreRowText: { fontSize: 14, color: '#374151', fontWeight: '500', letterSpacing: -0.1 },
+  scoreDetailSub: { fontSize: 12, color: '#C09070' },
+  scoreNote: {
+    backgroundColor: '#FFF3E8', borderRadius: 10, padding: 12,
+  },
+  scoreNoteText: { fontSize: 12, color: '#7C4A1E', lineHeight: 18 },
+  scoreRows: { gap: 12 },
+  scoreRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  scoreRowEmoji: { fontSize: 18, width: 26, marginTop: 1 },
+  scoreRowBody: { flex: 1, gap: 2 },
+  scoreRowLabel: { fontSize: 13, color: '#374151', fontWeight: '600', letterSpacing: -0.1 },
+  scoreRowDetail: { fontSize: 11, color: '#9CA3AF', lineHeight: 16 },
 });
