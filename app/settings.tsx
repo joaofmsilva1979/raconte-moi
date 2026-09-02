@@ -10,7 +10,7 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { COLOR_PALETTES } from '@/constants/colors';
@@ -23,8 +23,9 @@ import { MedicationsSection } from '@/components/settings/MedicationsSection';
 import { ComfortAidsSection } from '@/components/settings/ComfortAidsSection';
 
 export default function SettingsScreen() {
-  const { settings, saveFirstName, savePrimaryColor } = useSettingsStore();
+  const { settings, saveFirstName, savePrimaryColor, loadSettings } = useSettingsStore();
   const { primary } = useColorTheme();
+  const router = useRouter();
   const [firstName, setFirstName] = useState(settings?.first_name ?? '');
 
   useEffect(() => {
@@ -130,8 +131,8 @@ export default function SettingsScreen() {
           style={styles.resetBtn}
           onPress={() => {
             Alert.alert(
-              '⚠️ Effacer toutes les données ?',
-              'Toutes tes notes vocales, ressentis, douleurs, activités, médicaments et accessoires seront supprimés définitivement.\n\nCette action est irréversible. Tes réglages sont conservés.',
+              '⚠️ Remise à zéro complète ?',
+              'Toutes tes données seront effacées : notes, ressentis, douleurs, activités, médicaments, accessoires, prénom et réglages.\n\nL'app redémarrera comme à la première ouverture.',
               [
                 { text: 'Annuler', style: 'cancel' },
                 {
@@ -156,7 +157,8 @@ export default function SettingsScreen() {
                                 await Promise.all(files.map(f => FileSystem.deleteAsync(photosDir + f, { idempotent: true })));
                               } catch {}
                             }
-                            Alert.alert('Données effacées', "L'app est prête pour un nouveau départ.");
+                            await loadSettings();
+                            router.replace('/onboarding');
                           },
                         },
                       ]
@@ -167,7 +169,7 @@ export default function SettingsScreen() {
             );
           }}
         >
-          <Text style={styles.resetBtnText}>🗑 Effacer toutes les données</Text>
+          <Text style={styles.resetBtnText}>🗑 Remise à zéro complète</Text>
         </TouchableOpacity>
 
         {/* À propos */}

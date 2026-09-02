@@ -265,7 +265,13 @@ export async function resetAllData(): Promise<void> {
     DELETE FROM medications;
     DELETE FROM comfort_aid_logs;
     DELETE FROM comfort_aids;
+    DELETE FROM custom_pain_locations;
+    DELETE FROM pro_notes;
+    DELETE FROM settings;
+    DELETE FROM meal_slots;
   `);
+  // Re-seed default meal slots so the app isn't broken on next launch
+  await seedDefaultMealSlots(database);
 }
 
 // ─── Seed ─────────────────────────────────────────────────────────────────────
