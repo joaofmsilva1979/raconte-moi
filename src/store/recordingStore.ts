@@ -76,8 +76,7 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
     startListening(
       (partial) => set({ partialTranscript: partial }),
       (err) => {
-        if (get().phase !== 'recording') return; // erreurs tardives après stop → ignorer
-        if (/1110|no speech/i.test(err.message)) return; // iOS SR transient — pas fatal
+        if (get().phase !== 'recording') return; // erreurs post-stop → ignorer
         set({ phase: 'idle', error: err.message });
       }
     );
@@ -85,8 +84,10 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
 
   stopRecording: async () => {
     try {
-      const finalText = await stopListening();
-      set({ phase: 'processing', rawText: finalText });
+      const raw = await stopListening();
+      // iOS peut résoudre avec '' si onSpeechError fire avant onSpeechResults
+      const finalText = raw || get().partialTranscript;
+      set({ phase: 'processing', rawText: finalText, partialTranscript: '' });
 
       const { text, wasReformulated } = await reformulateText(finalText);
       set({ editedText: text, wasReformulated, phase: 'confirming' });

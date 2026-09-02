@@ -39,6 +39,14 @@ export function startListening(
   onError: (err: Error) => void
 ): void {
   const Voice = getVoice();
+
+  const doStart = () => {
+    Voice.start('fr-FR').catch((err: unknown) => {
+      const raw = err instanceof Error ? err.message : String(err);
+      onError(new Error(isPermissionError(raw) ? permissionMessage() : raw));
+    });
+  };
+
   Voice.onSpeechPartialResults = (e: any) => {
     onPartialResult(e.value?.[0] ?? '');
   };
@@ -47,24 +55,30 @@ export function startListening(
   };
   Voice.onSpeechError = (e: any) => {
     const raw = e.error?.message ?? 'Transcription error';
+    // iOS 26 fire 1110 "No speech detected" et arrête le reconnaisseur en interne.
+    // On relance automatiquement tant que l'utilisateur tient le bouton.
+    if (/1110|no speech/i.test(raw)) {
+      doStart();
+      return;
+    }
     onError(new Error(isPermissionError(raw) ? permissionMessage() : raw));
   };
-  // Voice.start() rejette si la permission est refusée avant même que onSpeechError fire
-  Voice.start('fr-FR').catch((err: unknown) => {
-    const raw = err instanceof Error ? err.message : String(err);
-    onError(new Error(isPermissionError(raw) ? permissionMessage() : raw));
-  });
+
+  doStart();
 }
 
 export function stopListening(): Promise<string> {
   const Voice = getVoice();
   return new Promise<string>((resolve) => {
-    const timer = setTimeout(() => resolve(''), 5000);
-    Voice.onSpeechError = () => {}; // couper les erreurs post-stop (ex: iOS "recognition cancelled")
-    Voice.onSpeechResults = (e: any) => {
+    const done = (text: string) => {
       clearTimeout(timer);
-      resolve(e.value?.[0] ?? '');
+      resolve(text);
     };
+    // 1500 ms : si Voice ne répond pas vite, la session était déjà morte (1110)
+    const timer = setTimeout(() => done(''), 1500);
+    // Après Voice.stop(), iOS peut fire onSpeechError (ex: "cancelled") au lieu de onSpeechResults
+    Voice.onSpeechError = () => done('');
+    Voice.onSpeechResults = (e: any) => done(e.value?.[0] ?? '');
     Voice.stop();
   });
 }
