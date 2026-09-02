@@ -75,7 +75,8 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
 
     startListening(
       (partial) => set({ partialTranscript: partial }),
-      (err) => set({ phase: 'idle', error: err.message })
+      // Ignorer les erreurs Voice tardives (iOS tire onSpeechError après stop)
+      (err) => { if (get().phase === 'recording') set({ phase: 'idle', error: err.message }); }
     );
   },
 
