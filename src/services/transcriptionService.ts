@@ -56,9 +56,10 @@ export function startListening(
   Voice.onSpeechError = (e: any) => {
     const raw = e.error?.message ?? 'Transcription error';
     // iOS 26 fire 1110 "No speech detected" et arrête le reconnaisseur en interne.
-    // On relance automatiquement tant que l'utilisateur tient le bouton.
+    // On attend 400ms avant de relancer — le temps que l'utilisateur commence à parler
+    // et que le reconnaisseur ait une chance de capter la voix avant le prochain cycle.
     if (/1110|no speech/i.test(raw)) {
-      doStart();
+      setTimeout(doStart, 400);
       return;
     }
     onError(new Error(isPermissionError(raw) ? permissionMessage() : raw));

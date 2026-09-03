@@ -89,6 +89,11 @@ export const useRecordingStore = create<RecordingState & RecordingActions>((set,
       const finalText = raw || get().partialTranscript;
       set({ phase: 'processing', rawText: finalText, partialTranscript: '' });
 
+      if (!finalText.trim()) {
+        set({ phase: 'idle', error: 'Rien n\'entendu — réessaie en parlant près du micro.' });
+        return;
+      }
+
       const { text, wasReformulated } = await reformulateText(finalText);
       set({ editedText: text, wasReformulated, phase: 'confirming' });
     } catch (e) {

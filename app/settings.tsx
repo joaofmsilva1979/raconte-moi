@@ -93,8 +93,9 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>SAUVEGARDE</Text>
         <BackupSection />
 
-        {/* Bilan médical PDF */}
-        <Text style={styles.sectionTitle}>BILAN MÉDICAL</Text>
+        {/* Bilan PDF */}
+        <Text style={styles.sectionTitle}>BILAN</Text>
+        <Text style={styles.sectionSubtitle}>À transférer à votre médecin</Text>
         <PdfExportSection />
 
         {/* Médicaments */}
@@ -110,7 +111,7 @@ export default function SettingsScreen() {
         <View style={styles.card}>
           <Text style={styles.participateText}>
             <Text style={styles.appName}>Raconte-moi</Text>
-            {" est née d'une phrase murmurée : « ce serait tellement bien de pouvoir dire à voix haute ce qu'on a mangé, comment on se sent après (faire le lien entre les aliments, la fatigue et les douleurs du quotidien). » Faute de trouver un outil simple, privé et en français, je l'ai créé.\n\nSi tu utilises "}
+            {" est née d'une phrase murmurée : « ce serait tellement bien de pouvoir dire à haute voix ce qu'on a mangé, comment on se sent après (faire le lien entre les aliments, la fatigue et les douleurs du quotidien). » Faute de trouver un outil simple, privé et en français, je l'ai créé.\n\nSi tu utilises "}
             <Text style={styles.appName}>Raconte-moi</Text>
             {" et que tu as des retours (une idée, quelque chose qui te manque, une expérience à partager) ; je lis tout. Tes retours m'aideront à adapter encore mieux l'app à tes besoins, tout en restant fidèle à la ligne conductrice du début."}
           </Text>
@@ -211,8 +212,14 @@ const styles = StyleSheet.create({
     color: '#9B8A80',
     textTransform: 'uppercase',
     marginTop: 28,
-    marginBottom: 8,
+    marginBottom: 4,
     letterSpacing: 0.8,
+  },
+  sectionSubtitle: {
+    fontSize: 11,
+    color: '#C09070',
+    fontStyle: 'italic',
+    marginBottom: 8,
   },
   card: {
     backgroundColor: '#FFFFFF',
