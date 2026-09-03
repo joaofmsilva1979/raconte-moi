@@ -19,10 +19,10 @@ import { useJournalStore } from '@/store/journalStore';
 import { JournalTimeline } from '@/components/JournalTimeline';
 import { formatDateLabel, formatDate, addDays } from '@/utils/dateUtils';
 import { DEFAULT_MEAL_SLOTS } from '@/constants/meals';
-import { updateEntryTranscript, updateEntryPhoto, deleteEntry, getActiveDates } from '@/db/entriesRepository';
+import { updateEntryTranscript, updateEntryPhoto, updateEntryMealType, deleteEntry, getActiveDates } from '@/db/entriesRepository';
 import { updateRessenti } from '@/db/ressentisRepository';
-import { Entry, Ressenti, RessentSubCategory } from '@/types';
-import { RESSENTI_LABELS, RESSENTI_ICONS, RESSENTI_SUB_CATEGORIES } from '@/constants/ressentis';
+import { Entry, MealType, Ressenti, RessentSubCategory } from '@/types';
+import { RESSENTI_LABELS, RESSENTI_ICONS, RESSENTI_SUB_CATEGORIES, CYCLE_SUB_CATEGORIES } from '@/constants/ressentis';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'react-native';
 
@@ -82,6 +82,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [editText, setEditText] = useState('');
   const [editPhoto, setEditPhoto] = useState<string | null>(null);
+  const [editMealType, setEditMealType] = useState<MealType>('other');
 
   const [editingRessenti, setEditingRessenti] = useState<Ressenti | null>(null);
   const [editRessentiNote, setEditRessentiNote] = useState('');
@@ -91,6 +92,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     setEditingEntry(entry);
     setEditText(entry.transcript);
     setEditPhoto(entry.photo_uri ?? null);
+    setEditMealType(entry.meal_type);
   }
 
   async function handlePickPhoto() {
@@ -126,6 +128,9 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     await updateEntryTranscript(editingEntry.id, editText.trim());
     if (editPhoto !== (editingEntry.photo_uri ?? null)) {
       await updateEntryPhoto(editingEntry.id, editPhoto);
+    }
+    if (editMealType !== editingEntry.meal_type) {
+      await updateEntryMealType(editingEntry.id, editMealType);
     }
     setEditingEntry(null);
     await refreshCurrentDay();
@@ -323,6 +328,32 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
         >
           <View style={styles.editModal}>
             <Text style={styles.editModalTitle}>Modifier la note</Text>
+
+            <View>
+              <Text style={styles.ressentiSubTitle}>Repas</Text>
+              <View style={styles.mealTypeRow}>
+                {([
+                  { type: 'breakfast', label: 'Petit-déj', icon: '🌅' },
+                  { type: 'lunch',     label: 'Déjeuner',  icon: '☀️' },
+                  { type: 'snack',     label: 'Collation', icon: '🍎' },
+                  { type: 'dinner',    label: 'Dîner',     icon: '🌙' },
+                  { type: 'other',     label: 'Autre',     icon: '🍽' },
+                ] as { type: MealType; label: string; icon: string }[]).map(m => {
+                  const sel = editMealType === m.type;
+                  return (
+                    <TouchableOpacity
+                      key={m.type}
+                      onPress={() => setEditMealType(m.type)}
+                      style={[styles.mealTypeChip, sel && { backgroundColor: primaryColor + '20', borderColor: primaryColor }]}
+                    >
+                      <Text style={styles.mealTypeIcon}>{m.icon}</Text>
+                      <Text style={[styles.mealTypeLabel, sel && { color: primaryColor, fontWeight: '700' }]}>{m.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
             <TextInput
               style={styles.editInput}
               value={editText}
@@ -390,6 +421,28 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
                     <Text style={styles.ressentiSubTitle}>Où as-tu mal ?</Text>
                     <View style={styles.subBtnsWrap}>
                       {RESSENTI_SUB_CATEGORIES.map((item) => {
+                        const sel = editRessentiSub === item.sub;
+                        return (
+                          <TouchableOpacity
+                            key={item.sub}
+                            onPress={() => setEditRessentiSub(sel ? null : item.sub)}
+                            style={[styles.subBtnEdit, sel && styles.subBtnEditSelected]}
+                          >
+                            <Text style={[styles.subBtnEditText, sel && styles.subBtnEditTextSelected]}>
+                              {item.icon} {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+
+                {editingRessenti.category === 'cycle' && (
+                  <View>
+                    <Text style={styles.ressentiSubTitle}>Détails</Text>
+                    <View style={styles.subBtnsWrap}>
+                      {CYCLE_SUB_CATEGORIES.map((item) => {
                         const sel = editRessentiSub === item.sub;
                         return (
                           <TouchableOpacity
@@ -550,6 +603,14 @@ const styles = StyleSheet.create({
   removePhotoBtn: { padding: 6 },
   removePhotoText: { fontSize: 12, color: '#C09070', fontWeight: '600' },
   ressentiSubTitle: { fontSize: 13, fontWeight: '700', color: '#6D28D9', marginBottom: 8 },
+  mealTypeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 4 },
+  mealTypeChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14,
+    borderWidth: 1.5, borderColor: '#F0D0B8', backgroundColor: '#FFF8F5',
+  },
+  mealTypeIcon: { fontSize: 13 },
+  mealTypeLabel: { fontSize: 12, fontWeight: '600', color: '#9B8A80' },
   subBtnsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
   subBtnEdit: {
     paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14,

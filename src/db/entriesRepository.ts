@@ -53,6 +53,14 @@ export async function updateEntryPhoto(id: number, photo_uri: string | null): Pr
   );
 }
 
+export async function updateEntryMealType(id: number, meal_type: string): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    `UPDATE entries SET meal_type = ? WHERE id = ?`,
+    [meal_type, id]
+  );
+}
+
 export async function getEntriesForDateRange(fromDate: string, toDate: string): Promise<Entry[]> {
   const db = await getDatabase();
   return db.getAllAsync<Entry>(

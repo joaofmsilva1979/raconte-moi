@@ -17,7 +17,8 @@ export type RessentSubCategory =
   | 'head' | 'jaw' | 'neck' | 'shoulders' | 'chest'
   | 'upper_back' | 'lower_back' | 'belly' | 'hips' | 'pelvic' | 'legs'
   | 'flow_light' | 'flow_medium' | 'flow_heavy'
-  | 'cramps' | 'mood_low' | 'breast_tension'
+  | 'cramps_mild' | 'cramps_moderate' | 'cramps_severe'
+  | 'mood_low' | 'breast_tension'
   | 'other';
 
 export type GoalType = 'watch' | 'remember' | 'other';
