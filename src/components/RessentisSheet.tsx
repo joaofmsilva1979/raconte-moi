@@ -230,6 +230,9 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
             {isMorning && (
               <View style={styles.expandBox}>
                 <Text style={styles.expandLabel}>Comment as-tu dormi ?</Text>
+                <Text style={styles.sleepHint}>
+                  Ton ressenti au réveil — douleurs, raideurs, fatigue matinale. Pas un suivi automatique comme Apple Santé, mais ce que tu as vraiment vécu en te levant.
+                </Text>
                 <View style={styles.sleepRow}>
                   {SLEEP_OPTIONS.map(({ quality, icon, label }) => {
                     const sel = sleepQuality === quality;
@@ -372,6 +375,10 @@ const styles = StyleSheet.create({
     marginTop: 20, marginBottom: 8,
   },
 
+  sleepHint: {
+    fontSize: 12, color: '#C09070', fontStyle: 'italic',
+    lineHeight: 17, marginBottom: 10, marginTop: 2,
+  },
   sleepRow: { flexDirection: 'row', gap: 10 },
   sleepBtn: {
     flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 12,
