@@ -39,7 +39,8 @@ type TimelineItem =
   | { kind: 'meal'; slot: MealSlot; slotEntries: Entry[]; slotRessentis: Ressenti[]; slotMeds: MedicationLog[]; slotAids: ComfortAidLog[]; sortKey: number }
   | { kind: 'feeling'; ressenti: Ressenti; sortKey: number }
   | { kind: 'med'; log: MedicationLog; sortKey: number }
-  | { kind: 'aid'; log: ComfortAidLog; sortKey: number };
+  | { kind: 'aid'; log: ComfortAidLog; sortKey: number }
+  | { kind: 'hydration'; log: HydrationLog; sortKey: number };
 
 function toMinutes(iso: string): number {
   const d = new Date(iso);
@@ -53,6 +54,7 @@ function buildTimeline(
   freeRessentis: Ressenti[],
   medicationLogs: MedicationLog[],
   comfortAidLogs: ComfortAidLog[],
+  hydrationLogs: HydrationLog[],
 ): TimelineItem[] {
   const mealItems: TimelineItem[] = slots.map((slot) => ({
     kind: 'meal' as const,
@@ -73,13 +75,17 @@ function buildTimeline(
     kind: 'med' as const, log: m, sortKey: toMinutes(m.recorded_at),
   }));
 
-  // aids with 'morning' go to the morning section (filtered at render time); rest standalone
   const freeAids = comfortAidLogs.filter((a) => !a.meal_type || a.meal_type === 'morning');
   const aidItems: TimelineItem[] = freeAids
     .filter((a) => a.meal_type !== 'morning')
     .map((a) => ({ kind: 'aid' as const, log: a, sortKey: toMinutes(a.recorded_at) }));
 
-  return [...mealItems, ...feelingItems, ...medItems, ...aidItems].sort((a, b) => a.sortKey - b.sortKey);
+  const hydrationItems: TimelineItem[] = hydrationLogs.map((l) => ({
+    kind: 'hydration' as const, log: l, sortKey: toMinutes(l.recorded_at),
+  }));
+
+  return [...mealItems, ...feelingItems, ...medItems, ...aidItems, ...hydrationItems]
+    .sort((a, b) => a.sortKey - b.sortKey);
 }
 
 const SLEEP_LABEL: Record<number, string> = { 1: 'Mal dormi 😣', 2: 'Sommeil moyen 😐', 3: 'Bien dormi 😊' };
@@ -127,12 +133,10 @@ export function JournalTimeline({
   const morningRessentis = ressentis.filter(r => r.context === 'morning');
   const morningAids = comfortAidLogs.filter(a => a.meal_type === 'morning');
   const freeRessentis = ressentis.filter(r => r.meal_type == null && r.context !== 'morning');
-  const timeline = buildTimeline(entries, ressentis, slots, freeRessentis, medicationLogs, comfortAidLogs);
+  const timeline = buildTimeline(entries, ressentis, slots, freeRessentis, medicationLogs, comfortAidLogs, hydrationLogs);
 
   const hasActivities = activities.length > 0;
-  const hasHydration = hydrationLogs.length > 0;
   const hasMorning = morningRessentis.length > 0 || morningAids.length > 0;
-  const totalMl = hydrationLogs.reduce((s, l) => s + l.amount_ml, 0);
 
   const getIsLast = (idx: number) => idx === timeline.length - 1 && !hasActivities;
 
@@ -250,6 +254,29 @@ export function JournalTimeline({
           );
         }
 
+        if (item.kind === 'hydration') {
+          const h = item.log;
+          return (
+            <View key={`hydration-${h.id}`} style={styles.row} testID={`timeline-hydration-${h.id}`}>
+              <View style={styles.dotCol}>
+                <View style={[styles.dot, { backgroundColor: '#38BDF8' }]} />
+                {!isLast && <View style={[styles.line, { backgroundColor: '#38BDF840' }]} />}
+              </View>
+              <View style={styles.content}>
+                <TouchableOpacity
+                  style={styles.hydrationCard}
+                  onLongPress={() => onDeleteHydration?.(h.id)}
+                  delayLongPress={600}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.hydrationCardTime}>💧 {formatTime(h.recorded_at)}</Text>
+                  <Text style={styles.hydrationCardMl}>{h.amount_ml} ml</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+        }
+
         const { slot, slotEntries, slotRessentis, slotMeds, slotAids } = item;
         return (
           <View key={`meal-${slot.meal_type}`} style={styles.row} testID={`timeline-slot-${slot.meal_type}`}>
@@ -337,23 +364,6 @@ export function JournalTimeline({
         </View>
       )}
 
-      {/* Hydratation */}
-      {hasHydration && (
-        <View style={styles.row} testID="timeline-hydration">
-          <View style={styles.dotCol}>
-            <View style={[styles.dot, { backgroundColor: '#0EA5E9' }]} />
-          </View>
-          <View style={styles.content}>
-            <Text style={styles.slotLabel}>💧 Hydratation · {totalMl >= 1000 ? `${(totalMl / 1000).toFixed(1)} L` : `${totalMl} ml`}</Text>
-            {hydrationLogs.map(log => (
-              <TouchableOpacity key={log.id} style={styles.hydrationEntry} onLongPress={() => onDeleteHydration?.(log.id)} delayLongPress={600} activeOpacity={0.85}>
-                <Text style={styles.hydrationTime}>{formatTime(log.recorded_at)}</Text>
-                <Text style={styles.hydrationMl}>{log.amount_ml} ml</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
     </View>
   );
 }
@@ -422,10 +432,11 @@ const styles = StyleSheet.create({
   aidName: { fontSize: 13, color: '#0C4A6E', fontWeight: '600', lineHeight: 18 },
   aidNote: { fontSize: 12, color: '#0EA5E9', fontStyle: 'italic', marginTop: 4 },
   longPressHint: { fontSize: 10, color: '#9CA3AF', marginTop: 2, fontStyle: 'italic' },
-  hydrationEntry: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingVertical: 4, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#BAE6FD',
+  hydrationCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#F0F9FF', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7,
+    borderLeftWidth: 3, borderLeftColor: '#38BDF8',
   },
-  hydrationTime: { fontSize: 12, color: '#0369A1' },
-  hydrationMl: { fontSize: 12, fontWeight: '700', color: '#0369A1' },
+  hydrationCardTime: { fontSize: 11, fontWeight: '700', color: '#0369A1' },
+  hydrationCardMl: { fontSize: 13, fontWeight: '700', color: '#0C4A6E' },
 });

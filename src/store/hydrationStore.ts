@@ -39,7 +39,7 @@ export const useHydrationStore = create<HydrationState & HydrationActions>((set,
     const log = await addHydrationLog(amount_ml);
     const todayLogs = [...get().todayLogs, log];
     const todayTotalMl = todayLogs.reduce((s, l) => s + l.amount_ml, 0);
-    set({ todayLogs, todayTotalMl, isSheetOpen: false });
+    set({ todayLogs, todayTotalMl }); // sheet reste ouverte
   },
 
   deleteLog: async (id) => {
