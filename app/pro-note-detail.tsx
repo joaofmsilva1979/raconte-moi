@@ -4,8 +4,8 @@ import {
   ScrollView, Alert, ActivityIndicator,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { WebView } from 'react-native-webview';
 import * as Sharing from 'expo-sharing';
+import WebViewWrapper from '@/components/WebViewWrapper';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { getProNote, updateProNote } from '@/db/proNotesRepository';
 import { ProNote } from '@/types';
@@ -75,7 +75,7 @@ export default function ProNoteDetailScreen() {
       {isFile && isPdf ? (
         // PDF rendered natively in WebView on iOS
         <View style={styles.flex}>
-          <WebView
+          <WebViewWrapper
             source={{ uri: note.file_uri! }}
             style={styles.flex}
             originWhitelist={['file://*', '*']}

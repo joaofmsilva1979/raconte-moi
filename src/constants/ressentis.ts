@@ -14,6 +14,7 @@ export const RESSENTI_CATEGORIES: {
   { category: 'other',    label: 'Autre',           icon: '✏️' },
 ];
 
+// Sous-catégories pour "Douleur" (localisation corporelle)
 export const RESSENTI_SUB_CATEGORIES: {
   sub: RessentSubCategory;
   label: string;
@@ -31,6 +32,21 @@ export const RESSENTI_SUB_CATEGORIES: {
   { sub: 'pelvic',     label: 'Pelvien',   icon: '🔻' },
   { sub: 'legs',       label: 'Jambes',    icon: '🦵' },
   { sub: 'other',      label: 'Autre',     icon: '✏️' },
+];
+
+// Sous-catégories spécifiques aux "Règles"
+export const CYCLE_SUB_CATEGORIES: {
+  sub: RessentSubCategory;
+  label: string;
+  icon: string;
+}[] = [
+  { sub: 'flow_light',    label: 'Flux léger',        icon: '🩸' },
+  { sub: 'flow_medium',   label: 'Flux modéré',       icon: '🩸' },
+  { sub: 'flow_heavy',    label: 'Flux abondant',     icon: '🩸' },
+  { sub: 'cramps',        label: 'Crampes',           icon: '😣' },
+  { sub: 'mood_low',      label: 'Humeur basse',      icon: '😔' },
+  { sub: 'breast_tension',label: 'Seins sensibles',   icon: '🌸' },
+  { sub: 'other',         label: 'Autre',             icon: '✏️' },
 ];
 
 export const RESSENTI_LABELS: Record<RessentCategory, string> = {
@@ -54,16 +70,22 @@ export const RESSENTI_ICONS: Record<RessentCategory, string> = {
 };
 
 export const SUB_CATEGORY_LABELS: Record<RessentSubCategory, string> = {
-  head:       'tête',
-  jaw:        'mâchoires',
-  neck:       'cou/nuque',
-  shoulders:  'épaules',
-  chest:      'thorax',
-  upper_back: 'dos haut',
-  lower_back: 'dos bas',
-  belly:      'ventre',
-  hips:       'hanches',
-  pelvic:     'pelvien',
-  legs:       'jambes',
-  other:      'autre',
+  head:           'tête',
+  jaw:            'mâchoires',
+  neck:           'cou/nuque',
+  shoulders:      'épaules',
+  chest:          'thorax',
+  upper_back:     'dos haut',
+  lower_back:     'dos bas',
+  belly:          'ventre',
+  hips:           'hanches',
+  pelvic:         'pelvien',
+  legs:           'jambes',
+  flow_light:     'flux léger',
+  flow_medium:    'flux modéré',
+  flow_heavy:     'flux abondant',
+  cramps:         'crampes',
+  mood_low:       'humeur basse',
+  breast_tension: 'seins sensibles',
+  other:          'autre',
 };

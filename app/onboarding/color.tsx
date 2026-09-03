@@ -18,7 +18,7 @@ export default function ColorScreen() {
 
   return (
     <View style={styles.container}>
-      <OnboardingProgress currentStep={4} totalSteps={5} />
+      <OnboardingProgress currentStep={4} totalSteps={6} />
 
       <View style={styles.content}>
         <Text style={styles.title}>Ta couleur</Text>

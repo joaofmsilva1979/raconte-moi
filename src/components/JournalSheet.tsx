@@ -24,10 +24,11 @@ import { updateRessenti } from '@/db/ressentisRepository';
 import { Entry, Ressenti, RessentSubCategory } from '@/types';
 import { RESSENTI_LABELS, RESSENTI_ICONS, RESSENTI_SUB_CATEGORIES } from '@/constants/ressentis';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy';
 import { Image } from 'react-native';
 
 async function savePhotoToPermanentStorage(tempUri: string): Promise<string> {
+  if (Platform.OS === 'web') return tempUri;
+  const FileSystem = await import('expo-file-system/legacy');
   const dir = FileSystem.documentDirectory + 'photos/';
   const dirInfo = await FileSystem.getInfoAsync(dir);
   if (!dirInfo.exists) await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
@@ -55,6 +56,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     sleepLog,
     medicationLogs,
     comfortAidLogs,
+    hydrationLogs,
     viewedDate,
     closeSheet,
     loadDay,
@@ -64,6 +66,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
     deleteMedLog,
     deleteAidLog,
     deleteSleep,
+    deleteHydrationEntry,
   } = useJournalStore();
 
   const today = formatDate(new Date());
@@ -286,6 +289,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
           sleepLog={sleepLog}
           medicationLogs={medicationLogs}
           comfortAidLogs={comfortAidLogs}
+          hydrationLogs={hydrationLogs}
           isPastDay={viewedDate < today}
           onEditEntry={handleEditEntry}
           onDeleteEntry={handleDeleteEntry}
@@ -295,6 +299,7 @@ export function JournalSheet({ primaryColor, onAddEntry }: JournalSheetProps) {
           onDeleteMed={(id) => confirmDelete('ce médicament', () => deleteMedLog(id))}
           onDeleteAid={(id) => confirmDelete('cet accessoire', () => deleteAidLog(id))}
           onDeleteSleep={() => sleepLog && confirmDelete('le log de sommeil', () => deleteSleep(sleepLog.id))}
+          onDeleteHydration={(id) => confirmDelete('cette entrée eau', () => deleteHydrationEntry(id))}
         />
       </ScrollView>
 

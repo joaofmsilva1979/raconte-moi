@@ -36,7 +36,7 @@ export default function GoalScreen() {
 
   return (
     <View style={styles.container}>
-      <OnboardingProgress currentStep={2} totalSteps={5} />
+      <OnboardingProgress currentStep={2} totalSteps={6} />
 
       <View style={styles.content}>
         <Text style={styles.title}>Pourquoi tu notes ?</Text>

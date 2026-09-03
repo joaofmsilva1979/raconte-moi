@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Entry, MealSlot, Ressenti, Activity, SleepLog, MedicationLog, ComfortAidLog } from '@/types';
+import { Entry, MealSlot, Ressenti, Activity, SleepLog, MedicationLog, ComfortAidLog, HydrationLog } from '@/types';
 import { formatTime } from '@/utils/dateUtils';
 import { RESSENTI_LABELS, RESSENTI_ICONS, SUB_CATEGORY_LABELS } from '@/constants/ressentis';
 import { getActivityLabel, getActivityIcon } from '@/constants/activities';
@@ -22,6 +22,7 @@ interface JournalTimelineProps {
   sleepLog?: SleepLog | null;
   medicationLogs?: MedicationLog[];
   comfortAidLogs?: ComfortAidLog[];
+  hydrationLogs?: HydrationLog[];
   isPastDay?: boolean;
   onEditEntry?: (entry: Entry) => void;
   onDeleteEntry?: (entry: Entry) => void;
@@ -31,6 +32,7 @@ interface JournalTimelineProps {
   onDeleteMed?: (id: number) => void;
   onDeleteAid?: (id: number) => void;
   onDeleteSleep?: () => void;
+  onDeleteHydration?: (id: number) => void;
 }
 
 type TimelineItem =
@@ -117,9 +119,9 @@ function RessentisCard({ ressenti, onEdit, onDelete, standalone }: { ressenti: R
 
 export function JournalTimeline({
   entries, slots, primaryColor, ressentis = [], activities = [],
-  sleepLog, medicationLogs = [], comfortAidLogs = [], isPastDay = false,
+  sleepLog, medicationLogs = [], comfortAidLogs = [], hydrationLogs = [], isPastDay = false,
   onEditEntry, onDeleteEntry, onEditRessenti,
-  onDeleteRessenti, onDeleteActivity, onDeleteMed, onDeleteAid, onDeleteSleep,
+  onDeleteRessenti, onDeleteActivity, onDeleteMed, onDeleteAid, onDeleteSleep, onDeleteHydration,
 }: JournalTimelineProps) {
   const pastOpacity = isPastDay ? 0.72 : 1;
   const morningRessentis = ressentis.filter(r => r.context === 'morning');
@@ -128,7 +130,9 @@ export function JournalTimeline({
   const timeline = buildTimeline(entries, ressentis, slots, freeRessentis, medicationLogs, comfortAidLogs);
 
   const hasActivities = activities.length > 0;
+  const hasHydration = hydrationLogs.length > 0;
   const hasMorning = morningRessentis.length > 0 || morningAids.length > 0;
+  const totalMl = hydrationLogs.reduce((s, l) => s + l.amount_ml, 0);
 
   const getIsLast = (idx: number) => idx === timeline.length - 1 && !hasActivities;
 
@@ -332,6 +336,24 @@ export function JournalTimeline({
           </View>
         </View>
       )}
+
+      {/* Hydratation */}
+      {hasHydration && (
+        <View style={styles.row} testID="timeline-hydration">
+          <View style={styles.dotCol}>
+            <View style={[styles.dot, { backgroundColor: '#0EA5E9' }]} />
+          </View>
+          <View style={styles.content}>
+            <Text style={styles.slotLabel}>💧 Hydratation · {totalMl >= 1000 ? `${(totalMl / 1000).toFixed(1)} L` : `${totalMl} ml`}</Text>
+            {hydrationLogs.map(log => (
+              <TouchableOpacity key={log.id} style={styles.hydrationEntry} onLongPress={() => onDeleteHydration?.(log.id)} delayLongPress={600} activeOpacity={0.85}>
+                <Text style={styles.hydrationTime}>{formatTime(log.recorded_at)}</Text>
+                <Text style={styles.hydrationMl}>{log.amount_ml} ml</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -400,4 +422,10 @@ const styles = StyleSheet.create({
   aidName: { fontSize: 13, color: '#0C4A6E', fontWeight: '600', lineHeight: 18 },
   aidNote: { fontSize: 12, color: '#0EA5E9', fontStyle: 'italic', marginTop: 4 },
   longPressHint: { fontSize: 10, color: '#9CA3AF', marginTop: 2, fontStyle: 'italic' },
+  hydrationEntry: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingVertical: 4, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#BAE6FD',
+  },
+  hydrationTime: { fontSize: 12, color: '#0369A1' },
+  hydrationMl: { fontSize: 12, fontWeight: '700', color: '#0369A1' },
 });

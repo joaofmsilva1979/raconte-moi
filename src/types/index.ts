@@ -16,6 +16,8 @@ export type RessentCategory =
 export type RessentSubCategory =
   | 'head' | 'jaw' | 'neck' | 'shoulders' | 'chest'
   | 'upper_back' | 'lower_back' | 'belly' | 'hips' | 'pelvic' | 'legs'
+  | 'flow_light' | 'flow_medium' | 'flow_heavy'
+  | 'cramps' | 'mood_low' | 'breast_tension'
   | 'other';
 
 export type GoalType = 'watch' | 'remember' | 'other';
@@ -86,6 +88,13 @@ export interface AppSettings {
   notifications_lunch: boolean;
   notifications_snack: boolean;
   notifications_dinner: boolean;
+  gender: 'female' | 'male' | 'other' | null;
+}
+
+export interface HydrationLog {
+  id: number;
+  recorded_at: string;
+  amount_ml: number;
 }
 
 export interface ColorPalette {

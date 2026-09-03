@@ -24,6 +24,7 @@ export async function getAppSettings(): Promise<AppSettings> {
     backup_interval, last_backup_at,
     notifications_enabled, notifications_breakfast, notifications_lunch,
     notifications_snack, notifications_dinner,
+    gender,
   ] = await Promise.all([
     getSetting('first_name'),
     getSetting('primary_color'),
@@ -37,6 +38,7 @@ export async function getAppSettings(): Promise<AppSettings> {
     getSetting('notifications_lunch'),
     getSetting('notifications_snack'),
     getSetting('notifications_dinner'),
+    getSetting('gender'),
   ]);
 
   return {
@@ -52,6 +54,7 @@ export async function getAppSettings(): Promise<AppSettings> {
     notifications_lunch: notifications_lunch !== 'false',
     notifications_snack: notifications_snack !== 'false',
     notifications_dinner: notifications_dinner !== 'false',
+    gender: (gender as AppSettings['gender']) ?? null,
   };
 }
 

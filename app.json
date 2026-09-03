@@ -43,7 +43,8 @@
       ["./plugins/withAppleIntelligence"]
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "baseUrl": "/raconte-moi-web"
     },
     "extra": {
       "privacyPolicyUrl": "https://joaofmsilva1979.github.io/raconte-moi/privacy-policy.html"

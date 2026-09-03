@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
 import { getDatabase } from '@/db/database';
 import { Entry, MealType } from '@/types';
 
@@ -69,7 +69,8 @@ export async function deleteEntry(id: number): Promise<void> {
     'SELECT photo_uri FROM entries WHERE id = ?', [id]
   );
   await db.runAsync('DELETE FROM entries WHERE id = ?', [id]);
-  if (row?.photo_uri) {
+  if (row?.photo_uri && Platform.OS !== 'web') {
+    const FileSystem = await import('expo-file-system/legacy');
     await FileSystem.deleteAsync(row.photo_uri, { idempotent: true }).catch(() => {});
   }
 }

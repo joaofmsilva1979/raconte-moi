@@ -49,7 +49,7 @@ export default function PermissionsScreen() {
 
   return (
     <View style={styles.container}>
-      <OnboardingProgress currentStep={5} totalSteps={5} />
+      <OnboardingProgress currentStep={5} totalSteps={6} />
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Dernière étape !</Text>

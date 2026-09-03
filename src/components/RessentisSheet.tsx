@@ -4,7 +4,8 @@ import {
   Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
 } from 'react-native';
 import { useRessentisStore } from '@/store/ressentisStore';
-import { RESSENTI_CATEGORIES, RESSENTI_SUB_CATEGORIES } from '@/constants/ressentis';
+import { useSettingsStore } from '@/store/settingsStore';
+import { RESSENTI_CATEGORIES, RESSENTI_SUB_CATEGORIES, CYCLE_SUB_CATEGORIES } from '@/constants/ressentis';
 import { MealType, SleepQuality } from '@/types';
 
 interface RessentisSheetProps {
@@ -34,6 +35,10 @@ function currentSlot(mode: string | null, selected_meal: MealType | null, moment
 }
 
 export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
+  const { settings } = useSettingsStore();
+  const visibleCategories = RESSENTI_CATEGORIES.filter(
+    c => c.category !== 'cycle' || settings?.gender !== 'male'
+  );
   const {
     isSheetOpen, mode, categories, sub_categories, selected_meal, meal_day,
     notes, subNote, sleepQuality, customPainLocations, moment,
@@ -49,6 +54,7 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
 
   const slot = currentSlot(mode, selected_meal, moment);
   const painSelected = categories.includes('pain');
+  const cycleSelected = categories.includes('cycle');
   const otherSelected = categories.includes('other');
   const isMealSlot = slot !== null && slot !== 'morning';
   const isMorning = slot === 'morning';
@@ -90,7 +96,7 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
 
             {/* Catégories — visibles immédiatement */}
             <View style={styles.chipRow}>
-              {RESSENTI_CATEGORIES.map((item) => {
+              {visibleCategories.map((item) => {
                 const selected = categories.includes(item.category);
                 return (
                   <TouchableOpacity
@@ -187,6 +193,30 @@ export function RessentisSheet({ primaryColor }: RessentisSheetProps) {
                     </TouchableOpacity>
                   </View>
                 )}
+              </View>
+            )}
+
+            {/* Sous-catégories Règles — flux, symptômes */}
+            {cycleSelected && (
+              <View style={styles.expandBox}>
+                <Text style={styles.expandLabel}>Précise si tu veux</Text>
+                <View style={styles.subRow}>
+                  {CYCLE_SUB_CATEGORIES.filter(i => i.sub !== 'other').map((item) => {
+                    const selected = sub_categories.includes(item.sub);
+                    return (
+                      <TouchableOpacity
+                        key={item.sub}
+                        onPress={() => toggleSubCategory(item.sub)}
+                        style={[styles.subChip, selected && styles.subChipSelected]}
+                      >
+                        <Text style={styles.subChipIcon}>{item.icon}</Text>
+                        <Text style={[styles.subChipText, selected && styles.subChipTextSelected]}>
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
             )}
 

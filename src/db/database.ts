@@ -57,7 +57,7 @@ export async function initDatabase(): Promise<void> {
 
 // ─── Schema versioning ────────────────────────────────────────────────────────
 
-const CURRENT_SCHEMA_VERSION = 7;
+const CURRENT_SCHEMA_VERSION = 8;
 
 async function columnExists(
   database: SQLite.SQLiteDatabase,
@@ -270,6 +270,19 @@ const MIGRATIONS: Migration[] = [
       );
     `);
   },
+
+  // v8 — journal hydratation (verres / ml) + genre utilisateur
+  async (database) => {
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS hydration_logs (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        recorded_at TEXT NOT NULL,
+        amount_ml   INTEGER NOT NULL,
+        created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_hydration_logs_recorded_at ON hydration_logs(recorded_at);
+    `);
+  },
 ];
 
 async function runMigrations(database: SQLite.SQLiteDatabase): Promise<void> {
@@ -310,6 +323,7 @@ export async function resetAllData(): Promise<void> {
     DELETE FROM pro_notes;
     DELETE FROM settings;
     DELETE FROM meal_slots;
+    DELETE FROM hydration_logs;
   `);
   // Re-seed default meal slots so the app isn't broken on next launch
   await seedDefaultMealSlots(database);

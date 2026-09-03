@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { Entry, Ressenti, Activity, SleepLog, MedicationLog, ComfortAidLog } from '@/types';
+import { Entry, Ressenti, Activity, SleepLog, MedicationLog, ComfortAidLog, HydrationLog } from '@/types';
 import { getEntriesForDay } from '@/db/entriesRepository';
 import { getRessentisForDay, deleteRessenti } from '@/db/ressentisRepository';
 import { getActivitiesForDay, deleteActivity } from '@/db/activitiesRepository';
 import { getSleepForDay, deleteSleepLog } from '@/db/sleepRepository';
 import { getMedicationLogsForDay, deleteMedicationLog } from '@/db/medicationsRepository';
 import { getComfortAidLogsForDay, deleteComfortAidLog } from '@/db/comfortAidsRepository';
+import { getHydrationForDay, deleteHydrationLog } from '@/db/hydrationRepository';
 import { formatDate, addDays } from '@/utils/dateUtils';
 
 interface JournalState {
@@ -16,6 +17,7 @@ interface JournalState {
   sleepLog: SleepLog | null;
   medicationLogs: MedicationLog[];
   comfortAidLogs: ComfortAidLog[];
+  hydrationLogs: HydrationLog[];
   isLoading: boolean;
   loadError: string | null;
   isSheetOpen: boolean;
@@ -33,6 +35,7 @@ interface JournalActions {
   deleteMedLog: (id: number) => Promise<void>;
   deleteAidLog: (id: number) => Promise<void>;
   deleteSleep: (id: number) => Promise<void>;
+  deleteHydrationEntry: (id: number) => Promise<void>;
 }
 
 export const useJournalStore = create<JournalState & JournalActions>((set, get) => ({
@@ -43,6 +46,7 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
   sleepLog: null,
   medicationLogs: [],
   comfortAidLogs: [],
+  hydrationLogs: [],
   isLoading: false,
   loadError: null,
   isSheetOpen: false,
@@ -56,17 +60,18 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
   closeSheet: () => set({ isSheetOpen: false }),
 
   loadDay: async (dateStr: string) => {
-    set({ isLoading: true, loadError: null, viewedDate: dateStr, entries: [], ressentis: [], activities: [], sleepLog: null, medicationLogs: [], comfortAidLogs: [] });
+    set({ isLoading: true, loadError: null, viewedDate: dateStr, entries: [], ressentis: [], activities: [], sleepLog: null, medicationLogs: [], comfortAidLogs: [], hydrationLogs: [] });
     try {
-      const [entries, ressentis, activities, sleepLog, medicationLogs, comfortAidLogs] = await Promise.all([
+      const [entries, ressentis, activities, sleepLog, medicationLogs, comfortAidLogs, hydrationLogs] = await Promise.all([
         getEntriesForDay(dateStr),
         getRessentisForDay(dateStr),
         getActivitiesForDay(dateStr),
         getSleepForDay(dateStr),
         getMedicationLogsForDay(dateStr),
         getComfortAidLogsForDay(dateStr),
+        getHydrationForDay(dateStr),
       ]);
-      set({ entries, ressentis, activities, sleepLog, medicationLogs, comfortAidLogs, isLoading: false });
+      set({ entries, ressentis, activities, sleepLog, medicationLogs, comfortAidLogs, hydrationLogs, isLoading: false });
     } catch (e) {
       console.error('[JournalStore] loadDay failed:', e);
       set({ isLoading: false, loadError: 'Impossible de charger le journal' });
@@ -112,6 +117,11 @@ export const useJournalStore = create<JournalState & JournalActions>((set, get) 
 
   deleteSleep: async (id) => {
     await deleteSleepLog(id);
+    await get().refreshCurrentDay();
+  },
+
+  deleteHydrationEntry: async (id) => {
+    await deleteHydrationLog(id);
     await get().refreshCurrentDay();
   },
 }));

@@ -13,9 +13,11 @@ import { RessentisSheet } from '@/components/RessentisSheet';
 import { ActivitySheet } from '@/components/ActivitySheet';
 import { MedicationSheet } from '@/components/MedicationSheet';
 import { ComfortAidSheet } from '@/components/ComfortAidSheet';
+import { HydrationSheet } from '@/components/HydrationSheet';
 import { useActivityStore } from '@/store/activityStore';
 import { useMedicationStore } from '@/store/medicationStore';
 import { useComfortAidStore } from '@/store/comfortAidStore';
+import { useHydrationStore } from '@/store/hydrationStore';
 import { DAILY_GOAL_MINUTES } from '@/constants/activities';
 
 export default function HomeScreen() {
@@ -37,12 +39,14 @@ export default function HomeScreen() {
   const { openSheet: openActivitySheet, todayTotalMinutes, loadTodayTotal } = useActivityStore();
   const { openSheet: openMedicationSheet, loadMedications } = useMedicationStore();
   const { openSheet: openComfortAidSheet, loadAids } = useComfortAidStore();
+  const { openSheet: openHydrationSheet, todayTotalMl, loadToday: loadHydration } = useHydrationStore();
 
   useEffect(() => {
     loadSettings();
     loadTodayTotal();
     loadMedications();
     loadAids();
+    loadHydration();
   }, []);
 
   useEffect(() => {
@@ -219,6 +223,18 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
         <TouchableOpacity
+          testID="add-hydration-btn"
+          onPress={openHydrationSheet}
+          style={[styles.actionBtn, styles.actionBtnHydration]}
+          activeOpacity={0.82}
+          accessibilityLabel="Enregistrer une prise d'eau"
+          accessibilityRole="button"
+        >
+          <Text style={[styles.actionBtnText, { color: '#0369A1' }]}>
+            💧 Hydratation{todayTotalMl > 0 ? ` · ${todayTotalMl >= 1000 ? `${(todayTotalMl / 1000).toFixed(1)} L` : `${todayTotalMl} ml`}` : ''}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           testID="open-journal-btn"
           onPress={openSheet}
           style={[styles.journalOpener, { borderColor: primary + '40' }]}
@@ -264,6 +280,7 @@ export default function HomeScreen() {
       <ActivitySheet primaryColor={primary} />
       <MedicationSheet primaryColor={primary} />
       <ComfortAidSheet primaryColor={primary} />
+      <HydrationSheet primaryColor={primary} />
       <JournalSheet primaryColor={primary} onAddEntry={closeSheet} />
     </SafeAreaView>
   );
@@ -399,6 +416,7 @@ const styles = StyleSheet.create({
   actionBtnActivites: { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' },
   actionBtnMedicaments: { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' },
   actionBtnAccessoires: { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' },
+  actionBtnHydration: { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', flex: 0, width: '100%' },
   actionBtnText: {
     fontSize: 15,
     fontWeight: '700',

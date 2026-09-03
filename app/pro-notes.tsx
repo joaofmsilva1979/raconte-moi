@@ -4,8 +4,6 @@ import {
   ScrollView, Alert, Modal, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Stack, useFocusEffect } from 'expo-router';
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system/legacy';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { getProNotes, createProNote, deleteProNote } from '@/db/proNotesRepository';
 import { ProNote } from '@/types';
@@ -35,6 +33,14 @@ export default function ProNotesScreen() {
   }
 
   async function handleImportFile() {
+    if (Platform.OS === 'web') {
+      Alert.alert('Non disponible', 'L\'import de fichiers nécessite l\'app iOS.');
+      setAddMode(null); setShowAdd(false);
+      return;
+    }
+    const DocumentPicker = await import('expo-document-picker');
+    const FileSystem = await import('expo-file-system/legacy');
+
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'],
       copyToCacheDirectory: false,
@@ -65,8 +71,11 @@ export default function ProNotesScreen() {
       {
         text: 'Supprimer', style: 'destructive',
         onPress: async () => {
-          if (note.file_uri) {
-            try { await FileSystem.deleteAsync(note.file_uri, { idempotent: true }); } catch {}
+          if (note.file_uri && Platform.OS !== 'web') {
+            try {
+              const FileSystem = await import('expo-file-system/legacy');
+              await FileSystem.deleteAsync(note.file_uri, { idempotent: true });
+            } catch {}
           }
           await deleteProNote(note.id);
           load();

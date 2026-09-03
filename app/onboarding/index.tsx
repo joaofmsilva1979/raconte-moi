@@ -14,7 +14,7 @@ export default function WelcomeScreen() {
   const handleContinue = async () => {
     if (!name.trim()) return;
     await saveFirstName(name.trim());
-    router.push('/onboarding/goal');
+    router.push('/onboarding/profile');
   };
 
   return (
@@ -22,7 +22,7 @@ export default function WelcomeScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <OnboardingProgress currentStep={1} totalSteps={5} />
+      <OnboardingProgress currentStep={1} totalSteps={6} />
 
       <View style={styles.content}>
         <Image source={require('@/assets/logo.png')} style={styles.logo} />

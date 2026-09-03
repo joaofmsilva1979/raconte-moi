@@ -47,7 +47,7 @@ export default function SlotsScreen() {
 
   return (
     <View style={styles.container}>
-      <OnboardingProgress currentStep={3} totalSteps={5} />
+      <OnboardingProgress currentStep={3} totalSteps={6} />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Mes horaires</Text>
         <Text style={styles.subtitle}>

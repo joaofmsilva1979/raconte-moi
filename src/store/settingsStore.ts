@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   notifications_lunch: true,
   notifications_snack: true,
   notifications_dinner: true,
+  gender: null,
 };
 
 interface SettingsState {
@@ -41,6 +42,7 @@ interface SettingsState {
   saveIcloudBackup: (enabled: boolean) => Promise<void>;
   saveBackupInterval: (days: number) => Promise<void>;
   saveLastBackupAt: (isoDate: string) => Promise<void>;
+  saveGender: (gender: AppSettings['gender']) => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => {
@@ -115,6 +117,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     saveLastBackupAt: async (isoDate) => {
       await setSetting('last_backup_at', isoDate);
       patchSettings({ last_backup_at: isoDate });
+    },
+
+    saveGender: async (gender) => {
+      await setSetting('gender', gender ?? '');
+      patchSettings({ gender });
     },
   };
 });
