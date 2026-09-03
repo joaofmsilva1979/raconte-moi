@@ -23,28 +23,35 @@ export default function PermissionsScreen() {
     notifications_snack:     true,
     notifications_dinner:    true,
   });
+  const [loading, setLoading] = useState(false);
 
   function toggleMeal(key: keyof typeof meals) {
     setMeals(prev => ({ ...prev, [key]: !prev[key] }));
   }
 
   const handleStart = async () => {
-    if (Platform.OS !== 'web') {
-      const { requestRecordingPermissionsAsync } = await import('expo-audio');
-      await requestRecordingPermissionsAsync();
-      if (notifEnabled) {
-        const Notifications = await import('expo-notifications');
-        await Notifications.requestPermissionsAsync();
+    if (loading) return;
+    setLoading(true);
+    try {
+      if (Platform.OS !== 'web') {
+        const { requestRecordingPermissionsAsync } = await import('expo-audio');
+        await requestRecordingPermissionsAsync();
+        if (notifEnabled) {
+          const Notifications = await import('expo-notifications');
+          await Notifications.requestPermissionsAsync();
+        }
       }
-    }
 
-    await saveNotificationSetting('notifications_enabled', notifEnabled);
-    for (const row of MEAL_ROWS) {
-      await saveNotificationSetting(row.key, meals[row.key]);
-    }
+      await Promise.all([
+        saveNotificationSetting('notifications_enabled', notifEnabled),
+        ...MEAL_ROWS.map(row => saveNotificationSetting(row.key, meals[row.key])),
+      ]);
 
-    await completeOnboarding();
-    router.replace('/');
+      await completeOnboarding();
+      router.replace('/');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -112,12 +119,15 @@ export default function PermissionsScreen() {
       </ScrollView>
 
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: primary }]}
+        style={[styles.button, { backgroundColor: primary, opacity: loading ? 0.7 : 1 }]}
         onPress={handleStart}
+        disabled={loading}
         activeOpacity={0.85}
       >
         <Text style={styles.buttonText}>
-          {Platform.OS === 'web' ? 'Commencer la démo' : 'Activer le microphone et commencer'}
+          {loading
+            ? 'Démarrage…'
+            : Platform.OS === 'web' ? 'Commencer la démo' : 'Activer le microphone et commencer'}
         </Text>
       </TouchableOpacity>
     </View>
