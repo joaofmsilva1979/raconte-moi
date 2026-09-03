@@ -82,6 +82,7 @@ export default function PermissionsScreen() {
               value={notifEnabled}
               onValueChange={setNotifEnabled}
               trackColor={{ true: primary }}
+              style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
             />
           </View>
 
@@ -133,7 +134,7 @@ const styles = StyleSheet.create({
     borderRadius: 12, padding: 16, marginBottom: 10,
   },
   notifBlock: {
-    backgroundColor: '#FFF3EE', borderRadius: 12, padding: 16,
+    backgroundColor: '#FFF3EE', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
     marginBottom: 16, borderWidth: 1, borderStyle: 'dashed',
     borderColor: '#F0C0A0',
   },
