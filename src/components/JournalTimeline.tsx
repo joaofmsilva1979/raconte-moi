@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Entry, MealSlot, Ressenti, Activity, SleepLog, MedicationLog, ComfortAidLog } from '@/types';
 import { formatTime } from '@/utils/dateUtils';
 import { RESSENTI_LABELS, RESSENTI_ICONS, SUB_CATEGORY_LABELS } from '@/constants/ressentis';
-import { ACTIVITY_LABELS, ACTIVITY_ICONS } from '@/constants/activities';
+import { getActivityLabel, getActivityIcon } from '@/constants/activities';
 
 const TIMING_LABEL: Record<string, string> = {
   before: 'avant le repas',
@@ -324,7 +324,7 @@ export function JournalTimeline({
               <TouchableOpacity key={activity.id} style={styles.activityCard} testID={`activity-card-${activity.id}`} onLongPress={() => onDeleteActivity?.(activity.id)} delayLongPress={600} activeOpacity={0.85}>
                 <Text style={styles.activityTime}>{formatTime(activity.recorded_at)}</Text>
                 <Text style={styles.activityText}>
-                  {ACTIVITY_ICONS[activity.activity_type]} {ACTIVITY_LABELS[activity.activity_type]} · {activity.duration_minutes}min
+                  {getActivityIcon(activity.activity_type)} {getActivityLabel(activity.activity_type)} · {activity.duration_minutes}min
                 </Text>
                 {activity.note ? <Text style={styles.activityNote}>"{activity.note}"</Text> : null}
               </TouchableOpacity>

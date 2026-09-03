@@ -324,9 +324,9 @@ async function seedDefaultMealSlots(database: SQLite.SQLiteDatabase): Promise<vo
   if (existing && existing.count > 0) return;
 
   await database.execAsync(`
-    INSERT INTO meal_slots VALUES ('breakfast', 'Petit-déjeuner', '☀️', 6, 10);
-    INSERT INTO meal_slots VALUES ('lunch',     'Déjeuner',       '🌞', 11, 14);
-    INSERT INTO meal_slots VALUES ('snack',     'Collation',      '🌤', 14, 18);
-    INSERT INTO meal_slots VALUES ('dinner',    'Dîner',          '🌙', 18, 22);
+    INSERT INTO meal_slots VALUES ('breakfast', 'Petit-déjeuner', '☀️', 6, 10, 1);
+    INSERT INTO meal_slots VALUES ('lunch',     'Déjeuner',       '🌞', 11, 14, 1);
+    INSERT INTO meal_slots VALUES ('snack',     'Collation',      '🌤', 14, 18, 1);
+    INSERT INTO meal_slots VALUES ('dinner',    'Dîner',          '🌙', 18, 22, 1);
   `);
 }

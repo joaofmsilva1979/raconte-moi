@@ -114,9 +114,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F0D0B8',
   },
-  slotLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  slotLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   slotSwitch: { transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] },
-  slotLabel: { fontSize: 15, fontWeight: '600', color: '#5C3020' },
+  slotLabel: { fontSize: 14, fontWeight: '600', color: '#5C3020', flexShrink: 1 },
   slotLabelDisabled: { color: '#C09070' },
   slotControls: { flexDirection: 'row', alignItems: 'center' },
   hourInput: {
