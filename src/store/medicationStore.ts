@@ -93,10 +93,10 @@ export const useMedicationStore = create<MedicationState & MedicationActions>((s
 
   saveMedicationLog: async () => {
     const { selectedMedicationId, timing, mealType, efficacy, note, recordedAt } = get();
-    if (!selectedMedicationId || !timing) return;
+    if (!selectedMedicationId) return;
     await logMedication({
       medication_id: selectedMedicationId,
-      timing,
+      timing: timing ?? undefined,
       meal_type: mealType ?? undefined,
       efficacy: efficacy ?? undefined,
       note: note.trim() || undefined,

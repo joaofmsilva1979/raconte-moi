@@ -27,7 +27,7 @@ export async function deleteMedication(id: number): Promise<void> {
 export async function logMedication(params: {
   medication_id: number;
   recorded_at: string;
-  timing: 'before' | 'during' | 'after';
+  timing?: 'before' | 'during' | 'after' | null;
   meal_type?: string;
   efficacy?: 1 | 2 | 3;
   note?: string;

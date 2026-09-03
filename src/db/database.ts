@@ -57,7 +57,7 @@ export async function initDatabase(): Promise<void> {
 
 // ─── Schema versioning ────────────────────────────────────────────────────────
 
-const CURRENT_SCHEMA_VERSION = 4;
+const CURRENT_SCHEMA_VERSION = 5;
 
 async function columnExists(
   database: SQLite.SQLiteDatabase,
@@ -227,6 +227,28 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_sleep_logs_log_date         ON sleep_logs(log_date);
       CREATE INDEX IF NOT EXISTS idx_medication_logs_recorded_at ON medication_logs(recorded_at);
       CREATE INDEX IF NOT EXISTS idx_comfort_aid_logs_recorded_at ON comfort_aid_logs(recorded_at);
+    `);
+  },
+
+  // v5 — timing devient nullable dans medication_logs (prise hors repas possible)
+  async (database) => {
+    await database.execAsync(`
+      CREATE TABLE medication_logs_v2 (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        medication_id INTEGER NOT NULL REFERENCES medications(id) ON DELETE CASCADE,
+        recorded_at   TEXT NOT NULL,
+        timing        TEXT,
+        meal_type     TEXT,
+        efficacy      INTEGER,
+        note          TEXT,
+        created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO medication_logs_v2
+        SELECT id, medication_id, recorded_at, timing, meal_type, efficacy, note, created_at
+        FROM medication_logs;
+      DROP TABLE medication_logs;
+      ALTER TABLE medication_logs_v2 RENAME TO medication_logs;
+      CREATE INDEX IF NOT EXISTS idx_medication_logs_recorded_at ON medication_logs(recorded_at);
     `);
   },
 ];

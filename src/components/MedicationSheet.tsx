@@ -42,7 +42,7 @@ export function MedicationSheet({ primaryColor }: Props) {
 
   if (!isSheetOpen) return null;
 
-  const canSave = selectedMedicationId !== null && timing !== null;
+  const canSave = selectedMedicationId !== null;
 
   async function handleAdd() {
     const name = newMedName.trim();
@@ -80,7 +80,7 @@ export function MedicationSheet({ primaryColor }: Props) {
             <Text style={styles.title}>💊 Médicament</Text>
 
             {/* Medication picker */}
-            <Text style={styles.label}>Médicament pris</Text>
+            <Text style={styles.label}>Médicament pris<Text style={styles.required}> *</Text>
             {medications.length === 0 && !showAdd && (
               <Text style={styles.emptyHint}>Aucun médicament enregistré — ajoute-en un ci-dessous.</Text>
             )}
@@ -134,7 +134,7 @@ export function MedicationSheet({ primaryColor }: Props) {
             )}
 
             {/* Timing */}
-            <Text style={styles.label}>Moment de prise</Text>
+            <Text style={styles.label}>Moment de prise <Text style={styles.optional}>(optionnel)</Text></Text>
             <View style={styles.chipRow}>
               {TIMINGS.map(t => {
                 const sel = timing === t.id;
@@ -247,6 +247,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   chipLarge: { alignItems: 'center', minWidth: 80 },
+  required: { color: '#DC2626', fontSize: 13, fontWeight: '800' },
+  optional: { fontSize: 10, fontWeight: '400', color: '#C09070', textTransform: 'none' },
   chipText: { fontSize: 13, fontWeight: '600', color: '#5C3020' },
   chipTextSel: { color: 'white' },
   efficacyIcon: { fontSize: 22, marginBottom: 2 },
