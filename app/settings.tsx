@@ -132,7 +132,7 @@ export default function SettingsScreen() {
           onPress={() => {
             Alert.alert(
               '⚠️ Remise à zéro complète ?',
-              'Toutes tes données seront effacées : notes, ressentis, douleurs, activités, médicaments, accessoires, prénom et réglages.\n\nL'app redémarrera comme à la première ouverture.',
+              "Toutes tes données seront effacées : notes, ressentis, douleurs, activités, médicaments, accessoires, prénom et réglages.\n\nL'app redémarrera comme à la première ouverture.",
               [
                 { text: 'Annuler', style: 'cancel' },
                 {
