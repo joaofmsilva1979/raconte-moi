@@ -1,0 +1,15 @@
+{
+  "name": "Raconte-moi",
+  "short_name": "Raconte-moi",
+  "start_url": "/raconte-moi/",
+  "display": "standalone",
+  "background_color": "#FFF8F5",
+  "theme_color": "#E85520",
+  "icons": [
+    {
+      "src": "/raconte-moi/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

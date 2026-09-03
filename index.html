@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Raconte-moi</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Raconte-moi" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/raconte-moi/apple-touch-icon.png" />
+    <link rel="manifest" href="/raconte-moi/manifest.json" />
+    <script>
+      (function(l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&');
+          });
+          window.history.replaceState(null, null,
+            decoded.shift() + (decoded.length ? '?' + decoded.join('&') : '') + l.hash
+          );
+        }
+      }(window.location));
+    </script>
+    <style id="expo-reset">
+      html, body { height: 100%; }
+      body { overflow: hidden; }
+      #root { display: flex; height: 100%; flex: 1; }
+    </style>
+    <style id="safari-reset">
+      input, textarea, select { -webkit-appearance: none; appearance: none; outline: none; }
+      input:focus, textarea:focus { outline: none; box-shadow: none; }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script src="/raconte-moi/_expo/static/js/web/entry-e36005c40e79173a924720f3e1c8f641.js" defer></script>
+  </body>
+</html>
