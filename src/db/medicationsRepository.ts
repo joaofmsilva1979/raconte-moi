@@ -39,7 +39,7 @@ export async function logMedication(params: {
     [
       params.medication_id,
       params.recorded_at,
-      params.timing,
+      params.timing ?? null,
       params.meal_type ?? null,
       params.efficacy ?? null,
       params.note ?? null,

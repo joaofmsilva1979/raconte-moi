@@ -4,7 +4,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { Entry, Ressenti, MealType, Activity, SleepLog } from '@/types';
 import { RESSENTI_LABELS, RESSENTI_ICONS, SUB_CATEGORY_LABELS } from '@/constants/ressentis';
 import { DEFAULT_MEAL_SLOTS } from '@/constants/meals';
-import { ACTIVITY_LABELS, ACTIVITY_ICONS } from '@/constants/activities';
+import { getActivityLabel, getActivityIcon } from '@/constants/activities';
 
 const MEAL_LABELS: Record<MealType, string> = {
   breakfast: 'Petit-déjeuner',
@@ -140,7 +140,7 @@ export function generateJournalHtml(
         ${dayActivities.map(a => `
           <div class="activity-item">
             <span class="item-time">${fmt(a.recorded_at)}</span>
-            ${ACTIVITY_ICONS[a.activity_type]} ${ACTIVITY_LABELS[a.activity_type]} · ${a.duration_minutes}min
+            ${getActivityIcon(a.activity_type)} ${getActivityLabel(a.activity_type)} · ${a.duration_minutes}min
             ${a.note ? `<span class="item-note"> — ${a.note}</span>` : ''}
           </div>`).join('')}
       </div>` : '';

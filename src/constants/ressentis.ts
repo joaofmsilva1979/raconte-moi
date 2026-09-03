@@ -9,6 +9,7 @@ export const RESSENTI_CATEGORIES: {
   { category: 'nausea',   label: 'Nausée',        icon: '🤢' },
   { category: 'pain',     label: 'Douleur',        icon: '😣' },
   { category: 'fatigue',  label: 'Fatigue',        icon: '😴' },
+  { category: 'cycle',   label: 'Règles',          icon: '🌸' },
   { category: 'good',     label: 'Je me sens bien', icon: '😊' },
   { category: 'other',    label: 'Autre',           icon: '✏️' },
 ];
@@ -37,6 +38,7 @@ export const RESSENTI_LABELS: Record<RessentCategory, string> = {
   nausea:   'Nausée',
   pain:     'Douleur',
   fatigue:  'Fatigue',
+  cycle:    'Règles',
   good:     'Je me sens bien',
   other:    'Autre',
 };
@@ -46,6 +48,7 @@ export const RESSENTI_ICONS: Record<RessentCategory, string> = {
   nausea:   '🤢',
   pain:     '😣',
   fatigue:  '😴',
+  cycle:    '🌸',
   good:     '😊',
   other:    '✏️',
 };

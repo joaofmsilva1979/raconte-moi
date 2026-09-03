@@ -9,6 +9,7 @@ export type RessentCategory =
   | 'nausea'
   | 'pain'
   | 'fatigue'
+  | 'cycle'
   | 'good'
   | 'other';
 
