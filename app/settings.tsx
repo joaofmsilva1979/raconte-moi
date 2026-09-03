@@ -22,8 +22,14 @@ import { PdfExportSection } from '@/components/settings/PdfExportSection';
 import { MedicationsSection } from '@/components/settings/MedicationsSection';
 import { ComfortAidsSection } from '@/components/settings/ComfortAidsSection';
 
+const GENDER_OPTIONS: { value: 'female' | 'male' | 'other'; label: string; icon: string }[] = [
+  { value: 'female', label: 'Femme', icon: '♀️' },
+  { value: 'male',   label: 'Homme', icon: '♂️' },
+  { value: 'other',  label: 'Non défini', icon: '⚧' },
+];
+
 export default function SettingsScreen() {
-  const { settings, saveFirstName, savePrimaryColor, loadSettings } = useSettingsStore();
+  const { settings, saveFirstName, savePrimaryColor, loadSettings, saveGender } = useSettingsStore();
   const { primary } = useColorTheme();
   const router = useRouter();
   const [firstName, setFirstName] = useState(settings?.first_name ?? '');
@@ -59,6 +65,26 @@ export default function SettingsScreen() {
             placeholder="Ton prénom"
             placeholderTextColor="#C09070"
           />
+          <View style={[styles.separator, { backgroundColor: primary + '30' }]} />
+          <Text style={styles.genderLabel}>Profil de santé</Text>
+          <View style={styles.genderRow}>
+            {GENDER_OPTIONS.map(opt => (
+              <TouchableOpacity
+                key={opt.value}
+                onPress={() => saveGender(opt.value)}
+                style={[
+                  styles.genderBtn,
+                  settings?.gender === opt.value && { backgroundColor: primary + '20', borderColor: primary },
+                ]}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.genderIcon}>{opt.icon}</Text>
+                <Text style={[styles.genderBtnLabel, settings?.gender === opt.value && { color: primary, fontWeight: '700' }]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {/* Couleur */}
@@ -239,6 +265,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#2D1A0E',
   },
+  separator: { height: 1, marginVertical: 14 },
+  genderLabel: { fontSize: 12, fontWeight: '600', color: '#9B8A80', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
+  genderRow: { flexDirection: 'row', gap: 8 },
+  genderBtn: {
+    flex: 1, alignItems: 'center', paddingVertical: 10,
+    borderRadius: 10, borderWidth: 1.5, borderColor: '#F0D0B8',
+    backgroundColor: '#FFF8F5',
+  },
+  genderIcon: { fontSize: 18, marginBottom: 2 },
+  genderBtnLabel: { fontSize: 11, color: '#9B8A80' },
   swatchGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
