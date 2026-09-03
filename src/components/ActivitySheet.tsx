@@ -29,11 +29,15 @@ function hhmmToISO(hhmm: string, baseISO: string): string | null {
 export function ActivitySheet({ primaryColor }: ActivitySheetProps) {
   const {
     isSheetOpen, selectedType, durationMinutes, note, recordedAt, todayTotalMinutes,
+    customActivities,
     closeSheet, selectType, setDuration, setNote, setRecordedAt, saveActivity,
+    addNewCustomActivity,
   } = useActivityStore();
 
   const [customDuration, setCustomDuration] = useState('');
   const [timeInput, setTimeInput] = useState('');
+  const [newActivityName, setNewActivityName] = useState('');
+  const [showAddActivity, setShowAddActivity] = useState(false);
 
   if (!isSheetOpen) return null;
 
@@ -59,6 +63,14 @@ export function ActivitySheet({ primaryColor }: ActivitySheetProps) {
     setDuration(min);
     setCustomDuration('');
     Keyboard.dismiss();
+  }
+
+  async function handleAddActivity() {
+    const name = newActivityName.trim();
+    if (!name) return;
+    await addNewCustomActivity(name);
+    setNewActivityName('');
+    setShowAddActivity(false);
   }
 
   return (
@@ -125,6 +137,56 @@ export function ActivitySheet({ primaryColor }: ActivitySheetProps) {
                 );
               })}
             </ScrollView>
+
+            {/* Activités custom */}
+            {(customActivities.length > 0 || showAddActivity) && (
+              <View style={styles.customRow}>
+                {customActivities.map(a => {
+                  const typeKey = `custom:${a.id}:${a.name}`;
+                  const sel = selectedType === typeKey;
+                  return (
+                    <TouchableOpacity
+                      key={a.id}
+                      onPress={() => selectType(typeKey)}
+                      style={[styles.typeBtn, sel && styles.typeBtnSelected, styles.typeBtnCustom]}
+                    >
+                      <Text style={styles.typeIcon}>⭐</Text>
+                      <Text style={[styles.typeLabel, sel && styles.typeLabelSelected]}>{a.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+
+            {showAddActivity && (
+              <View style={styles.addActivityBox}>
+                <TextInput
+                  style={styles.addActivityInput}
+                  placeholder="Ex: tir à l'arc, aquagym…"
+                  placeholderTextColor="#9CA3AF"
+                  value={newActivityName}
+                  onChangeText={setNewActivityName}
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={handleAddActivity}
+                />
+                <TouchableOpacity
+                  onPress={handleAddActivity}
+                  style={[styles.addActivityBtn, { backgroundColor: '#16A34A' }]}
+                >
+                  <Text style={styles.addActivityBtnText}>Ajouter</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <TouchableOpacity
+              onPress={() => setShowAddActivity(!showAddActivity)}
+              style={styles.addActivityTrigger}
+            >
+              <Text style={styles.addActivityTriggerText}>
+                {showAddActivity ? '✕ Annuler' : '+ Ajouter une activité'}
+              </Text>
+            </TouchableOpacity>
 
             <Text style={styles.sectionLabel}>Durée</Text>
             <View style={styles.durationRow}>
@@ -242,6 +304,18 @@ const styles = StyleSheet.create({
   typeIcon: { fontSize: 22 },
   typeLabel: { fontSize: 11, fontWeight: '600', color: '#166534' },
   typeLabelSelected: { color: '#15803D' },
+  customRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+  typeBtnCustom: { backgroundColor: '#F0FFF4' },
+  addActivityBox: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  addActivityInput: {
+    flex: 1, borderWidth: 1.5, borderColor: '#BBF7D0', borderRadius: 10,
+    paddingHorizontal: 10, paddingVertical: 7, fontSize: 13,
+    color: '#166534', backgroundColor: 'white',
+  },
+  addActivityBtn: { borderRadius: 10, paddingHorizontal: 14, justifyContent: 'center' },
+  addActivityBtnText: { color: 'white', fontWeight: '700', fontSize: 13 },
+  addActivityTrigger: { marginBottom: 16 },
+  addActivityTriggerText: { fontSize: 12, color: '#16A34A', fontWeight: '600' },
   durationRow: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
   durationBtn: {
     paddingHorizontal: 14, paddingVertical: 8,

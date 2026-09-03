@@ -57,7 +57,7 @@ export async function initDatabase(): Promise<void> {
 
 // ─── Schema versioning ────────────────────────────────────────────────────────
 
-const CURRENT_SCHEMA_VERSION = 6;
+const CURRENT_SCHEMA_VERSION = 7;
 
 async function columnExists(
   database: SQLite.SQLiteDatabase,
@@ -258,6 +258,17 @@ const MIGRATIONS: Migration[] = [
     await database.execAsync(
       `ALTER TABLE meal_slots ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1`
     );
+  },
+
+  // v7 — activités custom (tir à l'arc, aquagym…) ajoutables par l'utilisateur
+  async (database) => {
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS custom_activities (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        name       TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
   },
 ];
 

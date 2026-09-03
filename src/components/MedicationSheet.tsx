@@ -80,7 +80,7 @@ export function MedicationSheet({ primaryColor }: Props) {
             <Text style={styles.title}>💊 Médicament</Text>
 
             {/* Medication picker */}
-            <Text style={styles.label}>Médicament pris<Text style={styles.required}> *</Text>
+            <Text style={styles.label}>{'Médicament pris'}<Text style={styles.required}> *</Text></Text>
             {medications.length === 0 && !showAdd && (
               <Text style={styles.emptyHint}>Aucun médicament enregistré — ajoute-en un ci-dessous.</Text>
             )}
@@ -134,7 +134,7 @@ export function MedicationSheet({ primaryColor }: Props) {
             )}
 
             {/* Timing */}
-            <Text style={styles.label}>Moment de prise <Text style={styles.optional}>(optionnel)</Text></Text>
+            <Text style={styles.label}>{'Moment de prise '}<Text style={styles.optional}>(optionnel)</Text></Text>
             <View style={styles.chipRow}>
               {TIMINGS.map(t => {
                 const sel = timing === t.id;

@@ -1,6 +1,6 @@
 export type MealType = 'breakfast' | 'lunch' | 'snack' | 'dinner' | 'other';
 
-export type ActivityType = 'walk' | 'swim' | 'yoga' | 'bike' | 'stretch' | 'gym' | 'other';
+export type ActivityType = string; // types prédéfinis + activités custom de l'utilisateur
 
 export type SleepQuality = 1 | 2 | 3;
 

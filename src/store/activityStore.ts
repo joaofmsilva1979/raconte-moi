@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { ActivityType } from '@/types';
 import { createActivity, getTodayTotalMinutes } from '@/db/activitiesRepository';
+import { getCustomActivities, addCustomActivity, CustomActivity } from '@/db/customActivitiesRepository';
 
 interface ActivityState {
   isSheetOpen: boolean;
@@ -9,6 +10,7 @@ interface ActivityState {
   note: string;
   recordedAt: string;
   todayTotalMinutes: number;
+  customActivities: CustomActivity[];
 }
 
 interface ActivityActions {
@@ -20,6 +22,8 @@ interface ActivityActions {
   setRecordedAt: (iso: string) => void;
   saveActivity: () => Promise<void>;
   loadTodayTotal: () => Promise<void>;
+  loadCustomActivities: () => Promise<void>;
+  addNewCustomActivity: (name: string) => Promise<void>;
 }
 
 const INITIAL: ActivityState = {
@@ -29,12 +33,16 @@ const INITIAL: ActivityState = {
   note: '',
   recordedAt: new Date().toISOString(),
   todayTotalMinutes: 0,
+  customActivities: [],
 };
 
 export const useActivityStore = create<ActivityState & ActivityActions>((set, get) => ({
   ...INITIAL,
 
-  openSheet: () => set({ isSheetOpen: true, recordedAt: new Date().toISOString() }),
+  openSheet: () => {
+    getCustomActivities().then(customActivities => set({ customActivities }));
+    set({ isSheetOpen: true, recordedAt: new Date().toISOString() });
+  },
 
   closeSheet: () => set({
     isSheetOpen: false,
@@ -55,9 +63,13 @@ export const useActivityStore = create<ActivityState & ActivityActions>((set, ge
   saveActivity: async () => {
     const { selectedType, durationMinutes, note, recordedAt } = get();
     if (!selectedType || !durationMinutes || durationMinutes <= 0) return;
+    // Les types custom sont encodés "custom:{id}:{name}" — on stocke le nom directement
+    const activityType = selectedType.startsWith('custom:')
+      ? selectedType.split(':').slice(2).join(':')
+      : selectedType;
     await createActivity({
       recorded_at: recordedAt,
-      activity_type: selectedType,
+      activity_type: activityType,
       duration_minutes: durationMinutes,
       note: note.trim() || null,
     });
@@ -68,5 +80,18 @@ export const useActivityStore = create<ActivityState & ActivityActions>((set, ge
   loadTodayTotal: async () => {
     const todayTotalMinutes = await getTodayTotalMinutes();
     set({ todayTotalMinutes });
+  },
+
+  loadCustomActivities: async () => {
+    const customActivities = await getCustomActivities();
+    set({ customActivities });
+  },
+
+  addNewCustomActivity: async (name: string) => {
+    const activity = await addCustomActivity(name);
+    set(state => ({
+      customActivities: [...state.customActivities, activity],
+      selectedType: `custom:${activity.id}:${activity.name}`,
+    }));
   },
 }));
