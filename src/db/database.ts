@@ -57,7 +57,7 @@ export async function initDatabase(): Promise<void> {
 
 // ─── Schema versioning ────────────────────────────────────────────────────────
 
-const CURRENT_SCHEMA_VERSION = 5;
+const CURRENT_SCHEMA_VERSION = 6;
 
 async function columnExists(
   database: SQLite.SQLiteDatabase,
@@ -231,6 +231,7 @@ const MIGRATIONS: Migration[] = [
   },
 
   // v5 — timing devient nullable dans medication_logs (prise hors repas possible)
+
   async (database) => {
     await database.execAsync(`
       CREATE TABLE medication_logs_v2 (
@@ -250,6 +251,13 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE medication_logs_v2 RENAME TO medication_logs;
       CREATE INDEX IF NOT EXISTS idx_medication_logs_recorded_at ON medication_logs(recorded_at);
     `);
+  },
+
+  // v6 — repas désactivables : colonne enabled dans meal_slots (1=actif, 0=masqué)
+  async (database) => {
+    await database.execAsync(
+      `ALTER TABLE meal_slots ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1`
+    );
   },
 ];
 

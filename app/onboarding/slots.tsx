@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, Switch } from 'react-native';
 import { router } from 'expo-router';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
@@ -7,7 +7,7 @@ import { OnboardingProgress } from '@/components/OnboardingProgress';
 import { MealSlot, MealType } from '@/types';
 
 export default function SlotsScreen() {
-  const { mealSlots, saveMealSlot } = useSettingsStore();
+  const { mealSlots, saveMealSlot, saveMealSlotEnabled } = useSettingsStore();
   const { primary } = useColorTheme();
   const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
   const [rawHours, setRawHours] = useState<Record<string, string>>({});
@@ -56,29 +56,41 @@ export default function SlotsScreen() {
 
         {localSlots.map(slot => (
           <View key={slot.meal_type} style={styles.row}>
-            <Text style={styles.mealLabel}>{slot.icon} {slot.label}</Text>
-            <View style={styles.controls}>
-              <TextInput
-                style={[styles.hourInput, { borderColor: primary, color: primary }]}
-                value={rawHours[`${slot.meal_type}_start_hour`] ?? String(slot.start_hour)}
-                onChangeText={v => updateHour(slot.meal_type, 'start_hour', v)}
-                onBlur={() => commitHour(slot.meal_type, 'start_hour')}
-                keyboardType="number-pad"
-                maxLength={2}
-                selectTextOnFocus
+            <View style={styles.rowLeft}>
+              <Switch
+                value={slot.enabled !== 0}
+                onValueChange={v => saveMealSlotEnabled(slot.meal_type, v)}
+                trackColor={{ true: primary }}
+                style={styles.rowSwitch}
               />
-              <Text style={[styles.sep, { color: primary }]}>h — </Text>
-              <TextInput
-                style={[styles.hourInput, { borderColor: primary, color: primary }]}
-                value={rawHours[`${slot.meal_type}_end_hour`] ?? String(slot.end_hour)}
-                onChangeText={v => updateHour(slot.meal_type, 'end_hour', v)}
-                onBlur={() => commitHour(slot.meal_type, 'end_hour')}
-                keyboardType="number-pad"
-                maxLength={2}
-                selectTextOnFocus
-              />
-              <Text style={[styles.sep, { color: primary }]}>h</Text>
+              <Text style={[styles.mealLabel, slot.enabled === 0 && styles.mealLabelOff]}>
+                {slot.icon} {slot.label}
+              </Text>
             </View>
+            {slot.enabled !== 0 && (
+              <View style={styles.controls}>
+                <TextInput
+                  style={[styles.hourInput, { borderColor: primary, color: primary }]}
+                  value={rawHours[`${slot.meal_type}_start_hour`] ?? String(slot.start_hour)}
+                  onChangeText={v => updateHour(slot.meal_type, 'start_hour', v)}
+                  onBlur={() => commitHour(slot.meal_type, 'start_hour')}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  selectTextOnFocus
+                />
+                <Text style={[styles.sep, { color: primary }]}>h — </Text>
+                <TextInput
+                  style={[styles.hourInput, { borderColor: primary, color: primary }]}
+                  value={rawHours[`${slot.meal_type}_end_hour`] ?? String(slot.end_hour)}
+                  onChangeText={v => updateHour(slot.meal_type, 'end_hour', v)}
+                  onBlur={() => commitHour(slot.meal_type, 'end_hour')}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  selectTextOnFocus
+                />
+                <Text style={[styles.sep, { color: primary }]}>h</Text>
+              </View>
+            )}
           </View>
         ))}
       </ScrollView>
@@ -103,11 +115,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F0D0B8',
   },
+  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rowSwitch: { transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] },
   mealLabel: { fontSize: 15, fontWeight: '600', color: '#5C3020' },
+  mealLabelOff: { color: '#C09070' },
   controls: { flexDirection: 'row', alignItems: 'center' },
   hourInput: {
     borderWidth: 1.5,

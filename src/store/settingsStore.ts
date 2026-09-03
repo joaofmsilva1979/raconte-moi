@@ -4,6 +4,7 @@ import {
   getMealSlots,
   setSetting,
   updateMealSlot,
+  updateMealSlotEnabled,
 } from '@/db/settingsRepository';
 import { AppSettings, GoalType, MealSlot, MealType } from '@/types';
 
@@ -31,6 +32,7 @@ interface SettingsState {
   saveGoal: (goal: GoalType) => Promise<void>;
   savePrimaryColor: (color: string) => Promise<void>;
   saveMealSlot: (meal_type: MealType, start_hour: number, end_hour: number) => Promise<void>;
+  saveMealSlotEnabled: (meal_type: MealType, enabled: boolean) => Promise<void>;
   completeOnboarding: () => Promise<void>;
   saveNotificationSetting: (
     key: 'notifications_enabled' | 'notifications_breakfast' | 'notifications_lunch' | 'notifications_snack' | 'notifications_dinner',
@@ -77,6 +79,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       set(state => ({
         mealSlots: state.mealSlots.map(s =>
           s.meal_type === meal_type ? { ...s, start_hour, end_hour } : s
+        ),
+      }));
+    },
+
+    saveMealSlotEnabled: async (meal_type, enabled) => {
+      await updateMealSlotEnabled(meal_type, enabled);
+      set(state => ({
+        mealSlots: state.mealSlots.map(s =>
+          s.meal_type === meal_type ? { ...s, enabled: enabled ? 1 : 0 } : s
         ),
       }));
     },

@@ -69,6 +69,7 @@ export interface MealSlot {
   icon: string;
   start_hour: number;
   end_hour: number;
+  enabled: number; // 1 = actif, 0 = désactivé
 }
 
 export interface AppSettings {

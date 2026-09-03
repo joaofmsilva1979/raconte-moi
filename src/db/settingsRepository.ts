@@ -73,3 +73,14 @@ export async function updateMealSlot(
     [start_hour, end_hour, meal_type]
   );
 }
+
+export async function updateMealSlotEnabled(
+  meal_type: MealType,
+  enabled: boolean
+): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    'UPDATE meal_slots SET enabled = ? WHERE meal_type = ?',
+    [enabled ? 1 : 0, meal_type]
+  );
+}

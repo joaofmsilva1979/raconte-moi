@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Switch, StyleSheet } from 'react-native';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useColorTheme } from '@/hooks/useColorTheme';
 import { scheduleReminders } from '@/services/notificationService';
@@ -7,7 +7,7 @@ import { MealSlot, MealType } from '@/types';
 import { settingsStyles } from './settingsStyles';
 
 export function MealSlotsSection() {
-  const { mealSlots, settings, saveMealSlot } = useSettingsStore();
+  const { mealSlots, settings, saveMealSlot, saveMealSlotEnabled } = useSettingsStore();
   const { primary } = useColorTheme();
 
   const [localSlots, setLocalSlots] = useState<MealSlot[]>(mealSlots);
@@ -62,31 +62,43 @@ export function MealSlotsSection() {
     <View style={settingsStyles.card}>
       {localSlots.map(slot => (
         <View key={slot.meal_type} style={styles.slotRow}>
-          <Text style={styles.slotLabel}>{slot.icon} {slot.label}</Text>
-          <View style={styles.slotControls}>
-            <TextInput
-              testID={`slot-start-${slot.meal_type}`}
-              style={[styles.hourInput, { borderColor: primary, color: primary }]}
-              value={rawHours[`${slot.meal_type}_start_hour`] ?? String(slot.start_hour)}
-              onChangeText={v => updateHour(slot.meal_type, 'start_hour', v)}
-              onBlur={() => handleSlotBlur(slot.meal_type)}
-              keyboardType="number-pad"
-              maxLength={2}
-              selectTextOnFocus
+          <View style={styles.slotLeft}>
+            <Switch
+              value={slot.enabled !== 0}
+              onValueChange={v => saveMealSlotEnabled(slot.meal_type, v)}
+              trackColor={{ true: primary }}
+              style={styles.slotSwitch}
             />
-            <Text style={[styles.slotSep, { color: primary }]}>h — </Text>
-            <TextInput
-              testID={`slot-end-${slot.meal_type}`}
-              style={[styles.hourInput, { borderColor: primary, color: primary }]}
-              value={rawHours[`${slot.meal_type}_end_hour`] ?? String(slot.end_hour)}
-              onChangeText={v => updateHour(slot.meal_type, 'end_hour', v)}
-              onBlur={() => handleSlotBlur(slot.meal_type)}
-              keyboardType="number-pad"
-              maxLength={2}
-              selectTextOnFocus
-            />
-            <Text style={[styles.slotSep, { color: primary }]}>h</Text>
+            <Text style={[styles.slotLabel, slot.enabled === 0 && styles.slotLabelDisabled]}>
+              {slot.icon} {slot.label}
+            </Text>
           </View>
+          {slot.enabled !== 0 && (
+            <View style={styles.slotControls}>
+              <TextInput
+                testID={`slot-start-${slot.meal_type}`}
+                style={[styles.hourInput, { borderColor: primary, color: primary }]}
+                value={rawHours[`${slot.meal_type}_start_hour`] ?? String(slot.start_hour)}
+                onChangeText={v => updateHour(slot.meal_type, 'start_hour', v)}
+                onBlur={() => handleSlotBlur(slot.meal_type)}
+                keyboardType="number-pad"
+                maxLength={2}
+                selectTextOnFocus
+              />
+              <Text style={[styles.slotSep, { color: primary }]}>h — </Text>
+              <TextInput
+                testID={`slot-end-${slot.meal_type}`}
+                style={[styles.hourInput, { borderColor: primary, color: primary }]}
+                value={rawHours[`${slot.meal_type}_end_hour`] ?? String(slot.end_hour)}
+                onChangeText={v => updateHour(slot.meal_type, 'end_hour', v)}
+                onBlur={() => handleSlotBlur(slot.meal_type)}
+                keyboardType="number-pad"
+                maxLength={2}
+                selectTextOnFocus
+              />
+              <Text style={[styles.slotSep, { color: primary }]}>h</Text>
+            </View>
+          )}
         </View>
       ))}
     </View>
@@ -98,11 +110,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F0D0B8',
   },
+  slotLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  slotSwitch: { transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] },
   slotLabel: { fontSize: 15, fontWeight: '600', color: '#5C3020' },
+  slotLabelDisabled: { color: '#C09070' },
   slotControls: { flexDirection: 'row', alignItems: 'center' },
   hourInput: {
     borderWidth: 1.5,

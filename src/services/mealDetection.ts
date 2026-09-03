@@ -2,7 +2,7 @@ import { MealSlot, MealType } from '@/types';
 
 export function detectMealType(date: Date, slots: MealSlot[]): MealType {
   const hour = date.getHours();
-  const match = slots.find(s => hour >= s.start_hour && hour < s.end_hour);
+  const match = slots.find(s => s.enabled !== 0 && hour >= s.start_hour && hour < s.end_hour);
   return match?.meal_type ?? 'other';
 }
 
