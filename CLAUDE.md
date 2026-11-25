@@ -5,10 +5,25 @@
 App iOS de journal alimentaire vocal pour Eugénie (femme de Joao).
 Stack : React Native 0.86.2 + Expo SDK 57 + TypeScript + SQLite local.
 
+## Docs (GDrive, hub produit app + PWA) : lire `APP/STATUS.md` en début de session
+Hub : `GDrive CLAUDE_AI/APP_LESNOTESDEPATATE/`
+- `README.md` : carte du produit ; `APP/STATUS.md` : suivi iOS (**mettre à jour en fin de session**)
+- `FONCTIONNALITES/` (1 md par fonctionnalité) · `CONTENUS/` (1 md par texte publié, à modifier avant le code)
+- `ARCHITECTURE.md` · `DATABASE.md` · `APP_FLOW.md` · `TESTING.md` · `BRAND.md` : la version du hub fait foi (les copies locales ne sont pas commitées)
+- `DECISIONS.md` · `SOLUTIONS.md` · `HISTORIQUE.md` · `REFLEXIONS.md` · `AUDIT_LEGAL.md`
+La PWA (`~/projects/raconte-moi-pwa`) contient tout ce code + les adaptations web : c'est la base la plus à jour.
+
+## Règles communes (détail : hub `README.md` § Règles et `DECISIONS.md`)
+- Code en local + GitHub, jamais dans Drive ; âge minimum 15 ans ; nom App Store « Raconte-moi · Journal santé vocal »
+- Avant `eas submit` : vérifier que la politique répond et est à jour (`https://joaofmsilva1979.github.io/raconte-moi/privacy-policy.html`). Elle se publie depuis le repo PWA : `bash ~/projects/raconte-moi-pwa/scripts/publish-privacy-ios.sh`
+- Dates : `recorded_at` en UTC ; filtrer un jour local avec `dayRange()` / `localDay()` (`src/utils/dateUtils.ts` du code PWA), jamais `date(recorded_at)`
+- Prochain build natif : partir du code PWA (corrections du 2026-11-25), pas de ce repo
+- Backups : launchd `com.racontemoi.backup` (30 min) + hook Claude → hub `APP/backups/`
+
 ## Docs techniques
-- Commandes dev : `~/Library/CloudStorage/GoogleDrive-davisthe8th@gmail.com/My Drive/CLAUDE_AI/APP_LESNOTESDEPATATE/DOCS/COMMANDES_DEV.md`
-- Tech reference : `~/Library/CloudStorage/GoogleDrive-davisthe8th@gmail.com/My Drive/CLAUDE_AI/APP_LESNOTESDEPATATE/DOCS/TECH.md`
-- Plans features : `~/Library/CloudStorage/GoogleDrive-davisthe8th@gmail.com/My Drive/CLAUDE_AI/APP_LESNOTESDEPATATE/PLANS/`
+- Commandes dev : `GDrive CLAUDE_AI/APP_LESNOTESDEPATATE/DOCS/COMMANDES_DEV.md`
+- Tech reference : `GDrive CLAUDE_AI/APP_LESNOTESDEPATATE/DOCS/TECH.md`
+- Plans features : `GDrive CLAUDE_AI/APP_LESNOTESDEPATATE/PLANS/`
 
 ## Expo SDK 57 — pièges critiques
 - `expo-av` n'existe plus → utiliser `expo-audio`
