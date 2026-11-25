@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "TIMESTAMP=$(date +\"%Y-%m-%d_%H%M\") && rsync -a --exclude='node_modules' --exclude='.expo' --exclude='ios/build' --exclude='ios/Pods' --exclude='.git' \"/Users/joao.silva/projects/les-notes-de-patate/\" \"/Users/joao.silva/Library/CloudStorage/GoogleDrive-davisthe8th@gmail.com/My Drive/CLAUDE_AI/APP_LESNOTESDEPATATE/backup_${TIMESTAMP}/\" 2>/dev/null || true",
+            "command": "TIMESTAMP=$(date +\"%Y-%m-%d_%H%M\") && DEST=\"$(ls -d \"$HOME\"/Library/CloudStorage/GoogleDrive-*/\"My Drive\"/CLAUDE_AI/APP_LESNOTESDEPATATE/APP/backups | head -1)\" && [ -d \"$DEST\" ] && rsync -a --exclude='node_modules' --exclude='.expo' --exclude='ios/build' --exclude='ios/Pods' --exclude='.git' --exclude='dist' --exclude='flow-captures' --exclude='flow-diagram*' --exclude='flow.html' --exclude='flow.mmd' --exclude='graphify-out' --exclude='static_analysis_semgrep_1' \"$CLAUDE_PROJECT_DIR/\" \"${DEST}/backup_${TIMESTAMP}/\" 2>/dev/null || true && find \"${DEST}\" -maxdepth 1 -name 'backup_*' -type d | sort -r | tail -n +6 | while IFS= read -r old; do rm -rf \"$old\"; done 2>/dev/null || true",
             "statusMessage": "Backup Raconte-moi → Google Drive...",
             "async": true
           }
